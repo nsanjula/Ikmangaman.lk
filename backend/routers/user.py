@@ -1,6 +1,6 @@
-from fastapi import APIRouter
-from fastapi.params import Depends
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from starlette import status
 from starlette.status import HTTP_201_CREATED
 
 from backend.database.db import get_db
@@ -10,7 +10,7 @@ from backend.utils.hashing import hash_password
 
 router = APIRouter()
 
-@router.post("/signup", status_code=HTTP_201_CREATED)
+@router.post("/signup", status_code=status.HTTP_201_CREATED)
 def create_user(request: user.User, db: Session = Depends(get_db)):
     hashed_password = hash_password(request.password)
     new_user = users.User(
