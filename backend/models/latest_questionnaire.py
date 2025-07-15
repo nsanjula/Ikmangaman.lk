@@ -8,7 +8,7 @@ class LatestQuestionnaire(Base):
     __tablename__ = "latest_questionnaires"
 
     q_id = Column(INTEGER, primary_key=True, index= True)
-    user_id = Column(INTEGER, ForeignKey("user.id"))
+    user_id = Column(INTEGER, ForeignKey("users.user_id"))
     nature = Column(BOOLEAN, default=False)
     adventure = Column(BOOLEAN, default=False)
     luxury = Column(BOOLEAN, default=False)

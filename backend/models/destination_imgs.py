@@ -8,7 +8,7 @@ class DestinationImages(Base):
     __tablename__ = "destination_images"
 
     image_id = Column(INTEGER, primary_key=True, index=True)
-    destination_id = Column(INTEGER, ForeignKey("destination.id"))
+    destination_id = Column(INTEGER, ForeignKey("destinations.destination_id"))
     image = Column(LargeBinary)
 
     destination = relationship("Destination", back_populates="destination_image")
