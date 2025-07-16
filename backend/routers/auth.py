@@ -10,6 +10,7 @@ from backend.utils.hashing import verify_password
 from backend.utils.token import create_access_token
 
 router = APIRouter(
+    tags= ["auth"],
     prefix="/auth"
 )
 

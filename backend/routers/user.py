@@ -7,7 +7,9 @@ from backend.models import users
 from backend.schemas import user
 from backend.utils.hashing import hash_password
 
-router = APIRouter()
+router = APIRouter(
+    tags= ["user"]
+)
 
 @router.post("/signup", status_code=status.HTTP_201_CREATED)
 def create_user(request: user.User, db: Session = Depends(get_db)):

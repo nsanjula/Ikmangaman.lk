@@ -16,20 +16,20 @@ def get_month_int(month: str):
 
     return month_int_dict[month]
 
-def get_month_season(month:str):
+def get_month_season(month:int):
     month_season_dict = {
-        "January": 0,
-        "February": 0,
-        "March": 0,
-        "April": 1,
-        "May": 1,
-        "June": 1,
-        "July": 2,
-        "August": 2,
-        "September": 2,
-        "October": 3,
-        "November": 3,
-        "December": 3,
+        1 : 0,
+        2 : 0,
+        3 : 0,
+        4 : 1,
+        5 : 1,
+        6 : 1,
+        7 : 2,
+        8 : 2,
+        9 : 2,
+        10 : 3,
+        11 : 3,
+        12 : 3,
     }
 
     return month_season_dict[month]

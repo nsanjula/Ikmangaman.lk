@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from starlette import status
 
 from backend.database.db import get_db
 from backend.models import latest_questionnaire, location_coordinates, users
@@ -7,9 +8,11 @@ from backend.schemas import questionnaire, user
 from backend.utils import month_mapper
 from backend.utils.token import get_current_user
 
-router = APIRouter()
+router = APIRouter(
+    tags=["questionnaire"]
+)
 
-@router.post("/questionnaire")
+@router.post("/questionnaire", status_code=status.HTTP_201_CREATED)
 def submit_questionnaire(request: questionnaire.Questionnaire, db: Session = Depends(get_db), current_user: user.User = Depends(get_current_user) ):
     month_int = month_mapper.get_month_int(request.travel_month)
 
@@ -61,10 +64,10 @@ def submit_questionnaire(request: questionnaire.Questionnaire, db: Session = Dep
     db.commit()
     return {"status": "success"}
 
-@router.get("/questionnaire")
+@router.get("/questionnaire", status_code=status.HTTP_200_OK)
 def get_latest_questionnaire(db: Session = Depends(get_db), current_user: user.User = Depends(get_current_user)):
 
     accessed_user = db.query(users.User).filter(users.User.username == current_user.username).first()
-    latest_questionnaire_of_acc_user = db.query(latest_questionnaire.LatestQuestionnaire).filter(latest_questionnaire.LatestQuestionnaire.user_id == accessed_user.user_id).first()
-    return latest_questionnaire_of_acc_user
+    latest_questionnaire_of_accessed_user = db.query(latest_questionnaire.LatestQuestionnaire).filter(latest_questionnaire.LatestQuestionnaire.user_id == accessed_user.user_id).first()
+    return latest_questionnaire_of_accessed_user
 
