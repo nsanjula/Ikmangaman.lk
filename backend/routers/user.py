@@ -12,9 +12,9 @@ router = APIRouter()
 @router.post("/signup", status_code=status.HTTP_201_CREATED)
 def create_user(request: user.User, db: Session = Depends(get_db)):
 
-    existing_user = db.query(user.User).filter(user.User.username == request.username).first()
+    existing_user = db.query(users.User).filter(users.User.username == request.username).first()
     if existing_user:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username already exists")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username already taken")
 
     hashed_password = hash_password(request.password)
     new_user = users.User(

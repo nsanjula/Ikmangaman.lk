@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 
 class Questionnaire(BaseModel):
-
     nature: bool
     adventure: bool
     luxury: bool
@@ -13,9 +12,8 @@ class Questionnaire(BaseModel):
     food: bool
     spirituality: bool
     eco_tourism: bool
-    travel_month = str
-    no_of_people = int
-    start_latitude = float
-    start_longitude = float
+    travel_month : str
+    no_of_people : int
+    start_location : str
 
 
