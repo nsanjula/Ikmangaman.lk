@@ -5,6 +5,7 @@ from backend.database.db import get_db
 from backend.models import users, latest_questionnaire
 from backend.schemas import user
 from backend.services.aimodel1 import predict_traveler_type
+from backend.services.scoring import get_top_destinations
 from backend.utils import month_mapper
 from backend.utils.age_calc import calculate_age
 from backend.utils.token import get_current_user
@@ -39,8 +40,9 @@ def get_recommendations(db: Session = Depends(get_db), current_user: user.User =
     }
 
     traveler_type_results = predict_traveler_type(user_age, travel_season, interests_dict)
+    matching_destinations = get_top_destinations(traveler_type_results, travel_season, db)
 
-    return traveler_type_results
+    return matching_destinations
 
 
 
