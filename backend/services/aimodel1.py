@@ -21,11 +21,3 @@ def predict_traveler_type(age, season, interests_dict):
     ]
 
     return [label for label, val in zip(traveler_types, prediction) if val == 1]
-
-
-
-
-
-
-
-

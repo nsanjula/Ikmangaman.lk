@@ -5,6 +5,7 @@ from backend.database.db import get_db
 from backend.models import users, latest_questionnaire
 from backend.schemas import user
 from backend.services.aimodel1 import predict_traveler_type
+from backend.services.distance import get_distance_and_duration
 from backend.services.scoring import get_top_destinations
 from backend.utils import month_mapper
 from backend.utils.age_calc import calculate_age
@@ -40,9 +41,38 @@ def get_recommendations(db: Session = Depends(get_db), current_user: user.User =
     }
 
     traveler_type_results = predict_traveler_type(user_age, travel_season, interests_dict)
-    matching_destinations = get_top_destinations(traveler_type_results, travel_season, db)
+    top_destinations_with_scores = get_top_destinations(traveler_type_results, travel_season, db)
 
-    return matching_destinations
+    # return matching_destinations
 
+    # Example: assume user_start_location is stored in the questionnaire
+    user_location = {
+        "lat": latest_questionnaire_of_accessed_user.starting_location_latitudes,
+        "lng": latest_questionnaire_of_accessed_user.starting_location_longitudes
+    }
+
+    destinations_for_matrix = [{
+        "latitude": d[0].latitude,
+        "longitude": d[0].longitude
+    } for d in top_destinations_with_scores]
+
+    distance_results = get_distance_and_duration(user_location, destinations_for_matrix)
+
+    # Final response formatting
+    response = []
+    for i, (destination, score) in enumerate(top_destinations_with_scores):
+        rating_label = "Very Good" if score >= 0.8 else "Good" if score >= 0.6 else "Average"
+        response.append({
+            "destination_id": destination.destination_id,
+            "name": destination.name,
+            "match_score": round(score, 2),
+            "rating_label": rating_label,
+            # "estimated_budget": destination.estimated_budget,
+            "distance": distance_results[i]["distance"],
+            "travel_time": distance_results[i]["travel_time"],
+            "thumbnail_img": f"/destination-image/{destination.destination_id}"
+        })
+
+    return response
 
 
