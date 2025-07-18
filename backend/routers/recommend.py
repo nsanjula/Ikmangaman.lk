@@ -75,5 +75,3 @@ def get_recommendations(db: Session = Depends(get_db), current_user: user.User =
         })
 
     return response
-
-
