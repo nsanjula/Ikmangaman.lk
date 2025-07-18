@@ -1,5 +1,5 @@
 
-def calculate_the_budget(db, avg_cost, distance, no_of_people):
+def calculate_the_budget(avg_cost, distance, no_of_people):
 
     distance = distance.split()[0]
     distance_f = float(distance)
@@ -36,6 +36,38 @@ def calculate_the_budget(db, avg_cost, distance, no_of_people):
 
     return rounded_total_cost
 
+def cost_for_bicycle(distance, no_of_people):
+    cost_per_km_bicycle = 7.5
+    people_per_bike = 2
+    no_of_bikes = no_of_people / people_per_bike
+    cost_for_bikes = no_of_bikes * cost_per_km_bicycle * distance
+
+    return cost_for_bikes
+
+
+def cost_for_car(distance, no_of_people):
+    cost_per_km_car = 20
+    people_per_car = 5
+    no_of_cars = no_of_people / people_per_car
+    cost_for_cars = no_of_cars * cost_per_km_car * distance
+
+    return cost_for_cars
+
+def cost_for_p_bus(distance, no_of_people):
+    cost_per_km_p_bus = 72
+    people_per_p_bus = 30
+    no_of_p_buses = no_of_people / people_per_p_bus
+    cost_for_p_buses = no_of_p_buses * cost_per_km_p_bus * distance
+
+    return cost_for_p_buses
+
+def cost_for_transit(distance, no_of_people):
+    cost_per_km_transit = 2
+    people_per_transit = 50
+    no_of_transits = no_of_people / people_per_transit
+    cost_for_transits = no_of_transits * cost_per_km_transit * distance
+
+    return cost_for_transits
 
 def transport_probabilities(D, N):
     def suitability_D_and_N(S_D, N_opt, width):

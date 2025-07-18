@@ -6,7 +6,7 @@ from backend.models import users, latest_questionnaire
 from backend.schemas import user
 from backend.services.aimodel1 import predict_traveler_type
 from backend.services.budget import calculate_the_budget
-from backend.services.distance import get_distance_and_duration
+from backend.services.distance import get_distance_and_duration_for_recommendations
 from backend.services.scoring import get_top_destinations
 from backend.utils import month_mapper
 from backend.utils.age_calc import calculate_age
@@ -57,7 +57,7 @@ def get_recommendations(db: Session = Depends(get_db), current_user: user.User =
         "longitude": d[0].longitude
     } for d in top_destinations_with_scores]
 
-    distance_results = get_distance_and_duration(user_location, destinations_for_matrix)
+    distance_results = get_distance_and_duration_for_recommendations(user_location, destinations_for_matrix)
 
     # Final response formatting
     response = []
@@ -68,7 +68,7 @@ def get_recommendations(db: Session = Depends(get_db), current_user: user.User =
             "name": destination.name,
             "match_score": round(score, 2),
             "rating_label": rating_label,
-            "estimated_budget": calculate_the_budget(db, destination.avg_cost, distance_results[i]["distance"], latest_questionnaire_of_accessed_user.no_of_people),
+            "estimated_budget": calculate_the_budget(destination.avg_cost, distance_results[i]["distance"], latest_questionnaire_of_accessed_user.no_of_people),
             "distance": distance_results[i]["distance"],
             "travel_time": distance_results[i]["travel_time"],
             "thumbnail_img": f"/destination-image/{destination.destination_id}"
