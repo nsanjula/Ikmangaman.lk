@@ -7,8 +7,8 @@ import sys
 import pathlib
 
 # Calculate the .env file location relative to main.py
-env_path = pathlib.Path(__file__).parent / '.env'
-load_dotenv(dotenv_path=env_path)
+# env_path = pathlib.Path(__file__).parent / '.env'
+# load_dotenv(dotenv_path=env_path)
 
 from backend.routers import user, auth, hotels, weather
 

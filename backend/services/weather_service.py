@@ -7,6 +7,7 @@ load_dotenv()
 API_KEY = os.getenv("OPENWEATHER_API_KEY")
 BASE_URL = "http://api.openweathermap.org/data/2.5/weather"
 
+
 async def get_weather_by_city(city : str):
     params = {
         "q" : city,
@@ -37,12 +38,14 @@ def extract_forecast_data(forecast_data):
         date_str, time_str = dt_txt.split()
 
         if time_str == "12:00:00" and date_str not in added_dates:
+            icon_code = entry["weather"][0]["icon"]
             filtered = {
                 "date": date_str,
                 "temperature": entry["main"]["temp"],
                 "weather": entry["weather"][0]["description"],
                 "humidity": entry["main"]["humidity"],
-                "visibility": entry["visibility"]
+                "visibility": entry["visibility"],
+                "icon_url": f"http://openweathermap.org/img/wn/{icon_code}@2x.png"
             }
 
             daily_forecasts.append(filtered)
