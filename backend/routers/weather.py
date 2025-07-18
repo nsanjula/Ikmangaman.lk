@@ -3,7 +3,10 @@ from httpx import HTTPStatusError
 
 from backend.services.weather_service import get_weather_by_city,get_weather_forecast_by_city,extract_forecast_data
 
-router = APIRouter(prefix="/weather", tags=["weather"])
+router = APIRouter(
+    prefix="/weather",
+    tags=["weather"]
+)
 
 @router.get("/")
 async def get_weather(city: str):

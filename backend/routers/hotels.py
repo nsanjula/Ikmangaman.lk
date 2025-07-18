@@ -1,7 +1,10 @@
 from fastapi import APIRouter, HTTPException
 from backend.services.hotel_service import get_hotels
 
-router = APIRouter(prefix="/hotels", tags=["hotels"])
+router = APIRouter(
+    prefix="/hotels",
+    tags=["hotels"]
+)
 
 @router.get("/")
 async def get_hotel(city: str):
