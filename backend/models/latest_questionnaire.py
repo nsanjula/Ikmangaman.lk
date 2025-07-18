@@ -3,7 +3,6 @@ from sqlalchemy.orm import relationship
 
 from backend.database.db import Base
 
-
 class LatestQuestionnaire(Base):
     __tablename__ = "latest_questionnaires"
 

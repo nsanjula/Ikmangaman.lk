@@ -11,7 +11,7 @@ class User(Base):
     firstname = Column(String)
     lastname = Column(String)
     date_0f_birth = Column(Date)
-    username = Column(String)
+    username = Column(String, unique= True, nullable=False)
     password = Column(String)
 
     latest_questionnaire = relationship("LatestQuestionnaire", back_populates="user")

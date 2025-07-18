@@ -41,18 +41,6 @@ Y_pred = model.predict(X_test)
 print("Classification Report (per traveler type):")
 print(classification_report(Y_test, Y_pred, target_names=labels))
 
-# === Step 7: Save the trained model ===
-# Dynamically compute correct path: project_root/models/traveler_model.pkl
-# current_dir = os.path.dirname(os.path.abspath(__file__))  # model_training/
-# project_root = os.path.abspath(os.path.join(current_dir, ".."))  # Ikmangamanlk/
-# models_dir = os.path.join(project_root, "models")
-# os.makedirs(models_dir, exist_ok=True)
-#
-# model_path = os.path.join(models_dir, "traveler_model.pkl")
-# joblib.dump(model, model_path)
-#
-# print(f"Model training complete and saved to: {model_path}")
-
 # === Step 7: Save the trained model to services directory ===
 current_dir = os.path.dirname(os.path.abspath(__file__))  # ai_models/
 services_dir = os.path.abspath(os.path.join(current_dir, "..", "services"))

@@ -9,7 +9,10 @@ from backend.schemas.token import Token
 from backend.utils.hashing import verify_password
 from backend.utils.token import create_access_token
 
-router = APIRouter()
+router = APIRouter(
+    tags= ["auth"],
+    prefix="/auth"
+)
 
 @router.post("/login")
 def login(request: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
