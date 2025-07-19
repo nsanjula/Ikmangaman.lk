@@ -56,10 +56,11 @@ def cost_for_car(distance, no_of_people):
 def cost_for_p_bus(distance, no_of_people):
     cost_per_km_p_bus = 72
     people_per_p_bus = 30
-    no_of_p_buses = no_of_people / people_per_p_bus
-    cost_for_p_buses = no_of_p_buses * cost_per_km_p_bus * distance
-
-    return cost_for_p_buses
+    if no_of_people <= people_per_p_bus:
+        return cost_per_km_p_bus * distance
+    else:
+        no_of_p_buses = no_of_people / people_per_p_bus
+        return no_of_p_buses * cost_per_km_p_bus * distance
 
 def cost_for_transit(distance, no_of_people):
     cost_per_km_transit = 2
