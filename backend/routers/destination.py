@@ -36,8 +36,16 @@ def get_guide_photo(guide_id: int, db: Session = Depends(get_db)):
 @router.get("/{destination_id}")
 async def get_destination(destination_id: int, db: Session = Depends(get_db), current_user: user.User = Depends(get_current_user)):
     accessed_user = db.query(users.User).filter(users.User.username == current_user.username).first()
+    if not accessed_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
     latest_questionnaire_of_accessed_user = db.query(latest_questionnaire.LatestQuestionnaire).filter(latest_questionnaire.LatestQuestionnaire.user_id == accessed_user.user_id).first()
+    if not latest_questionnaire_of_accessed_user:
+        raise HTTPException(status_code=400, detail="Please complete the travel questionnaire first to access destination details")
+
     destination_obj = db.query(Destination).filter(Destination.destination_id == destination_id).first()
+    if not destination_obj:
+        raise HTTPException(status_code=404, detail=f"Destination with ID {destination_id} not found")
 
     trip_distance_and_duration = get_distance_and_duration_for_one_location(
         latest_questionnaire_of_accessed_user.starting_location_latitudes,
@@ -50,6 +58,20 @@ async def get_destination(destination_id: int, db: Session = Depends(get_db), cu
     distance_f = float(distance)
     duration = trip_distance_and_duration["duration_text"]
 
+        # Try to get weather data, fallback to None if it fails
+    try:
+        weather_data = await get_forecast(destination_obj.name)
+    except Exception as e:
+        print(f"Weather API failed for {destination_obj.name}: {e}")
+        weather_data = None
+
+    # Try to get hotel data, fallback to None if it fails
+    try:
+        hotel_data = await get_hotel(destination_obj.name)
+    except Exception as e:
+        print(f"Hotel API failed for {destination_obj.name}: {e}")
+        hotel_data = None
+
     response = {
         "destination_name" : destination_obj.name,
         "destination_id" : destination_obj.destination_id,
@@ -59,8 +81,8 @@ async def get_destination(destination_id: int, db: Session = Depends(get_db), cu
         "things to do" : destination_obj.things_to_do.split("/"),
         "distance" : distance,
         "duration" : duration,
-        "weather data" : await get_forecast(destination_obj.name),
-        "hotel data" : await get_hotel(destination_obj.name),
+        "weather data" : weather_data,
+        "hotel data" : hotel_data,
         "cost for bicycle" : round(cost_for_bicycle(distance_f, latest_questionnaire_of_accessed_user.no_of_people)),
         "cost for car" : round(cost_for_car(distance_f, latest_questionnaire_of_accessed_user.no_of_people)),
         "cost for private bus" : round(cost_for_p_bus(distance_f, latest_questionnaire_of_accessed_user.no_of_people)),

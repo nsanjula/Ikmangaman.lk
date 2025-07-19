@@ -9,9 +9,13 @@ BASE_URL = "http://api.openweathermap.org/data/2.5/weather"
 
 
 async def get_weather_by_city(city : str):
+    if not API_KEY:
+        raise ValueError("OPENWEATHER_API_KEY not configured in .env file")
+    
     params = {
         "q" : city,
-        "appid": API_KEY
+        "appid": API_KEY,
+        "units": "metric"  # Get temperature in Celsius
     }
     async with httpx.AsyncClient() as client:
         response = await client.get(BASE_URL, params=params)
@@ -19,9 +23,13 @@ async def get_weather_by_city(city : str):
         return response.json()
 
 async def get_weather_forecast_by_city(city : str):
+    if not API_KEY:
+        raise ValueError("OPENWEATHER_API_KEY not configured in .env file")
+        
     params = {
         "q" : city,
-        "appid": API_KEY
+        "appid": API_KEY,
+        "units": "metric"  # Get temperature in Celsius
     }
     async with httpx.AsyncClient() as client:
         response = await client.get("https://api.openweathermap.org/data/2.5/forecast", params=params)

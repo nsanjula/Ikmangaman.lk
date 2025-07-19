@@ -1,0 +1,130 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /**
+   * Tailwind CSS theme
+   * tailwind.config.ts expects the following color variables to be expressed as HSL values.
+   * A different format will require also updating the theme in tailwind.config.ts.
+  */
+  :root {
+    --background: 200 59% 19%; /* Cyan-900: #164E63 */
+    --foreground: 0 0% 100%; /* White */
+
+    --card: 200 59% 19%; /* Cyan-900: #164E63 */
+    --card-foreground: 0 0% 100%; /* White */
+
+    --popover: 200 59% 19%; /* Cyan-900: #164E63 */
+    --popover-foreground: 0 0% 100%; /* White */
+
+    --primary: 188 86% 53%; /* Cyan-500: #06B6D4 */
+    --primary-foreground: 0 0% 100%; /* White */
+
+    --secondary: 188 79% 28%; /* Cyan-700: #0E7490 */
+    --secondary-foreground: 0 0% 100%; /* White */
+
+    --muted: 214 32% 91%; /* Blue-Gray-200: #E2E8F0 */
+    --muted-foreground: 215 16% 47%; /* Blue-Gray-400: #94A3B8 */
+
+    --accent: 188 85% 40%; /* Cyan-600: #0891B2 */
+    --accent-foreground: 0 0% 100%; /* White */
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%; /* White */
+
+    --border: 214 32% 91%; /* Blue-Gray-200: #E2E8F0 */
+    --input: 214 32% 91%; /* Blue-Gray-200: #E2E8F0 */
+    --ring: 188 86% 53%; /* Cyan-500: #06B6D4 */
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 190 100% 6%; /* #071B23 darker background for dark sections */
+    --foreground: 0 0% 100%; /* White */
+
+    --card: 190 100% 6%; /* #071B23 */
+    --card-foreground: 0 0% 100%; /* White */
+
+    --popover: 190 100% 6%; /* #071B23 */
+    --popover-foreground: 0 0% 100%; /* White */
+
+    --primary: 188 86% 53%; /* Cyan-500: #06B6D4 */
+    --primary-foreground: 0 0% 100%; /* White */
+
+    --secondary: 188 79% 28%; /* Cyan-700: #0E7490 */
+    --secondary-foreground: 0 0% 100%; /* White */
+
+    --muted: 188 79% 28%; /* Cyan-700: #0E7490 */
+    --muted-foreground: 214 32% 91%; /* Blue-Gray-200: #E2E8F0 */
+
+    --accent: 188 85% 40%; /* Cyan-600: #0891B2 */
+    --accent-foreground: 0 0% 100%; /* White */
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 100%; /* White */
+
+    --border: 188 79% 28%; /* Cyan-700: #0E7490 */
+    --input: 188 79% 28%; /* Cyan-700: #0E7490 */
+    --ring: 188 86% 53%; /* Cyan-500: #06B6D4 */
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  /* Custom range slider styling for grey thumb */
+  .slider::-webkit-slider-thumb {
+    appearance: none;
+    height: 16px;
+    width: 16px;
+    border-radius: 50%;
+    background: #6b7280;
+    cursor: pointer;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .slider::-moz-range-thumb {
+    height: 16px;
+    width: 16px;
+    border-radius: 50%;
+    background: #6b7280;
+    cursor: pointer;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+}
