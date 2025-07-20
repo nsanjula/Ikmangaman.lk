@@ -10,7 +10,7 @@ import { FiTruck } from "react-icons/fi";
 import { FaCar } from "react-icons/fa";
 import { IoPersonSharp } from "react-icons/io5";
 
-const GOOGLE_MAPS_API_KEY = "AIzaSyChfPh1WAJCQBTXIBnx9WkOs_gU7YaTw4Y";
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 interface Coordinates {
   lat: number;
