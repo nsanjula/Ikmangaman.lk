@@ -38,6 +38,17 @@
 | Dev Tools    | Git, GitHub, VS Code      |
 
 ---
+## API integrations
+
+- 🗺️ **Google maps API's**  
+  Maps Javascript API, Places API, Distance Matrix API, Directions API, Routes API
+
+- 🌅 **OpenWeathermap API**  
+  To fetch weather data.
+
+- 🏨 **Mock API**  
+  To fetch hotel data for destinations.
+---
 
 ## 🔐 Environment Setup
 
