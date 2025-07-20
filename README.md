@@ -44,3 +44,60 @@ Create a `.env` file inside the `frontend/` directory with the following variabl
 
 ```env
 VITE_GOOGLE_MAPS_API_KEY=your-google-maps-api-key-here
+```
+### 🔑 Root  `.env` Configuration
+
+Create a `.env` file inside the `frontend/` directory with the following variable:
+
+```env
+# API credentials
+AMADEUS_CLIENT_ID=your_api_key
+AMADEUS_CLIENT_SECRET=your_client_secret
+RAPIDAPI_KEY=your_api_key
+
+# API base and weather
+REACT_APP_API_BASE_URL=http://localhost:8000
+OPENWEATHER_API_KEY=your_api_key
+
+# Google Maps
+GOOGLE_MAPS_API_KEY=your_api_key
+
+# Security settings
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+SECRET_KEY=your_secret_key_here
+ALGORITHM=HS256
+```
+---
+## 🧪 How to Run the Project
+### 📦 Backend Setup
+```
+cd backend
+python -m venv venv
+source venv/bin/activate  # or venv\Scripts\activate on Windows
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
+- Runs at: http://localhost:8000
+- Docs available at: http://localhost:8000/docs
+
+### 💻 Frontend Setup
+```
+cd frontend
+npm install
+npm run dev
+```
+---
+## 👥 Team Members
+- Nisal Sanjula
+- Yasiru Hansana
+- Anupama Wickramarathna
+- Buvindu Suraweera
+- Chirantha Akarsha
+
+---
+## ✅ To Do / Future Enhancements
+
+- 🧠 Crowd prediction models for destinations
+- 📝 Itinerary generation and integrated trip budget calculator
+- 🤝 Affiliate partnerships with hotel booking platforms in Sri Lanka
+
