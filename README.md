@@ -12,6 +12,9 @@
 - 📍 **Interactive Route Visualization**  
   Uses Google Maps to display the route from your current location to the destination, including distance and time.
 
+- 🗺️ **Destination-Specific Map Overlays**  
+  Shows key landmarks and points of interest around each recommended destination for better trip planning.
+
 - 🌦️ **Real-Time Weather Insights**  
   Fetches live weather information to help users plan trips accordingly.
 
