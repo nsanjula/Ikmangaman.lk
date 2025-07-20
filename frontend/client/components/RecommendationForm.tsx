@@ -23,7 +23,7 @@ const RecommendationForm = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const [showFilters, setShowFilters] = useState(true);
-  const [budget, setBudget] = useState(50000);
+  const [budget, setBudget] = useState(100000);
   const [selectedAreas, setSelectedAreas] = useState<string[]>([
     "hill_country",
     "coastal",
@@ -35,10 +35,56 @@ const RecommendationForm = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Helper function to determine area type from destination (simplified for backend format)
-  const getAreaType = (destinationId: number): string => {
-    // For now, return a default type since backend doesn't provide this info
-    // This could be enhanced with a lookup table or additional API call
-    return "coastal"; // Default type
+  const getAreaType = (
+    destinationId: number,
+    destinationName?: string,
+  ): string => {
+    // Since backend doesn't provide area type info, we'll assign based on destination ID
+    // to ensure variety in recommendations rather than all being "coastal"
+    const areaTypes = ["hill_country", "coastal", "dry_zone", "urban"];
+
+    // Use destination name if available for more accurate classification
+    if (destinationName) {
+      const name = destinationName.toLowerCase();
+      if (
+        name.includes("galle") ||
+        name.includes("colombo") ||
+        name.includes("negombo") ||
+        name.includes("matara") ||
+        name.includes("trincomalee") ||
+        name.includes("batticaloa")
+      ) {
+        return "coastal";
+      }
+      if (
+        name.includes("kandy") ||
+        name.includes("nuwara") ||
+        name.includes("ella") ||
+        name.includes("hatton") ||
+        name.includes("badulla")
+      ) {
+        return "hill_country";
+      }
+      if (
+        name.includes("anuradhapura") ||
+        name.includes("polonnaruwa") ||
+        name.includes("sigiriya") ||
+        name.includes("dambulla") ||
+        name.includes("vavuniya")
+      ) {
+        return "dry_zone";
+      }
+      if (
+        name.includes("colombo") ||
+        name.includes("dehiwala") ||
+        name.includes("moratuwa")
+      ) {
+        return "urban";
+      }
+    }
+
+    // Fallback: distribute evenly across area types based on ID
+    return areaTypes[destinationId % areaTypes.length];
   };
 
   const fetchRecommendations = async () => {
@@ -96,7 +142,7 @@ const RecommendationForm = () => {
             description: `${item.rating_label} match (${item.distance}, ${item.travel_time})`,
             price: Math.round(item.estimated_budget || 0),
             score: item.match_score || 0,
-            type: getAreaType(item.destination_id),
+            type: getAreaType(item.destination_id, item.name),
             things_to_do: "", // Not provided by backend currently
             thumbnail_img: item.thumbnail_img || "",
           };
@@ -292,7 +338,7 @@ const RecommendationForm = () => {
                   className="bg-white hover:bg-gray-100 text-cyan-700 px-4 py-2 rounded font-medium transition-colors flex items-center gap-2 whitespace-nowrap"
                 >
                   <span>📝</span>
-                  New Questionnaire
+                  Edit Questionnaire
                 </button>
               </div>
               {error && (
@@ -446,7 +492,7 @@ const RecommendationForm = () => {
                         onClick={() => navigate("/questionnaire")}
                         className="bg-cyan-700 hover:bg-cyan-800 text-white px-6 py-3 rounded transition-colors font-medium border-2 border-white"
                       >
-                        Retake Questionnaire
+                        Edit Questionnaire
                       </button>
                     </div>
                   </div>

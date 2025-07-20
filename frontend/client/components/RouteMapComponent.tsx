@@ -6,8 +6,9 @@ import {
   DirectionsService,
   DirectionsRenderer,
 } from "@react-google-maps/api";
-import { FiNavigation, FiTruck } from "react-icons/fi";
+import { FiTruck } from "react-icons/fi";
 import { FaCar } from "react-icons/fa";
+import { IoPersonSharp } from "react-icons/io5";
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyChfPh1WAJCQBTXIBnx9WkOs_gU7YaTw4Y";
 
@@ -177,7 +178,7 @@ const RouteMapComponent: React.FC<RouteMapComponentProps> = ({
       case "TRANSIT":
         return <FiTruck className="w-4 h-4" />;
       case "WALKING":
-        return <FiNavigation className="w-4 h-4" />;
+        return <IoPersonSharp className="w-4 h-4" />;
       default:
         return <FaCar className="w-4 h-4" />;
     }
@@ -302,43 +303,8 @@ const RouteMapComponent: React.FC<RouteMapComponentProps> = ({
         </GoogleMap>
       </LoadScript>
 
-      {/* Route Information */}
-      {routeInfo && (
-        <div className="mt-4 bg-white p-4 rounded-lg border shadow-sm">
-          <h3 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
-            {getTravelModeIcon(selectedTravelMode)}
-            Best Route ({selectedTravelMode.toLowerCase()})
-          </h3>
-          <div className="grid grid-cols-2 gap-4 mb-3">
-            <div>
-              <span className="text-sm text-gray-600">Distance:</span>
-              <div className="font-medium">{routeInfo.distance}</div>
-            </div>
-            <div>
-              <span className="text-sm text-gray-600">Duration:</span>
-              <div className="font-medium">{routeInfo.duration}</div>
-            </div>
-          </div>
-
-          {routeInfo.instructions.length > 0 && (
-            <div>
-              <span className="text-sm text-gray-600">Key Directions:</span>
-              <ul className="text-sm mt-1 space-y-1">
-                {routeInfo.instructions
-                  .slice(0, 3)
-                  .map((instruction, index) => (
-                    <li key={index} className="text-gray-700">
-                      {index + 1}. {instruction}
-                    </li>
-                  ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Legend */}
-      <div className="mt-4 flex flex-wrap gap-4 text-sm text-gray-600">
+      <div className="mt-4 flex flex-wrap gap-4 text-sm text-gray-800 dark:text-gray-800">
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 bg-green-500 rounded-full"></div>
           <span>Starting Location</span>
@@ -352,7 +318,11 @@ const RouteMapComponent: React.FC<RouteMapComponentProps> = ({
             className="w-6 h-1 rounded"
             style={{ backgroundColor: getRouteColor(selectedTravelMode) }}
           ></div>
-          <span>{selectedTravelMode.toLowerCase()} route</span>
+          <span>
+            {selectedTravelMode.charAt(0).toUpperCase() +
+              selectedTravelMode.slice(1).toLowerCase()}{" "}
+            route
+          </span>
         </div>
       </div>
 
@@ -365,11 +335,6 @@ const RouteMapComponent: React.FC<RouteMapComponentProps> = ({
           </div>
         </div>
       )}
-
-      <div className="mt-2 text-xs text-gray-500">
-        💡 Switch between travel modes to see different route options and
-        estimated travel times.
-      </div>
     </div>
   );
 };

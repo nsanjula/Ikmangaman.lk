@@ -115,8 +115,12 @@ const LocalGuides: React.FC = () => {
                   {guide.name || "Guide Name Not Available"}
                 </h3>
                 {guide.gender && (
-                  <p className="text-sm text-gray-600 capitalize">
-                    {guide.gender}
+                  <p className="text-sm text-gray-600">
+                    {guide.gender === "M"
+                      ? "Male"
+                      : guide.gender === "F"
+                        ? "Female"
+                        : guide.gender}
                   </p>
                 )}
               </div>
@@ -193,10 +197,10 @@ const LocalGuides: React.FC = () => {
       </div>
 
       {/* Additional Info */}
-      <div className="mt-6 text-sm text-gray-600">
+      <div className="mt-6 text-sm text-gray-200 dark:text-gray-200">
         <p>
-          👥 Local guides can provide personalized tours and insider knowledge
-          about the destination.
+          <span className="text-blue-400">🗺️</span> Local guides can provide
+          personalized tours and insider knowledge about the destination.
         </p>
       </div>
     </div>

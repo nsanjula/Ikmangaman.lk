@@ -117,17 +117,10 @@ const HeroSection: React.FC = () => {
                 >
                   Log In
                 </a>
-                <button
-                  onClick={retry}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors"
-                >
-                  Try Again
-                </button>
               </div>
               <div className="text-sm text-red-700 bg-red-50 p-3 rounded">
-                <strong>Authentication Issue:</strong> Your login session may
-                have expired. Try clicking "Try Again" first, or log in again if
-                the issue persists.
+                <strong>Authentication Issue:</strong> Your login session has
+                expired. Please log in again to access this destination.
               </div>
             </div>
           )}

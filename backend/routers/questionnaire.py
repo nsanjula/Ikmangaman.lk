@@ -69,5 +69,29 @@ def get_latest_questionnaire(db: Session = Depends(get_db), current_user: user.U
 
     accessed_user = db.query(users.User).filter(users.User.username == current_user.username).first()
     latest_questionnaire_of_accessed_user = db.query(latest_questionnaire.LatestQuestionnaire).filter(latest_questionnaire.LatestQuestionnaire.user_id == accessed_user.user_id).first()
-    return latest_questionnaire_of_accessed_user
 
+    if not latest_questionnaire_of_accessed_user:
+        raise HTTPException(status_code=404, detail="No questionnaire found")
+
+    # Convert month integer back to month string
+    travel_month = month_mapper.get_month_str(latest_questionnaire_of_accessed_user.month)
+
+    # Return properly formatted response matching frontend expectations
+    return {
+        "nature": latest_questionnaire_of_accessed_user.nature,
+        "adventure": latest_questionnaire_of_accessed_user.adventure,
+        "luxury": latest_questionnaire_of_accessed_user.luxury,
+        "culture": latest_questionnaire_of_accessed_user.culture,
+        "relaxation": latest_questionnaire_of_accessed_user.relaxation,
+        "wellness": latest_questionnaire_of_accessed_user.wellness,
+        "local_life": latest_questionnaire_of_accessed_user.local_life,
+        "wild_life": latest_questionnaire_of_accessed_user.wildlife,
+        "food": latest_questionnaire_of_accessed_user.food,
+        "spirituality": latest_questionnaire_of_accessed_user.spirituality,
+        "eco_tourism": latest_questionnaire_of_accessed_user.eco_tourism,
+        "travel_month": travel_month,
+        "no_of_people": latest_questionnaire_of_accessed_user.no_of_people,
+        "start_location": latest_questionnaire_of_accessed_user.start_location if hasattr(latest_questionnaire_of_accessed_user, 'start_location') else "",
+        "starting_location_latitudes": latest_questionnaire_of_accessed_user.starting_location_latitudes,
+        "starting_location_longitudes": latest_questionnaire_of_accessed_user.starting_location_longitudes
+    }

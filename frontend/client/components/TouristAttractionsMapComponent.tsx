@@ -46,22 +46,74 @@ const mapContainerStyle = {
   height: "500px",
 };
 
-// Define icon colors for different place types
+// Define custom marker icons for different place types using the provided marker images
 const getPlaceIcon = (types: string[]) => {
-  const iconMap: { [key: string]: { color: string; emoji: string } } = {
-    tourist_attraction: { color: "#F59E0B", emoji: "🎯" },
-    museum: { color: "#8B5CF6", emoji: "🏛️" },
-    park: { color: "#10B981", emoji: "🌳" },
-    restaurant: { color: "#EF4444", emoji: "🍽️" },
-    lodging: { color: "#3B82F6", emoji: "🏨" },
-    church: { color: "#6B7280", emoji: "⛪" },
-    temple: { color: "#F97316", emoji: "🏯" },
-    zoo: { color: "#84CC16", emoji: "🦁" },
-    aquarium: { color: "#06B6D4", emoji: "🐠" },
-    shopping_mall: { color: "#EC4899", emoji: "🛍️" },
-    amusement_park: { color: "#F43F5E", emoji: "🎢" },
-    natural_feature: { color: "#22C55E", emoji: "🏔️" },
-    point_of_interest: { color: "#F59E0B", emoji: "📍" },
+  const iconMap: { [key: string]: { markerUrl: string; bgColor: string } } = {
+    tourist_attraction: {
+      markerUrl:
+        "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2Fe4b0a2b0be8b4ba2b4dea6780c6d48a4?format=webp&width=800",
+      bgColor: "#9333EA",
+    },
+    museum: {
+      markerUrl:
+        "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2F41e73cbd493d4ad5bec6b78b4ff04f21?format=webp&width=800",
+      bgColor: "#A0522D",
+    },
+    park: {
+      markerUrl:
+        "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2Fb3bd44fe8a83416fb8a3c6093980c5f1?format=webp&width=800",
+      bgColor: "#5F8A5F",
+    },
+    restaurant: {
+      markerUrl:
+        "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2Fa993504970cb4128a822d87ff78471e6?format=webp&width=800",
+      bgColor: "#DAA520",
+    },
+    lodging: {
+      markerUrl:
+        "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2F6b7f49b0e5084cb8acdddd601b194c85?format=webp&width=800",
+      bgColor: "#1E40AF",
+    },
+    church: {
+      markerUrl:
+        "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2Fe4b0a2b0be8b4ba2b4dea6780c6d48a4?format=webp&width=800",
+      bgColor: "#9333EA",
+    },
+    temple: {
+      markerUrl:
+        "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2Fe4b0a2b0be8b4ba2b4dea6780c6d48a4?format=webp&width=800",
+      bgColor: "#9333EA",
+    },
+    zoo: {
+      markerUrl:
+        "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2Fb3bd44fe8a83416fb8a3c6093980c5f1?format=webp&width=800",
+      bgColor: "#5F8A5F",
+    },
+    aquarium: {
+      markerUrl:
+        "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2Fb3bd44fe8a83416fb8a3c6093980c5f1?format=webp&width=800",
+      bgColor: "#5F8A5F",
+    },
+    shopping_mall: {
+      markerUrl:
+        "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2Fa993504970cb4128a822d87ff78471e6?format=webp&width=800",
+      bgColor: "#DAA520",
+    },
+    amusement_park: {
+      markerUrl:
+        "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2Fe4b0a2b0be8b4ba2b4dea6780c6d48a4?format=webp&width=800",
+      bgColor: "#9333EA",
+    },
+    natural_feature: {
+      markerUrl:
+        "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2Fb3bd44fe8a83416fb8a3c6093980c5f1?format=webp&width=800",
+      bgColor: "#5F8A5F",
+    },
+    point_of_interest: {
+      markerUrl:
+        "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2Fe4b0a2b0be8b4ba2b4dea6780c6d48a4?format=webp&width=800",
+      bgColor: "#9333EA",
+    },
   };
 
   // Find the best matching type
@@ -206,43 +258,78 @@ const TouristAttractionsMapComponent: React.FC<
   }
 
   return (
-    <div className={`${className}`}>
-      {/* Controls */}
-      <div className="mb-4 flex flex-wrap gap-4 items-center">
-        {/* Category Filter */}
-        <div className="flex gap-2">
+    <div
+      className={`${className} bg-gradient-to-br from-cyan-50 to-blue-50 dark:from-cyan-900/20 dark:to-blue-900/20 rounded-xl p-6 border border-cyan-200 dark:border-cyan-700`}
+    >
+      {/* Styled Filters */}
+      <div className="mb-6">
+        {/* Category Filter with Connected Rectangular Boxes */}
+        <div className="flex h-12 rounded-lg overflow-hidden shadow-sm">
           {[
-            { value: "all", label: "All" },
-            { value: "tourist_attraction", label: "Attractions" },
-            { value: "museum", label: "Museums" },
-            { value: "park", label: "Parks" },
-            { value: "restaurant", label: "Restaurants" },
-            { value: "lodging", label: "Hotels" },
-          ].map((category) => (
+            { value: "all", label: "All", icon: null },
+            {
+              value: "park",
+              label: "Parks",
+              icon: "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2Fb3bd44fe8a83416fb8a3c6093980c5f1?format=webp&width=800",
+            },
+            {
+              value: "museum",
+              label: "Museums",
+              icon: "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2F41e73cbd493d4ad5bec6b78b4ff04f21?format=webp&width=800",
+            },
+            {
+              value: "tourist_attraction",
+              label: "Attractions",
+              icon: "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2Fe4b0a2b0be8b4ba2b4dea6780c6d48a4?format=webp&width=800",
+            },
+            {
+              value: "lodging",
+              label: "Hotels",
+              icon: "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2F6b7f49b0e5084cb8acdddd601b194c85?format=webp&width=800",
+            },
+            {
+              value: "restaurant",
+              label: "Restaurants",
+              icon: "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2Fa993504970cb4128a822d87ff78471e6?format=webp&width=800",
+            },
+          ].map((category, index) => (
             <button
               key={category.value}
               onClick={() => setSelectedCategory(category.value)}
-              className={`px-3 py-1 rounded-full text-sm transition-colors ${
+              className={`relative flex flex-col items-center justify-center px-2 py-1 text-sm font-medium transition-all duration-200 h-full flex-1 ${
                 selectedCategory === category.value
-                  ? "bg-cyan-600 text-white"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  ? "bg-cyan-600 text-white shadow-md z-10"
+                  : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
               }`}
             >
-              {category.label}
+              {category.icon && (
+                <img
+                  src={category.icon}
+                  alt={category.label}
+                  className="w-6 h-6 mb-0.5 object-contain"
+                />
+              )}
+              <span className="text-xs font-medium w-full text-center leading-tight">
+                {category.label}
+              </span>
             </button>
           ))}
         </div>
 
         {/* Show Labels Toggle */}
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={showLabels}
-            onChange={(e) => setShowLabels(e.target.checked)}
-            className="rounded"
-          />
-          Show place names
-        </label>
+        <div className="mt-4 flex justify-center">
+          <label className="inline-flex items-center gap-2 text-sm bg-white dark:bg-gray-800 px-4 py-2 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+            <input
+              type="checkbox"
+              checked={showLabels}
+              onChange={(e) => setShowLabels(e.target.checked)}
+              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-gray-700 dark:text-gray-300">
+              Show place names
+            </span>
+          </label>
+        </div>
       </div>
 
       <LoadScript
@@ -262,11 +349,21 @@ const TouristAttractionsMapComponent: React.FC<
           onLoad={onLoad}
           onUnmount={onUnmount}
           options={{
+            disableDefaultUI: false,
+            zoomControl: true,
+            streetViewControl: false,
+            mapTypeControl: false,
+            fullscreenControl: true,
             styles: [
               {
                 featureType: "poi",
-                elementType: "labels",
-                stylers: [{ visibility: showLabels ? "on" : "off" }],
+                elementType: "all",
+                stylers: [{ visibility: "off" }],
+              },
+              {
+                featureType: "poi.park",
+                elementType: "geometry",
+                stylers: [{ visibility: "on" }],
               },
             ],
           }}
@@ -299,16 +396,9 @@ const TouristAttractionsMapComponent: React.FC<
                 title={place.name}
                 onClick={() => setSelectedPlace(place)}
                 icon={{
-                  url:
-                    "data:image/svg+xml;charset=UTF-8," +
-                    encodeURIComponent(`
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-                      <circle cx="16" cy="16" r="14" fill="${placeIcon.color}" stroke="white" stroke-width="2"/>
-                      <text x="16" y="20" text-anchor="middle" font-size="12" fill="white">${placeIcon.emoji}</text>
-                    </svg>
-                  `),
+                  url: placeIcon.markerUrl,
                   scaledSize: window.google?.maps?.Size
-                    ? new window.google.maps.Size(32, 32)
+                    ? new window.google.maps.Size(40, 40)
                     : undefined,
                 }}
                 label={
@@ -318,7 +408,7 @@ const TouristAttractionsMapComponent: React.FC<
                           place.name.length > 15
                             ? place.name.substring(0, 12) + "..."
                             : place.name,
-                        color: "#1F2937",
+                        color: "#6B7280",
                         fontSize: "12px",
                         fontWeight: "bold",
                         className: "place-label",
@@ -390,11 +480,11 @@ const TouristAttractionsMapComponent: React.FC<
                         key={index}
                         className="text-xs px-2 py-1 rounded-full flex items-center gap-1"
                         style={{
-                          backgroundColor: icon.color + "20",
-                          color: icon.color,
+                          backgroundColor: icon.bgColor + "20",
+                          color: icon.bgColor,
                         }}
                       >
-                        <span>{icon.emoji}</span>
+                        <span>📍</span>
                         {type.replace(/_/g, " ")}
                       </span>
                     );
@@ -406,42 +496,18 @@ const TouristAttractionsMapComponent: React.FC<
         </GoogleMap>
       </LoadScript>
 
-      {/* Legend */}
-      <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs">
-            🎯
-          </div>
-          <span>Main Destination</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center text-white text-xs">
-            🎯
-          </div>
-          <span>Attractions</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center text-white text-xs">
-            🏛️
-          </div>
-          <span>Museums</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">
-            🌳
-          </div>
-          <span>Parks</span>
-        </div>
-      </div>
-
-      <div className="mt-4 p-3 bg-cyan-50 rounded-lg">
-        <div className="text-sm text-cyan-800">
-          <strong>Found {filteredPlaces.length} attractions</strong> within 20km
+      {/* Information Panel */}
+      <div className="mt-6 bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="text-sm text-gray-600 dark:text-gray-400">
+          <strong>Showing {filteredPlaces.length} locations</strong> within 20km
           radius
         </div>
-        <div className="text-xs text-cyan-600 mt-1">
-          💡 Click markers for details • Use filters to find specific types •
-          Toggle names on/off
+        <div className="text-xs text-gray-600 dark:text-gray-400 mt-2 flex items-center gap-1">
+          <span>💡</span>
+          <span>
+            Click map markers for details • Use filters above to show specific
+            types • Toggle place names with checkbox
+          </span>
         </div>
       </div>
     </div>

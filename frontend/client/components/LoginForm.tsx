@@ -111,13 +111,13 @@ const LoginForm = () => {
 
               <div className="mb-4">
                 <label className="block text-white mb-2">
-                  Username or Email
+                  Username
                 </label>
                 <input
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Enter your username or email"
+                  placeholder="Enter your username"
                   className="w-full p-3 rounded bg-white bg-opacity-90 text-gray-800 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 />
               </div>

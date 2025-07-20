@@ -114,45 +114,27 @@ const MapSection: React.FC = () => {
       <div>
         <h2 className="text-xl font-semibold mb-4">Best Route</h2>
 
-        {/* Route Information */}
-        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-            <div>
-              <span className="font-medium text-green-800">Distance:</span>
-              <span className="ml-2 text-green-600">
-                {destinationData.distance} km
+        <div className="bg-gradient-to-br from-cyan-50 to-blue-50 dark:from-cyan-900/20 dark:to-blue-900/20 rounded-xl p-6 border border-cyan-200 dark:border-cyan-700">
+          {/* Route Map */}
+          <div className="rounded-lg overflow-hidden">
+            <RouteMapComponent
+              destination={destination}
+              startingLocation={startingLocation}
+              destinationName={destinationData.destination_name}
+              className="w-full"
+            />
+          </div>
+
+          <div className="mt-4 bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="text-sm text-gray-600 dark:text-gray-400">
+              🛣️ This map shows the optimized driving route from your starting
+              location to{" "}
+              <span className="font-medium">
+                {destinationData.destination_name}
               </span>
-            </div>
-            <div>
-              <span className="font-medium text-green-800">Duration:</span>
-              <span className="ml-2 text-green-600">
-                {destinationData.duration}
-              </span>
-            </div>
-            <div>
-              <span className="font-medium text-green-800">Mode:</span>
-              <span className="ml-2 text-green-600">Driving</span>
+              .
             </div>
           </div>
-        </div>
-
-        {/* Route Map */}
-        <div className="rounded-lg overflow-hidden border border-gray-200">
-          <RouteMapComponent
-            destination={destination}
-            startingLocation={startingLocation}
-            destinationName={destinationData.destination_name}
-            className="w-full"
-          />
-        </div>
-
-        <div className="mt-2 text-sm text-gray-600">
-          🛣️ This map shows the optimized driving route from your starting
-          location to{" "}
-          <span className="font-medium">
-            {destinationData.destination_name}
-          </span>
-          .
         </div>
       </div>
 
@@ -161,21 +143,11 @@ const MapSection: React.FC = () => {
         <h2 className="text-xl font-semibold mb-4">Tourist Attractions</h2>
 
         {/* Tourist Attractions Map */}
-        <div className="rounded-lg overflow-hidden border border-gray-200">
-          <TouristAttractionsMapComponent
-            destination={destination}
-            destinationName={destinationData.destination_name}
-            className="w-full"
-          />
-        </div>
-
-        <div className="mt-2 text-sm text-gray-600">
-          🎯 This map shows tourist attractions and points of interest near{" "}
-          <span className="font-medium">
-            {destinationData.destination_name}
-          </span>
-          . Click on any attraction marker to see more details.
-        </div>
+        <TouristAttractionsMapComponent
+          destination={destination}
+          destinationName={destinationData.destination_name}
+          className="w-full"
+        />
       </div>
     </div>
   );

@@ -138,11 +138,7 @@ const WeatherCard: React.FC = () => {
           return (
             <div
               key={day.date}
-              className={`p-4 rounded-lg shadow-lg text-white ${
-                index === 0
-                  ? "bg-gradient-to-br from-cyan-600 to-cyan-700"
-                  : "bg-gradient-to-br from-cyan-500 to-cyan-600"
-              }`}
+              className="p-4 rounded-lg shadow-lg text-white bg-gradient-to-br from-cyan-500 to-cyan-600"
             >
               {/* Date */}
               <div className="text-center mb-3">
@@ -184,7 +180,7 @@ const WeatherCard: React.FC = () => {
       </div>
 
       {/* Additional Info */}
-      <div className="mt-4 text-sm text-gray-600">
+      <div className="mt-4 text-sm text-gray-200 dark:text-gray-200">
         <p>
           🌤️ Weather forecast shows the next 5 days to help you plan your visit
           to {destinationData?.destination_name}.

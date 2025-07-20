@@ -24,7 +24,7 @@ const AuthStatus = () => {
         <span className="auth-status-text">You are logged in</span>
         <button
           onClick={handleLogout}
-          className="auth-logout-button bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded ml-2"
+          className="auth-logout-button bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded ml-2"
         >
           Logout
         </button>

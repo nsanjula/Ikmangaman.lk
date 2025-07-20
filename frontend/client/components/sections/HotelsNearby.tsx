@@ -154,7 +154,7 @@ const HotelsNearby: React.FC = () => {
       </div>
 
       {/* Additional Info */}
-      <div className="mt-6 text-sm text-gray-600">
+      <div className="mt-6 text-sm text-gray-200 dark:text-gray-200">
         <p>
           🏨 Hotel information is provided by our booking partners. Prices and
           availability may vary.

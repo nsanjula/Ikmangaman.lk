@@ -3,6 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { authAPI, RegisterRequest, LoginRequest } from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import BackendStatus from "./BackendStatus";
+import { Calendar } from "./ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { Button } from "./ui/button";
+import { FiCalendar } from "react-icons/fi";
 
 const RegisterForm = () => {
   const [formData, setFormData] = useState({
@@ -13,6 +17,8 @@ const RegisterForm = () => {
     password: "",
     confirmPassword: "",
   });
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -24,6 +30,31 @@ const RegisterForm = () => {
       ...prev,
       [name]: value,
     }));
+
+    // If birthday field is manually typed, try to parse it as a date
+    if (name === "birthday" && value) {
+      const parsedDate = new Date(value.split("/").reverse().join("-")); // Convert DD/MM/YYYY to YYYY-MM-DD for parsing
+      if (!isNaN(parsedDate.getTime())) {
+        setSelectedDate(parsedDate);
+      }
+    }
+  };
+
+  const handleDateSelect = (date: Date | undefined) => {
+    setSelectedDate(date);
+    if (date) {
+      // Format date as DD/MM/YYYY for display
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+      const formattedDate = `${day}/${month}/${year}`;
+
+      setFormData((prev) => ({
+        ...prev,
+        birthday: formattedDate,
+      }));
+    }
+    setIsCalendarOpen(false);
   };
 
   const validateForm = () => {
@@ -85,8 +116,8 @@ const RegisterForm = () => {
         const loginResponse = await authAPI.login(loginData);
         login(loginResponse.access_token);
 
-        // Redirect to questionnaire after successful auto-login
-        navigate("/questionnaire");
+        // Redirect to no-recommendation page for new users
+        navigate("/norecommendation");
       } catch (loginError) {
         // If auto-login fails, redirect to login page with message
         navigate("/login", {
@@ -193,18 +224,46 @@ const RegisterForm = () => {
 
               <div className="mb-4">
                 <label className="block text-white mb-2">Birthday</label>
-                <input
-                  type="text"
-                  name="birthday"
-                  value={formData.birthday}
-                  onChange={handleChange}
-                  placeholder="DD/MM/YYYY"
-                  className={`w-full p-3 rounded bg-white bg-opacity-90 text-gray-800 focus:outline-none focus:ring-2 ${
-                    errors.birthday
-                      ? "focus:ring-red-500"
-                      : "focus:ring-cyan-500"
-                  }`}
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="birthday"
+                    value={formData.birthday}
+                    onChange={handleChange}
+                    placeholder="DD/MM/YYYY"
+                    className={`w-full p-3 rounded bg-white bg-opacity-90 text-gray-800 focus:outline-none focus:ring-2 pr-12 ${
+                      errors.birthday
+                        ? "focus:ring-red-500"
+                        : "focus:ring-cyan-500"
+                    }`}
+                  />
+                  <Popover
+                    open={isCalendarOpen}
+                    onOpenChange={setIsCalendarOpen}
+                  >
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="absolute right-1 top-1/2 transform -translate-y-1/2 h-10 w-10 p-0 hover:bg-gray-200"
+                        onClick={() => setIsCalendarOpen(!isCalendarOpen)}
+                      >
+                        <FiCalendar className="h-4 w-4 text-gray-600" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={handleDateSelect}
+                        disabled={(date) =>
+                          date > new Date() || date < new Date("1900-01-01")
+                        }
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
                 {errors.birthday && (
                   <p className="text-red-400 text-sm mt-1">{errors.birthday}</p>
                 )}

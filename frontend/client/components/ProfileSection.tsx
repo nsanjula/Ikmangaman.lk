@@ -9,7 +9,12 @@ import {
 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { authAPI, UserProfile, UserUpdateRequest } from "../lib/api";
+import {
+  authAPI,
+  UserProfile,
+  UserUpdateRequest,
+  DestinationDetails,
+} from "../lib/api";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -27,33 +32,57 @@ const Profile = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const savedPlaces = [
-    {
-      id: 1,
-      title: "Ella Rock Hike",
-      body: "Challenging hike with breathtaking views of Ella Gap and surrounding mountains.",
-      image:
-        "https://images.unsplash.com/photo-1588666309990-d68f08e3d4a6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
-    },
-    {
-      id: 2,
-      title: "Nine Arch Bridge",
-      body: "Iconic colonial-era railway bridge surrounded by lush greenery and tea plantations.",
-      image:
-        "https://images.unsplash.com/photo-1594978788872-3c8bddba3b7a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
-    },
-    {
-      id: 3,
-      title: "Little Adam's Peak",
-      body: "Gentle hike with panoramic views perfect for sunrise or sunset.",
-      image:
-        "https://images.unsplash.com/photo-1594978854110-6d0c4a2a9e97?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
-    },
-  ];
+  const [savedPlaces, setSavedPlaces] = useState<
+    Array<{ id: number; name: string; description: string; image: string }>
+  >([]);
+  const [savedPlacesLoading, setSavedPlacesLoading] = useState(false);
+  const [savedPlacesError, setSavedPlacesError] = useState<string | null>(null);
 
   const placesPerPage = 3;
   const totalPages = Math.ceil(savedPlaces.length / placesPerPage);
+  const currentPlaces = savedPlaces.slice(
+    (currentPage - 1) * placesPerPage,
+    currentPage * placesPerPage,
+  );
+
+  // Load saved places data using random destination IDs
+  const loadSavedPlaces = async () => {
+    try {
+      setSavedPlacesLoading(true);
+      setSavedPlacesError(null);
+
+      // Use 6 random destination IDs for saved places
+      const randomDestinationIds = [1, 2, 3, 4, 5, 6];
+      const savedPlacesData = [];
+
+      for (const destinationId of randomDestinationIds) {
+        try {
+          const destinationData =
+            await authAPI.getDestinationDetails(destinationId);
+          savedPlacesData.push({
+            id: destinationData.destination_id,
+            name: destinationData.destination_name,
+            description: destinationData.description,
+            image: destinationData["destiantion image"]
+              ? `http://localhost:8000${destinationData["destiantion image"]}`
+              : "https://images.unsplash.com/photo-1588666309990-d68f08e3d4a6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+          });
+        } catch (error) {
+          console.warn(`Failed to load destination ${destinationId}:`, error);
+          // Continue with other destinations even if one fails
+        }
+      }
+
+      setSavedPlaces(savedPlacesData);
+    } catch (error) {
+      console.error("Failed to load saved places:", error);
+      setSavedPlacesError(
+        error instanceof Error ? error.message : "Failed to load saved places",
+      );
+    } finally {
+      setSavedPlacesLoading(false);
+    }
+  };
 
   // Load user profile data on component mount
   useEffect(() => {
@@ -88,6 +117,7 @@ const Profile = () => {
     };
 
     loadUserProfile();
+    loadSavedPlaces();
   }, [logout, navigate]);
 
   const handleChange = (field: string, value: string) => {
@@ -274,61 +304,122 @@ const Profile = () => {
           )}
         </div>
 
-        {/* Saved Places */}
+        {/* Your Saved Places */}
         <div className="w-full">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-2xl font-semibold">Your Saved Places</h3>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="p-2 bg-cyan-600 rounded hover:bg-cyan-500 disabled:opacity-50 transition-colors"
-              >
-                <FiChevronLeft />
-              </button>
-              <button
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                }
-                disabled={currentPage === totalPages}
-                className="p-2 bg-cyan-600 rounded hover:bg-cyan-500 disabled:opacity-50 transition-colors"
-              >
-                <FiChevronRight />
-              </button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {savedPlaces.map((place) => (
-              <div
-                key={place.id}
-                className="bg-sky-300 text-cyan-900 p-4 rounded-xl shadow-md hover:shadow-lg transition-shadow"
-              >
-                <div className="h-48 rounded-lg mb-4 overflow-hidden">
-                  <img
-                    src={place.image}
-                    alt={place.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <h4 className="font-bold text-xl mb-2">{place.title}</h4>
-                <p className="text-gray-700 mb-4">{place.body}</p>
-                <button className="w-full bg-cyan-600 hover:bg-cyan-700 text-white py-2 rounded-lg transition-colors">
-                  View Details
+            {savedPlaces.length > placesPerPage && (
+              <div className="flex gap-2">
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                  disabled={currentPage === 1}
+                  className="p-2 bg-cyan-600 rounded hover:bg-cyan-500 disabled:opacity-50 transition-colors"
+                >
+                  <FiChevronLeft />
+                </button>
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
+                  disabled={currentPage === totalPages}
+                  className="p-2 bg-cyan-600 rounded hover:bg-cyan-500 disabled:opacity-50 transition-colors"
+                >
+                  <FiChevronRight />
                 </button>
               </div>
-            ))}
+            )}
           </div>
 
-          <div className="flex justify-center gap-1 mb-10">
-            {Array.from({ length: totalPages }).map((_, index) => (
+          {savedPlacesLoading && (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
+              <p>Loading your saved places...</p>
+            </div>
+          )}
+
+          {savedPlacesError && (
+            <div className="bg-red-500 text-white p-4 rounded-lg mb-6">
+              <p className="font-medium">Error loading saved places</p>
+              <p className="text-sm mt-1">{savedPlacesError}</p>
               <button
-                key={index}
-                onClick={() => setCurrentPage(index + 1)}
-                className={`w-3 h-3 rounded-full ${currentPage === index + 1 ? "bg-white" : "bg-gray-400"}`}
-              />
-            ))}
-          </div>
+                onClick={loadSavedPlaces}
+                className="mt-2 bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-sm transition-colors"
+              >
+                Try Again
+              </button>
+            </div>
+          )}
+
+          {!savedPlacesLoading &&
+            !savedPlacesError &&
+            savedPlaces.length === 0 && (
+              <div className="text-center py-8">
+                <p className="text-lg mb-4">No saved places yet</p>
+                <p className="text-gray-300 mb-4">
+                  Start exploring destinations and save your favorites!
+                </p>
+                <a
+                  href="/recommendations"
+                  className="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-3 rounded-lg transition-colors"
+                >
+                  Explore Destinations
+                </a>
+              </div>
+            )}
+
+          {!savedPlacesLoading &&
+            !savedPlacesError &&
+            savedPlaces.length > 0 && (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                  {currentPlaces.map((place) => (
+                    <div
+                      key={place.id}
+                      className="bg-sky-300 text-cyan-900 p-4 rounded-xl shadow-md hover:shadow-lg transition-shadow flex flex-col"
+                    >
+                      <div className="h-48 rounded-lg mb-4 overflow-hidden">
+                        <img
+                          src={place.image}
+                          alt={place.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            // Fallback to default image if image fails
+                            (e.target as HTMLImageElement).src =
+                              "https://images.unsplash.com/photo-1588666309990-d68f08e3d4a6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+                          }}
+                        />
+                      </div>
+                      <h4 className="font-bold text-xl mb-2">{place.name}</h4>
+                      <p className="text-gray-700 mb-4 text-sm leading-relaxed flex-grow">
+                        {place.description}
+                      </p>
+                      <button
+                        onClick={() => {
+                          /* Dummy button - no action */
+                        }}
+                        className="w-full bg-cyan-600 hover:bg-cyan-700 text-white py-2 rounded-lg transition-colors mt-auto"
+                      >
+                        View Details
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {totalPages > 1 && (
+                  <div className="flex justify-center gap-1 mb-10">
+                    {Array.from({ length: totalPages }).map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentPage(index + 1)}
+                        className={`w-3 h-3 rounded-full ${currentPage === index + 1 ? "bg-white" : "bg-gray-400"}`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
         </div>
 
         {/* Logout Button */}

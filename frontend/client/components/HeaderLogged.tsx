@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { FiUser } from "react-icons/fi";
 
 export default function HeaderLogged() {
   const navigate = useNavigate();
@@ -41,16 +42,16 @@ export default function HeaderLogged() {
           <div className="hidden md:flex items-center space-x-4">
             <div
               onClick={() => navigate("/profile")}
-              className="w-10 h-10 bg-cyan-100 rounded-full flex items-center justify-center text-cyan-700 font-medium cursor-pointer hover:bg-cyan-200 transition"
+              className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-cyan-700 shadow-lg cursor-pointer hover:bg-gray-50 transition border-2 border-cyan-600 ring-2 ring-cyan-200"
               title="Profile"
             >
-              {placeholderName.charAt(0).toUpperCase()}
+              <FiUser size={20} />
             </div>
             <Button
               onClick={handleLogout}
               variant="outline"
               size="sm"
-              className="text-gray-700 hover:text-red-600 hover:border-red-300"
+              className="text-white bg-cyan-600 hover:bg-cyan-700 border-cyan-600 hover:border-cyan-700"
             >
               Logout
             </Button>
@@ -90,14 +91,22 @@ export default function HeaderLogged() {
           >
             Future Improvements
           </a>
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="flex items-center space-x-4 mt-4">
             <div
               onClick={() => navigate("/profile")}
-              className="w-10 h-10 bg-cyan-100 rounded-full flex items-center justify-center text-cyan-700 font-medium cursor-pointer hover:bg-cyan-200 transition"
+              className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-cyan-700 shadow-lg cursor-pointer hover:bg-gray-50 transition border-2 border-cyan-600 ring-2 ring-cyan-200"
               title="Profile"
             >
-              {placeholderName.charAt(0).toUpperCase()}
+              <FiUser size={20} />
             </div>
+            <Button
+              onClick={handleLogout}
+              variant="outline"
+              size="sm"
+              className="text-white bg-cyan-600 hover:bg-cyan-700 border-cyan-600 hover:border-cyan-700"
+            >
+              Logout
+            </Button>
           </div>
         </div>
       </div>
