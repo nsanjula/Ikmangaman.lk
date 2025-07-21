@@ -111,7 +111,7 @@ npm run dev
 ---
 ## ✅ To Do / Future Enhancements
 
-- 🧠 Crowd prediction models for destinations
+- 🧠 Crowd prediction models to predict the crowd levels of each destination
 - 📝 Itinerary generation and integrated trip budget calculator
 - 🤝 Affiliate partnerships with hotel booking platforms in Sri Lanka
 
