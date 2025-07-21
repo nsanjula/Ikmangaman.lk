@@ -84,6 +84,8 @@ ALGORITHM=HS256
 ---
 ## 🧪 How to Run the Project
 ### 📦 Backend Setup
+
+- In ```backend/database/db.py``` change the ```SQLALCHEMY_DATABASE_URL``` to your databse file path
 ```
 cd backend
 python -m venv venv
