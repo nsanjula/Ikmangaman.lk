@@ -61,7 +61,7 @@ VITE_GOOGLE_MAPS_API_KEY=your-google-maps-api-key-here
 ```
 ### 🔑 Root  `.env` Configuration
 
-Create a `.env` file inside the `frontend/` directory with the following variable:
+Create a `.env` file inside the `Ikmangaman.lk_main/` directory with the following variable:
 
 ```env
 # API credentials
