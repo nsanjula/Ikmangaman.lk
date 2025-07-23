@@ -23,7 +23,7 @@ const RecommendationForm = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const [showFilters, setShowFilters] = useState(true);
-  const [budget, setBudget] = useState(100000);
+  const [budget, setBudget] = useState(500000);
   const [selectedAreas, setSelectedAreas] = useState<string[]>([
     "hill_country",
     "coastal",
@@ -263,18 +263,18 @@ const RecommendationForm = () => {
                     <input
                       type="range"
                       min="5000"
-                      max="100000"
+                      max="500000"
                       step="5000"
                       value={budget}
                       onChange={(e) => setBudget(Number(e.target.value))}
                       className="w-full h-2 bg-gray-400 rounded-lg appearance-none cursor-pointer slider"
                       style={{
-                        background: `linear-gradient(to right, #6b7280 0%, #6b7280 ${((budget - 5000) / (100000 - 5000)) * 100}%, #d1d5db ${((budget - 5000) / (100000 - 5000)) * 100}%, #d1d5db 100%)`,
+                        background: `linear-gradient(to right, #6b7280 0%, #6b7280 ${((budget - 5000) / (500000 - 5000)) * 100}%, #d1d5db ${((budget - 5000) / (500000 - 5000)) * 100}%, #d1d5db 100%)`,
                       }}
                     />
                     <div className="flex justify-between text-xs mt-1 text-cyan-200">
                       <span>LKR 5,000</span>
-                      <span>LKR 100,000</span>
+                      <span>LKR 500,000</span>
                     </div>
                   </div>
 

@@ -464,13 +464,13 @@ const QuestionnairePage: React.FC = () => {
               <input
                 type="range"
                 min={1}
-                max={30}
+                max={60}
                 value={groupSize}
                 onChange={(e) => {
                   const value = Number(e.target.value);
                   setGroupSize(value);
                   // Update CSS custom property for progress fill
-                  const percentage = ((value - 1) / (30 - 1)) * 100;
+                  const percentage = ((value - 1) / (60 - 1)) * 100;
                   e.target.style.setProperty(
                     "--thumb-position",
                     `${percentage}%`,
@@ -479,7 +479,7 @@ const QuestionnairePage: React.FC = () => {
                 className="w-full slider"
                 style={
                   {
-                    "--thumb-position": `${((groupSize - 1) / (30 - 1)) * 100}%`,
+                    "--thumb-position": `${((groupSize - 1) / (60 - 1)) * 100}%`,
                   } as React.CSSProperties
                 }
               />

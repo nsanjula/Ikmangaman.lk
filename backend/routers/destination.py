@@ -72,23 +72,23 @@ async def get_destination(destination_id: int, db: Session = Depends(get_db), cu
         print(f"Hotel API failed for {destination_obj.name}: {e}")
         hotel_data = None
 
-    try:
-        transit_cost_per_person = get_transit_fare(
-            latest_questionnaire_of_accessed_user.starting_location_latitudes,
-            latest_questionnaire_of_accessed_user.starting_location_longitudes,
-            destination_obj.latitude,
-            destination_obj.longitude
-        )
-        if transit_cost_per_person is not None:
-            total_transit_cost = transit_cost_per_person * latest_questionnaire_of_accessed_user.no_of_people
-            print("Transit data from API")
-        else:
-            # fallback to your logic
-            total_transit_cost = cost_for_transit(distance_f, latest_questionnaire_of_accessed_user.no_of_people)
-            print("Transit data from hard coded values")
-    except Exception as e:
-        print(f"Transit fare fetch failed: {e}")
-        total_transit_cost = cost_for_transit(distance_f, latest_questionnaire_of_accessed_user.no_of_people)
+    # try:
+    #     transit_cost_per_person = get_transit_fare(
+    #         latest_questionnaire_of_accessed_user.starting_location_latitudes,
+    #         latest_questionnaire_of_accessed_user.starting_location_longitudes,
+    #         destination_obj.latitude,
+    #         destination_obj.longitude
+    #     )
+    #     if transit_cost_per_person is not None:
+    #         total_transit_cost = transit_cost_per_person * latest_questionnaire_of_accessed_user.no_of_people
+    #         print("Transit data from API")
+    #     else:
+    #         # fallback to your logic
+    #         total_transit_cost = cost_for_transit(distance_f, latest_questionnaire_of_accessed_user.no_of_people)
+    #         print("Transit data from hard coded values")
+    # except Exception as e:
+    #     print(f"Transit fare fetch failed: {e}")
+    #     total_transit_cost = cost_for_transit(distance_f, latest_questionnaire_of_accessed_user.no_of_people)
 
 
     response = {
@@ -105,7 +105,7 @@ async def get_destination(destination_id: int, db: Session = Depends(get_db), cu
         "cost for bicycle" : round(cost_for_bicycle(distance_f, latest_questionnaire_of_accessed_user.no_of_people)),
         "cost for car" : round(cost_for_car(distance_f, latest_questionnaire_of_accessed_user.no_of_people)),
         "cost for private bus" : round(cost_for_p_bus(distance_f, latest_questionnaire_of_accessed_user.no_of_people)),
-        "cost for transit" : round(total_transit_cost),
+        "cost for transit" : round(cost_for_transit(distance_f, latest_questionnaire_of_accessed_user.no_of_people, db)),
         "guide details": [
             {
                 "guide_id": guide.guide_id,

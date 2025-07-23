@@ -1,6 +1,12 @@
 import os
 import requests
+import math
 from dotenv import load_dotenv
+from fastapi import Depends
+from requests import Session
+
+from backend.database.db import get_db
+from backend.models import transitfare
 
 load_dotenv()
 GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
@@ -46,7 +52,7 @@ def cost_for_bicycle(distance, no_of_people):
     cost_per_km_bicycle = 7.5
     people_per_bike = 2
     no_of_bikes = no_of_people / people_per_bike
-    cost_for_bikes = no_of_bikes * cost_per_km_bicycle * distance
+    cost_for_bikes = math.ceil(no_of_bikes) * cost_per_km_bicycle * distance
 
     return cost_for_bikes
 
@@ -55,7 +61,7 @@ def cost_for_car(distance, no_of_people):
     cost_per_km_car = 20
     people_per_car = 5
     no_of_cars = no_of_people / people_per_car
-    cost_for_cars = no_of_cars * cost_per_km_car * distance
+    cost_for_cars = math.ceil(no_of_cars) * cost_per_km_car * distance
 
     return cost_for_cars
 
@@ -63,17 +69,20 @@ def cost_for_p_bus(distance, no_of_people):
     cost_per_km_p_bus = 72
     people_per_p_bus = 30
     no_of_p_buses = no_of_people / people_per_p_bus
-    cost_for_p_buses = no_of_p_buses * cost_per_km_p_bus * distance
+    cost_for_p_buses = math.ceil(no_of_p_buses) * cost_per_km_p_bus * distance
 
     return cost_for_p_buses
 
-def cost_for_transit(distance, no_of_people):
-    cost_per_km_transit = 2
-    people_per_transit = 50
-    no_of_transits = no_of_people / people_per_transit
-    cost_for_transits = no_of_transits * cost_per_km_transit * distance
+def cost_for_transit(distance, no_of_people, db: Session = Depends(get_db)):
+    no_of_stops = round(distance)
+    total_transit_fare = 0
+    if no_of_stops <= 350:
+        fare_record = db.query(transitfare.Transitfare).filter(transitfare.Transitfare.no_of_stops == no_of_stops).first()
+        total_transit_fare = fare_record.fare * no_of_people
+    else:
+        total_transit_fare = 2159 * no_of_people
 
-    return cost_for_transits
+    return total_transit_fare
 
 def get_transit_fare(origin_lat, origin_lng, dest_lat, dest_lng):
     # 6.032, 80.217
@@ -100,6 +109,8 @@ def get_transit_fare(origin_lat, origin_lng, dest_lat, dest_lng):
             return None  # fare not available
     else:
         raise Exception("No transit route found.")
+
+
 
 def transport_probabilities(D, N):
     def suitability_D_and_N(S_D, N_opt, width):
