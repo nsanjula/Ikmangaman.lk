@@ -6,3 +6,4 @@ from backend.models.users import User
 from backend.models.latest_questionnaire import LatestQuestionnaire
 from backend.models.location_coordinates import LocationCoordinates
 from backend.models.destination_imgs import DestinationImages
+from backend.models.transitfare import Transitfare
