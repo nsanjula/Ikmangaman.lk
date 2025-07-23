@@ -10,7 +10,7 @@ router = APIRouter(
 async def get_hotel(city: str):
     try:
         data = await get_hotels(city)
-        print(data)
+        # print(data)
         return data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

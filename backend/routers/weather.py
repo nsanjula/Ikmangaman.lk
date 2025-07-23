@@ -12,7 +12,7 @@ router = APIRouter(
 async def get_weather(city: str):
     try:
         weather_data = await get_weather_by_city(city)
-        print("Weather data is ", weather_data)
+        # print("Weather data is ", weather_data)
         return{
             "city": weather_data["name"],
             "country": weather_data["sys"]["country"],
@@ -31,7 +31,7 @@ async def get_weather(city: str):
 async def get_forecast(city: str):
     try:
         forecast_data = await get_weather_forecast_by_city(city)
-        print("Weather forecast data is ", forecast_data)
+        # print("Weather forecast data is ", forecast_data)
         filtered_data = extract_forecast_data(forecast_data)
         return filtered_data
     except HTTPStatusError as e:

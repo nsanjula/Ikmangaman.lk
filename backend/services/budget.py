@@ -1,3 +1,9 @@
+import os
+import requests
+from dotenv import load_dotenv
+
+load_dotenv()
+GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 
 def calculate_the_budget(avg_cost, distance, no_of_people):
 
@@ -68,6 +74,32 @@ def cost_for_transit(distance, no_of_people):
     cost_for_transits = no_of_transits * cost_per_km_transit * distance
 
     return cost_for_transits
+
+def get_transit_fare(origin_lat, origin_lng, dest_lat, dest_lng):
+    # 6.032, 80.217
+    galle_lat = 6.032
+    galle_long = 80.217
+
+    url = (
+        "https://maps.googleapis.com/maps/api/directions/json"
+        f"?origin={origin_lat},{origin_lng}"
+        f"&destination={galle_lat},{galle_long}"
+        f"&mode=transit"
+        f"&key={GOOGLE_MAPS_API_KEY}"
+    )
+
+    response = requests.get(url)
+    data = response.json()
+
+    if data.get("routes"):
+        leg = data["routes"][0]["legs"][0]
+        fare = leg.get("fare")
+        if fare and fare["currency"] == "LKR":
+            return fare["value"]  # e.g., 180.0
+        else:
+            return None  # fare not available
+    else:
+        raise Exception("No transit route found.")
 
 def transport_probabilities(D, N):
     def suitability_D_and_N(S_D, N_opt, width):
