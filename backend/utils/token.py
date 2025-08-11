@@ -4,7 +4,7 @@ from backend.schemas.token import TokenData
 from dotenv import load_dotenv
 import os
 
-load_dotenv()  # Loads .env from the root directory
+load_dotenv()  # Loads .env from the root data
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
