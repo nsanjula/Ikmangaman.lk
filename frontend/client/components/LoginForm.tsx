@@ -4,9 +4,21 @@ import { authAPI, LoginRequest } from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import BackendStatus from "./BackendStatus";
 
+const EyeIcon = ({ isVisible }: { isVisible: boolean }) => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    {isVisible ? (
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />,
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+    ) : (
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+    )}
+  </svg>
+);
+
 const LoginForm = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -69,7 +81,7 @@ const LoginForm = () => {
   return (
     <>
       <BackendStatus />
-      <section className="relative h-screen bg-cover bg-center bg-no-repeat">
+      <section className="relative h-screen bg-cover bg-center bg-no-repeat" style={{ background: 'var(--bg)' }}>
         {/* Background Image */}
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -78,83 +90,143 @@ const LoginForm = () => {
           }}
         />
 
-        {/* Dark overlay for better text readability */}
-        <div className="absolute inset-0 bg-black bg-opacity-50" />
+        {/* Dark gradient overlay */}
+        <div className="absolute inset-0 gradient-overlay" />
 
         {/* Content */}
-        <div className="relative z-10 flex flex-col md:flex-row justify-center items-center min-h-screen px-4">
-          {/* Left side - Welcome message */}
-          <div className="text-white text-center md:text-left mb-8 md:mb-0 md:mr-16">
-            <h1 className="text-4xl font-bold mb-4">Welcome Back</h1>
-            <p className="text-xl">Log in to access your account</p>
-          </div>
+        <div className="relative z-10 flex flex-col md:flex-row justify-center items-center min-h-screen">
+          <div className="container flex flex-col md:flex-row justify-center items-center gap-16">
+            {/* Left side - Welcome message */}
+            <div className="text-white text-center md:text-left">
+              <h1 className="text-white mb-4">Welcome Back</h1>
+              <p className="text-xl text-white/90">Log in to access your personalized travel recommendations</p>
+            </div>
 
-          {/* Right side - Login Form */}
-          <div className="w-full max-w-md">
-            <form
-              onSubmit={handleSubmit}
-              className="bg-cyan-900 bg-opacity-80 p-8 rounded-lg backdrop-blur-sm"
-            >
-              <h2 className="text-2xl font-bold mb-6 text-center">Log In</h2>
-
-              {successMessage && (
-                <div className="mb-4 p-2 bg-green-500 text-white rounded text-center">
-                  {successMessage}
-                </div>
-              )}
-
-              {error && (
-                <div className="mb-4 p-2 bg-red-500 text-white rounded text-center">
-                  {error}
-                </div>
-              )}
-
-              <div className="mb-4">
-                <label className="block text-white mb-2">
-                  Username
-                </label>
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Enter your username"
-                  className="w-full p-3 rounded bg-white bg-opacity-90 text-gray-800 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                />
-              </div>
-
-              <div className="mb-6">
-                <label className="block text-white mb-2">Password</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  className="w-full p-3 rounded bg-white bg-opacity-90 text-gray-800 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                className={`w-full py-3 rounded font-medium transition-colors ${
-                  isLoading
-                    ? "bg-cyan-600 cursor-not-allowed"
-                    : "bg-cyan-700 hover:bg-cyan-600"
-                }`}
+            {/* Right side - Login Form */}
+            <div className="w-full max-w-md">
+              <form
+                onSubmit={handleSubmit}
+                className="card surface-blur p-8"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  backdropFilter: 'blur(12px)',
+                }}
               >
-                {isLoading ? "Logging in..." : "Log In"}
-              </button>
+                <h2 className="text-center mb-6" style={{ color: 'var(--text-900)' }}>Log In</h2>
 
-              <div className="mt-4 text-center text-white text-sm">
-                <a href="/forgot-password" className="hover:underline">
-                  Forgot password?
-                </a>
-                <span className="mx-2">•</span>
-                <a href="/register" className="hover:underline">
-                  Create an account
-                </a>
-              </div>
-            </form>
+                {successMessage && (
+                  <div className="mb-4 p-3 rounded" style={{ background: 'var(--primary-100)', color: 'var(--primary-700)', borderLeft: '4px solid var(--primary-600)' }}>
+                    {successMessage}
+                  </div>
+                )}
+
+                {error && (
+                  <div className="mb-4 p-3 rounded" style={{ background: '#FEF2F2', color: '#B91C1C', borderLeft: '4px solid #EF4444' }}>
+                    {error}
+                  </div>
+                )}
+
+                <div className="mb-4">
+                  <label className="block mb-2 font-medium" style={{ color: 'var(--text-900)' }}>
+                    Username
+                  </label>
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Enter your username"
+                    className="w-full p-3 rounded-lg border transition-colors duration-150"
+                    style={{
+                      background: 'var(--surface)',
+                      borderColor: 'var(--border)',
+                      color: 'var(--text-900)',
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = 'var(--primary-600)'}
+                    onBlur={(e) => e.target.style.borderColor = 'var(--border)'}
+                  />
+                </div>
+
+                <div className="mb-6">
+                  <label className="block mb-2 font-medium" style={{ color: 'var(--text-900)' }}>Password</label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter your password"
+                      className="w-full p-3 pr-12 rounded-lg border transition-colors duration-150"
+                      style={{
+                        background: 'var(--surface)',
+                        borderColor: 'var(--border)',
+                        color: 'var(--text-900)',
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = 'var(--primary-600)'}
+                      onBlur={(e) => e.target.style.borderColor = 'var(--border)'}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 transition-colors duration-150"
+                      style={{ color: 'var(--text-600)' }}
+                      onMouseEnter={(e) => e.target.style.color = 'var(--primary-600)'}
+                      onMouseLeave={(e) => e.target.style.color = 'var(--text-600)'}
+                    >
+                      <EyeIcon isVisible={showPassword} />
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="btn btn-primary btn-lg w-full mb-4"
+                  style={{
+                    opacity: isLoading ? 0.7 : 1,
+                    cursor: isLoading ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  {isLoading ? "Logging in..." : "Log In"}
+                </button>
+
+                {/* Social Login Placeholder */}
+                <div className="mb-4">
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t" style={{ borderColor: 'var(--border)' }}></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-2 text-sm" style={{ background: 'rgba(255, 255, 255, 0.95)', color: 'var(--text-600)' }}>Or continue with</span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 mt-4">
+                    <button
+                      type="button"
+                      disabled
+                      className="btn btn-secondary btn-md opacity-50 cursor-not-allowed"
+                    >
+                      Google
+                    </button>
+                    <button
+                      type="button"
+                      disabled
+                      className="btn btn-secondary btn-md opacity-50 cursor-not-allowed"
+                    >
+                      Facebook
+                    </button>
+                  </div>
+                </div>
+
+                <div className="text-center text-sm">
+                  <a href="/forgot-password" className="btn btn-tertiary text-sm">
+                    Forgot password?
+                  </a>
+                  <span className="mx-2" style={{ color: 'var(--text-600)' }}>•</span>
+                  <a href="/register" className="btn btn-tertiary text-sm">
+                    Create an account
+                  </a>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       </section>

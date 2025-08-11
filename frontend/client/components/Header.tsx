@@ -16,25 +16,31 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-white shadow-sm relative z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center py-4">
+    <header className="bg-white shadow-sm relative z-50 sticky top-0 border-b border-border">
+      <div className="container">
+        <div className="flex justify-between items-center py-6">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <h1 className="text-2xl font-bold text-cyan-900">Ikmangaman.lk</h1>
+            <h1 className="text-2xl font-bold" style={{ color: 'var(--primary-700)' }}>Ikmangaman.lk</h1>
           </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             <a
               href="#"
-              className="text-gray-700 hover:text-cyan-600 font-medium transition-colors duration-200"
+              className="font-medium transition-colors duration-150"
+              style={{ color: 'var(--text-600)' }}
+              onMouseEnter={(e) => e.target.style.color = 'var(--primary-600)'}
+              onMouseLeave={(e) => e.target.style.color = 'var(--text-600)'}
             >
               About Us
             </a>
             <a
               href="#"
-              className="text-gray-700 hover:text-cyan-600 font-medium transition-colors duration-200"
+              className="font-medium transition-colors duration-150"
+              style={{ color: 'var(--text-600)' }}
+              onMouseEnter={(e) => e.target.style.color = 'var(--primary-600)'}
+              onMouseLeave={(e) => e.target.style.color = 'var(--text-600)'}
             >
               Future Improvements
             </a>
@@ -42,19 +48,18 @@ export default function Header() {
 
           {/* Desktop Auth Buttons - Hidden on mobile */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button
+            <button
               onClick={() => handleNavigation("/login")}
-              variant="ghost"
-              className="text-gray-700 hover:text-cyan-600"
+              className="btn btn-tertiary"
             >
-              Log In
-            </Button>
-            <Button
+              Log in
+            </button>
+            <button
               onClick={() => handleNavigation("/register")}
-              className="bg-cyan-500 hover:bg-cyan-600 text-white transition-colors duration-200"
+              className="btn btn-primary btn-md"
             >
-              Sign Up for Free
-            </Button>
+              Sign up
+            </button>
           </div>
 
           {/* Mobile Menu Button - Always visible on mobile */}
@@ -65,7 +70,7 @@ export default function Header() {
               onClick={toggleMobileMenu}
               aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
               aria-expanded={isMobileMenuOpen}
-              className="text-gray-700 hover:text-cyan-600"
+              style={{ color: 'var(--text-600)' }}
             >
               {isMobileMenuOpen ? (
                 <svg
@@ -109,32 +114,33 @@ export default function Header() {
           <div className="border-t border-gray-200 pt-4 space-y-4">
             <a
               href="#"
-              className="block text-gray-700 hover:text-cyan-600 font-medium transition-colors duration-200 px-4 py-2"
+              className="block font-medium transition-colors duration-150 px-4 py-2"
+              style={{ color: 'var(--text-600)' }}
               onClick={() => setIsMobileMenuOpen(false)}
             >
               About Us
             </a>
             <a
               href="#"
-              className="block text-gray-700 hover:text-cyan-600 font-medium transition-colors duration-200 px-4 py-2"
+              className="block font-medium transition-colors duration-150 px-4 py-2"
+              style={{ color: 'var(--text-600)' }}
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Future Improvements
             </a>
             <div className="flex flex-col space-y-2 pt-2 px-4">
-              <Button
+              <button
                 onClick={() => handleNavigation("/login")}
-                variant="ghost"
-                className="text-gray-700 hover:text-cyan-600 justify-start"
+                className="btn btn-tertiary justify-start"
               >
-                Log In
-              </Button>
-              <Button
+                Log in
+              </button>
+              <button
                 onClick={() => handleNavigation("/register")}
-                className="bg-cyan-500 hover:bg-cyan-600 text-white justify-start transition-colors duration-200"
+                className="btn btn-primary btn-md justify-start"
               >
-                Sign Up for Free
-              </Button>
+                Sign up
+              </button>
             </div>
           </div>
         </div>

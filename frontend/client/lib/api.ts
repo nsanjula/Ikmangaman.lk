@@ -446,6 +446,7 @@ class AuthAPI {
         headers: {
           "Content-Type": "application/json",
         },
+        signal: AbortSignal.timeout(5000), // 5 second timeout
       });
 
       if (!response.ok) {
@@ -461,12 +462,22 @@ class AuthAPI {
 
       return response.json();
     } catch (error) {
-      if (error instanceof TypeError && error.message.includes("fetch")) {
-        throw new Error(
-          "Unable to connect to server. Please check your connection.",
-        );
-      }
-      throw error;
+      console.warn("Starting locations API failed, using fallback:", error);
+      // Return fallback starting locations
+      return {
+        locations: [
+          "Colombo",
+          "Kandy",
+          "Galle",
+          "Jaffna",
+          "Trincomalee",
+          "Anuradhapura",
+          "Polonnaruwa",
+          "Matara",
+          "Batticaloa",
+          "Kurunegala"
+        ]
+      };
     }
   }
 

@@ -1,20 +1,36 @@
+import { useState } from "react";
+
 export default function PartnerLogos() {
+  const [imageErrors, setImageErrors] = useState<{[key: string]: boolean}>({});
+
+  const handleImageError = (imageKey: string) => {
+    setImageErrors(prev => ({ ...prev, [imageKey]: true }));
+  };
+
   return (
     <section className="bg-white py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <p className="text-gray-600 text-lg mb-8">Powered by</p>
 
-          <div className="flex justify-center items-center space-x-12 md:space-x-16">
+          <div className="flex justify-center items-center space-x-12 md:space-x-16 flex-wrap gap-4">
             {/* Google Maps Logo */}
             <div className="flex items-center justify-center">
               <div className="flex items-center">
-                <div className="w-8 h-8 md:w-10 md:h-10 mr-3">
-                  <img
-                    src="https://cdn.builder.io/api/v1/image/assets%2Fc9ab74d0d22a403180b3c3116f1f10c6%2F23ad3cd329784b6ab968ea57889dc548?format=webp&width=800"
-                    alt="Google Maps icon"
-                    className="w-full h-full object-contain"
-                  />
+                <div className="w-8 h-8 md:w-10 md:h-10 mr-3 flex-shrink-0">
+                  {!imageErrors.googleMaps ? (
+                    <img
+                      src="https://cdn.builder.io/api/v1/image/assets%2Fc9ab74d0d22a403180b3c3116f1f10c6%2F23ad3cd329784b6ab968ea57889dc548?format=webp&width=800"
+                      alt="Google Maps icon"
+                      className="w-full h-full object-contain"
+                      onError={() => handleImageError('googleMaps')}
+                      crossOrigin="anonymous"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-blue-500 rounded flex items-center justify-center">
+                      <span className="text-white text-xs font-bold">G</span>
+                    </div>
+                  )}
                 </div>
                 <span className="text-gray-700 font-semibold text-xl md:text-2xl">
                   Google Maps
@@ -25,12 +41,20 @@ export default function PartnerLogos() {
             {/* OpenWeatherMap Logo */}
             <div className="flex items-center justify-center">
               <div className="flex items-center">
-                <div className="w-8 h-8 md:w-10 md:h-10 mr-3">
-                  <img
-                    src="https://cdn.builder.io/api/v1/image/assets%2Fc9ab74d0d22a403180b3c3116f1f10c6%2F9326fb5ea02341d29c618ef9185f2b1f?format=webp&width=800"
-                    alt="OpenWeatherMap icon"
-                    className="w-full h-full object-contain"
-                  />
+                <div className="w-8 h-8 md:w-10 md:h-10 mr-3 flex-shrink-0">
+                  {!imageErrors.openWeather ? (
+                    <img
+                      src="https://cdn.builder.io/api/v1/image/assets%2Fc9ab74d0d22a403180b3c3116f1f10c6%2F9326fb5ea02341d29c618ef9185f2b1f?format=webp&width=800"
+                      alt="OpenWeatherMap icon"
+                      className="w-full h-full object-contain"
+                      onError={() => handleImageError('openWeather')}
+                      crossOrigin="anonymous"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-orange-500 rounded flex items-center justify-center">
+                      <span className="text-white text-xs font-bold">W</span>
+                    </div>
+                  )}
                 </div>
                 <span className="text-gray-700 font-semibold text-xl md:text-2xl">
                   OpenWeatherMap
