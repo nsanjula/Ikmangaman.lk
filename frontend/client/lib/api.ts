@@ -15,11 +15,27 @@ const handleAPIError = (error: any, context: string): never => {
 export const testConnection = async (): Promise<boolean> => {
   try {
     console.log("Testing connection to:", `${API_BASE_URL}/docs`);
-    const response = await fetch(`${API_BASE_URL}/docs`, { method: "HEAD" });
+
+    // Use Promise.race for cleaner timeout handling
+    const fetchPromise = fetch(`${API_BASE_URL}/docs`, {
+      method: "HEAD"
+    });
+
+    const timeoutPromise = new Promise<Response>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('Request timeout after 15 seconds'));
+      }, 15000);
+    });
+
+    const response = await Promise.race([fetchPromise, timeoutPromise]);
     console.log("Connection test result:", response.ok, response.status);
     return response.ok;
-  } catch (error) {
-    console.error("Connection test failed:", error);
+  } catch (error: any) {
+    if (error.message?.includes('timeout')) {
+      console.warn("Connection test timed out");
+    } else {
+      console.error("Connection test failed:", error);
+    }
     return false;
   }
 };
@@ -353,6 +369,8 @@ class AuthAPI {
 
       if (!response.ok) {
         if (response.status === 401) {
+          // Clear invalid token
+          this.removeToken();
           throw new Error("Authentication failed. Please log in again.");
         }
         const errorText = await response.text();
@@ -385,6 +403,8 @@ class AuthAPI {
 
       if (!response.ok) {
         if (response.status === 401) {
+          // Clear invalid token
+          this.removeToken();
           throw new Error("Authentication required. Please log in again.");
         }
         const error: ApiError = await response.json();
@@ -422,6 +442,8 @@ class AuthAPI {
 
       if (!response.ok) {
         if (response.status === 401) {
+          // Clear invalid token
+          this.removeToken();
           throw new Error("Authentication required. Please log in again.");
         }
         const error: ApiError = await response.json();
@@ -501,6 +523,8 @@ class AuthAPI {
 
       if (!response.ok) {
         if (response.status === 401) {
+          // Clear invalid token
+          this.removeToken();
           throw new Error("Authentication required. Please log in again.");
         }
         const error: ApiError = await response.json();
@@ -540,6 +564,8 @@ class AuthAPI {
 
       if (!response.ok) {
         if (response.status === 401) {
+          // Clear invalid token
+          this.removeToken();
           throw new Error("Authentication required. Please log in again.");
         }
         const error: ApiError = await response.json();

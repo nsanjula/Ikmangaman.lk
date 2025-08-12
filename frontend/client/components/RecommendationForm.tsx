@@ -7,6 +7,7 @@ import {
   BackendRecommendation,
 } from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
+import { useApiWithLoading } from "../contexts/LoadingContext";
 
 interface RecommendationCard {
   id: number;
@@ -125,7 +126,8 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({ value, onChange, option
 
 const RecommendationForm = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
+  const { callWithLoading } = useApiWithLoading();
   const [showFilters, setShowFilters] = useState(true);
   const [budget, setBudget] = useState(500000);
   const [selectedAreas, setSelectedAreas] = useState<string[]>([
@@ -216,19 +218,26 @@ const RecommendationForm = () => {
 
   const fetchRecommendations = async () => {
     try {
-      setIsLoading(true);
       setError(null);
 
       if (!isAuthenticated) {
         console.log("User not authenticated, redirecting...");
         setError("Please log in to view recommendations");
+        setIsLoading(false);
         return;
       }
 
       console.log("Fetching recommendations for authenticated user...");
-      const data: RecommendationsResponse = await authAPI.getRecommendations();
+      const data: RecommendationsResponse = await callWithLoading(
+        async () => {
+          const result = await authAPI.getRecommendations();
+          console.log("Recommendations response:", result);
+          return result;
+        },
+        'recommendations',
+        'Loading your personalized recommendations...'
+      );
 
-      console.log("Recommendations response:", data);
       console.log(
         "Response type:",
         typeof data,
@@ -243,6 +252,7 @@ const RecommendationForm = () => {
           "No recommendations available. Please complete the questionnaire first to get personalized recommendations.",
         );
         setCards([]);
+        setIsLoading(false);
         return;
       }
 
@@ -250,6 +260,7 @@ const RecommendationForm = () => {
       if (!Array.isArray(data)) {
         console.error("Expected array but got:", typeof data, data);
         setError("Invalid response format from server. Please try again.");
+        setIsLoading(false);
         return;
       }
 
@@ -289,6 +300,8 @@ const RecommendationForm = () => {
           "No recommendations available. Please complete the questionnaire first to get personalized recommendations.",
         );
       }
+
+      setIsLoading(false);
     } catch (err) {
       console.error("Error fetching recommendations:", err);
 
@@ -297,6 +310,8 @@ const RecommendationForm = () => {
           err.message.includes("Authentication required") ||
           err.message.includes("Please log in again")
         ) {
+          console.log("🔐 Authentication error detected, logging out user");
+          logout(); // Clear authentication state
           setError(
             "Your session has expired. Please log in again to view recommendations.",
           );
@@ -310,7 +325,6 @@ const RecommendationForm = () => {
       } else {
         setError("Failed to fetch recommendations. Please try again.");
       }
-    } finally {
       setIsLoading(false);
     }
   };
@@ -512,7 +526,13 @@ const RecommendationForm = () => {
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => navigate("/questionnaire")}
-                    className="btn btn-secondary btn-md flex items-center gap-2 whitespace-nowrap"
+                    className="btn btn-secondary btn-md flex items-center gap-2 whitespace-nowrap border-2 hover:bg-opacity-10"
+                    style={{
+                      borderColor: 'var(--primary-600)',
+                      color: 'var(--primary-600)',
+                      borderWidth: '2px',
+                      borderStyle: 'solid'
+                    }}
                   >
                     <span>📝</span>
                     Edit Questionnaire

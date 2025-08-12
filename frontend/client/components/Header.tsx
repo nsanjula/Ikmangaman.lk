@@ -16,8 +16,8 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-white shadow-sm relative z-50 sticky top-0 border-b border-border">
-      <div className="container">
+    <header className="bg-white shadow-sm relative z-50 iframe-header border-b border-border">
+      <div className="container iframe-container">
         <div className="flex justify-between items-center py-6">
           {/* Logo */}
           <div className="flex-shrink-0">

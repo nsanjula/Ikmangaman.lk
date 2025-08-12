@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { authAPI, DestinationDetails } from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
+import { useApiWithLoading } from "../contexts/LoadingContext";
 
 interface UseDestinationDataResult {
   data: DestinationDetails | null;
@@ -19,10 +20,10 @@ export const useDestinationData = (
   const [isFallbackData, setIsFallbackData] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const { isAuthenticated, logout } = useAuth();
+  const { callWithLoading } = useApiWithLoading();
 
   const fetchData = async () => {
     try {
-      setLoading(true);
       setError(null);
       setIsFallbackData(false);
 
@@ -39,10 +40,14 @@ export const useDestinationData = (
         throw new Error("Please log in to view destination details.");
       }
 
-      const result = await authAPI.getDestinationDetails(
-        parseInt(destinationId!),
+      const result = await callWithLoading(
+        () => authAPI.getDestinationDetails(parseInt(destinationId!)),
+        `destination-${destinationId}`,
+        `Loading destination details...`
       );
+
       setData(result);
+      setLoading(false);
 
       // Check if this is fallback data
       if (
@@ -58,9 +63,10 @@ export const useDestinationData = (
       // If it's an auth error, ensure we logout to sync state
       if (
         err instanceof Error &&
-        err.message.includes("Authentication failed")
+        (err.message.includes("Authentication failed") ||
+          err.message.includes("Authentication required"))
       ) {
-        console.log("🔐 Authentication failed - ensuring logout");
+        console.log("🔐 Authentication error detected - ensuring logout");
         logout();
       }
 
@@ -89,7 +95,7 @@ export const useDestinationData = (
         setError("Failed to fetch destination data");
       }
     } finally {
-      setLoading(false);
+      // Loading is managed by the loading context now
     }
   };
 

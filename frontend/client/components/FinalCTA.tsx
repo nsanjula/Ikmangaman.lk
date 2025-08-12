@@ -4,7 +4,7 @@ export default function FinalCTA() {
   const navigate = useNavigate();
   return (
     <section className="bg-slate-900 py-20">
-      <div className="container text-center">
+      <div className="container iframe-container text-center">
         <h2 className="text-4xl lg:text-6xl font-bold text-white mb-6">
           Ready to explore
           <br />

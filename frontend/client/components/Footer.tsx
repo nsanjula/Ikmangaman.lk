@@ -1,7 +1,7 @@
 export default function Footer() {
   return (
     <footer className="py-9" style={{ background: '#0B1220', color: '#94A3B8' }}>
-      <div className="container">
+      <div className="container iframe-container">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Company Info */}
           <div>

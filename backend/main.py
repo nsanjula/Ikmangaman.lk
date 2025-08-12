@@ -20,7 +20,15 @@ app.include_router(locations.router)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8080", "http://localhost:48752"],  # Your React app's origin
+    allow_origins=[
+        "http://localhost:8080",
+        "http://localhost:8081",  # Common Vite alternative port
+        "http://localhost:3000",  # Common React dev port
+        "http://localhost:48752",
+        "http://127.0.0.1:8080",
+        "http://127.0.0.1:8081",
+        "http://127.0.0.1:3000",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

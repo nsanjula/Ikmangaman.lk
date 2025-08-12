@@ -9,7 +9,7 @@ export default function PartnerLogos() {
 
   return (
     <section className="bg-white py-12">
-      <div className="container">
+      <div className="container iframe-container">
         <div className="text-center">
           <p className="text-gray-600 text-lg mb-8">Powered by</p>
 

@@ -4,7 +4,7 @@ export default function HeroSection() {
   const navigate = useNavigate();
 
   return (
-    <section className="relative h-screen overflow-hidden">
+    <section className="relative iframe-hero overflow-hidden min-h-screen h-screen">
       {/* Background Image */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -17,8 +17,8 @@ export default function HeroSection() {
       <div className="absolute inset-0 gradient-overlay" />
 
       {/* Content */}
-      <div className="relative z-10 flex items-center justify-center h-full">
-        <div className="container text-center text-white">
+      <div className="relative z-10 flex items-center justify-center min-h-screen">
+        <div className="container iframe-container text-center text-white py-20">
           <h1 className="mb-6 text-white">
             Discover Sri Lanka
             <br />
