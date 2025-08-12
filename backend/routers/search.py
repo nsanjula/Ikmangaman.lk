@@ -4,6 +4,7 @@ import torch
 import open_clip
 from PIL import Image
 from fastapi import APIRouter, UploadFile, File, HTTPException, Query, Depends
+from sqlalchemy import String
 from sqlalchemy.orm import Session
 from collections import defaultdict
 from fastapi import APIRouter
@@ -16,7 +17,8 @@ from backend.routers.hotels import get_hotel
 from backend.routers.weather import get_forecast
 
 router = APIRouter(
-    tags=["search"]
+    tags=["search"],
+    prefix="/search"
 )
 
 # ===== Load CLIP model =====
@@ -137,13 +139,67 @@ async def search_by_image(
             "weather_data": weather_data,
             "hotel_data": hotel_data,
             "guide_details": guide_details,
-            "destination_image": f"/images/{best_image_path}",  # assumes StaticFiles mount at /images
-            "visual_match_score": round(score, 4),
+            "destination image": f"/destination-image/{d.destination_id}",
+            "visual_match_score": round(score, 4)
         })
 
     return {"results": results}
 
 
-@router.get("/search/search-by-text")
-def search_by_name():
-    pass
+@router.get("/by-destination-name")
+async def search_by_name(
+        destination_name: str = Query(..., description="Name of the destination"),
+        db: Session = Depends(get_db)
+):
+    # Search destination(s) by name
+    destinations = db.query(Destination).filter(Destination.name.ilike(f"%{destination_name}%")).all()
+
+    if not destinations:
+        raise HTTPException(status_code=404, detail="No destinations found with that name")
+
+    results = []
+
+    for d in destinations:
+        # Fetch weather data
+        try:
+            weather_data = await get_forecast(d.name)
+        except Exception as e:
+            print(f"Weather API failed for {d.name}: {e}")
+            weather_data = None
+
+        # Fetch hotel data
+        try:
+            hotel_data = await get_hotel(d.name)
+        except Exception as e:
+            print(f"Hotel API failed for {d.name}: {e}")
+            hotel_data = None
+
+        # Guide details
+        guide_details = [
+            {
+                "guide_id": g.guide_id,
+                "name": g.name,
+                "gender": g.gender,
+                "contact_no": g.contact_no,
+                "photo_url": f"/guides/photo/{g.guide_id}",
+            }
+            for g in getattr(d, "guides", [])
+        ]
+
+        results.append({
+            "destination_name": d.name,
+            "destination_id": d.destination_id,
+            "latitude": getattr(d, "latitude", None),
+            "longitude": getattr(d, "longitude", None),
+            "description": getattr(d, "description", None),
+            "things_to_do": d.things_to_do.split("/") if getattr(d, "things_to_do", None) else [],
+            "weather_data": weather_data,
+            "hotel_data": hotel_data,
+            "guide_details": guide_details,
+            "destination image": f"/destination-image/{d.destination_id}"
+        })
+
+
+
+    return {"results": results}
+
