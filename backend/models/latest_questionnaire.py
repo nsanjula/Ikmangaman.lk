@@ -26,4 +26,3 @@ class LatestQuestionnaire(Base):
 
     user = relationship("User", back_populates="latest_questionnaire")
 
-

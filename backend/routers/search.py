@@ -3,18 +3,14 @@ import numpy as np
 import torch
 import open_clip
 from PIL import Image
-from fastapi import APIRouter, UploadFile, File, HTTPException, Query, Depends
-from sqlalchemy import String
+from fastapi import UploadFile, File, HTTPException, Query, Depends
 from sqlalchemy.orm import Session
-from collections import defaultdict
 from fastapi import APIRouter
 
 from backend.database.db import get_db
-from backend.models import destinations
 from backend.models.destinations import Destination
 from backend.models.destination_imgs import ImageEmbedding
 from backend.routers.hotels import get_hotel
-from backend.routers.weather import get_forecast
 from backend.schemas import user
 from backend.utils.auth_token import get_current_user
 
@@ -105,14 +101,6 @@ async def search_by_image(
         if not d:
             continue
 
-
-        # Try to get weather data, fallback to None if it fails
-        try:
-            weather_data = await get_forecast(d.name)
-        except Exception as e:
-            print(f"Weather API failed for {d.name}: {e}")
-            weather_data = None
-
         # Try to get hotel data, fallback to None if it fails
         try:
             hotel_data = await get_hotel(d.name)
@@ -163,13 +151,6 @@ async def search_by_name(
     results = []
 
     for d in destinations:
-        # Fetch weather data
-        try:
-            weather_data = await get_forecast(d.name)
-        except Exception as e:
-            print(f"Weather API failed for {d.name}: {e}")
-            weather_data = None
-
         # Fetch hotel data
         try:
             hotel_data = await get_hotel(d.name)
