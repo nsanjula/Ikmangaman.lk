@@ -9,8 +9,11 @@ from collections import defaultdict
 from fastapi import APIRouter
 
 from backend.database.db import get_db
+from backend.models import destinations
 from backend.models.destinations import Destination
 from backend.models.destination_imgs import ImageEmbedding
+from backend.routers.hotels import get_hotel
+from backend.routers.weather import get_forecast
 
 router = APIRouter(
     tags=["search"]
@@ -43,61 +46,103 @@ async def search_by_image(
     if file.content_type not in {"image/jpeg", "image/png", "image/webp"}:
         raise HTTPException(415, "Please upload a JPG, PNG, or WEBP image")
 
-    # Embed the uploaded image
+    # --- 1) Embed uploaded image ---
     q_vec = embed_bytes(await file.read())
 
-    # Load all stored embeddings
+    # --- 2) Load all stored embeddings ---
     rows = db.query(ImageEmbedding).filter(ImageEmbedding.vector != None).all()
     if not rows:
         raise HTTPException(500, "No embeddings found. Please build them first.")
 
     embs, dest_ids, img_paths = [], [], []
     for r in rows:
-        embs.append(np.frombuffer(r.vector, dtype=np.float32))
-        dest_ids.append(r.destination_id)
-        img_paths.append(r.image_path)
+        e = np.frombuffer(r.vector, dtype=np.float32)
+        if e.size:
+            embs.append(e)
+            dest_ids.append(r.destination_id)
+            img_paths.append(r.image_path)
 
     X = np.vstack(embs)  # shape: (N, 512)
     scores = X @ q_vec   # cosine similarity
 
-    # Take top matches overall
+    # --- 3) Take top matches overall ---
     idx = np.argsort(-scores)[:50]
+    from collections import defaultdict
     per_dest = defaultdict(list)
     for i in idx:
         per_dest[dest_ids[i]].append((float(scores[i]), img_paths[i]))
 
-    # Aggregate scores per destination
-    final = []
+    # --- 4) Aggregate per destination ---
+    final_rank = []
     for dest_id, lst in per_dest.items():
         lst.sort(key=lambda x: x[0], reverse=True)
         topk = lst[:min(per_dest_k, len(lst))]
         mean_score = np.mean([s for s, _ in topk])
         best_image_path = topk[0][1]
-        final.append((dest_id, mean_score, best_image_path))
+        final_rank.append((dest_id, mean_score, best_image_path))
 
-    final.sort(key=lambda x: x[1], reverse=True)
-    final = final[:k]
-    print(final)
+    final_rank.sort(key=lambda x: x[1], reverse=True)
+    final_rank = final_rank[:k]
+    dest_ids_top = [d for d, _, _ in final_rank]
 
-    # Fetch destination metadata
-    dest_map = {
-        d.destination_id: d
-        for d in db.query(Destination).filter(Destination.destination_id.in_([d for d, _, _ in final])).all()
-    }
+    # --- 5) Fetch Destination objects in ranked order ---
+    dest_objs = (
+        db.query(Destination)
+          .filter(Destination.destination_id.in_(dest_ids_top))
+          .all()
+    )
+    dest_map = {d.destination_id: d for d in dest_objs}
 
-    print(dest_map)
+    # --- 6) Build full response ---
+    results = []
+    for dest_id, score, best_image_path in final_rank:
+        d = dest_map.get(dest_id)
+        if not d:
+            continue
 
-    return {
-        "results": [
+
+        # Try to get weather data, fallback to None if it fails
+        try:
+            weather_data = await get_forecast(d.name)
+        except Exception as e:
+            print(f"Weather API failed for {d.name}: {e}")
+            weather_data = None
+
+        # Try to get hotel data, fallback to None if it fails
+        try:
+            hotel_data = await get_hotel(d.name)
+        except Exception as e:
+            print(f"Hotel API failed for {d.name}: {e}")
+            hotel_data = None
+
+
+        guide_details = [
             {
-                "destination_id": dest_id,
-                "name": getattr(dest_map.get(dest_id), "name", None),
-                "score": round(score, 4),
-                "best_image_path": img_path
+                "guide_id": g.guide_id,
+                "name": g.name,
+                "gender": g.gender,
+                "contact_no": g.contact_no,
+                "photo_url": f"/guides/photo/{g.guide_id}",
             }
-            for dest_id, score, img_path in final
+            for g in getattr(d, "guides", [])
         ]
-    }
+
+        results.append({
+            "destination_name": d.name,
+            "destination_id": d.destination_id,
+            "latitude": getattr(d, "latitude", None),
+            "longitude": getattr(d, "longitude", None),
+            "description": getattr(d, "description", None),
+            "things_to_do": d.things_to_do.split("/") if getattr(d, "things_to_do", None) else [],
+            "weather_data": weather_data,
+            "hotel_data": hotel_data,
+            "guide_details": guide_details,
+            "destination_image": f"/images/{best_image_path}",  # assumes StaticFiles mount at /images
+            "visual_match_score": round(score, 4),
+        })
+
+    return {"results": results}
+
 
 @router.get("/search/search-by-text")
 def search_by_name():

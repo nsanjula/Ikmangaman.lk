@@ -72,25 +72,6 @@ async def get_destination(destination_id: int, db: Session = Depends(get_db), cu
         print(f"Hotel API failed for {destination_obj.name}: {e}")
         hotel_data = None
 
-    # try:
-    #     transit_cost_per_person = get_transit_fare(
-    #         latest_questionnaire_of_accessed_user.starting_location_latitudes,
-    #         latest_questionnaire_of_accessed_user.starting_location_longitudes,
-    #         destination_obj.latitude,
-    #         destination_obj.longitude
-    #     )
-    #     if transit_cost_per_person is not None:
-    #         total_transit_cost = transit_cost_per_person * latest_questionnaire_of_accessed_user.no_of_people
-    #         print("Transit data from API")
-    #     else:
-    #         # fallback to your logic
-    #         total_transit_cost = cost_for_transit(distance_f, latest_questionnaire_of_accessed_user.no_of_people)
-    #         print("Transit data from hard coded values")
-    # except Exception as e:
-    #     print(f"Transit fare fetch failed: {e}")
-    #     total_transit_cost = cost_for_transit(distance_f, latest_questionnaire_of_accessed_user.no_of_people)
-
-
     response = {
         "destination_name" : destination_obj.name,
         "destination_id" : destination_obj.destination_id,
