@@ -6,7 +6,7 @@ from backend.database.db import get_db
 from backend.models import users
 from backend.schemas import user
 from backend.utils.hashing import hash_password
-from backend.utils.token import get_current_user
+from backend.utils.auth_token import get_current_user
 
 router = APIRouter(
     tags= ["user"]

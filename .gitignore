@@ -6,3 +6,4 @@ __pycache__
 .config/
 node_modules/
 .cursor
+/backend/data/images
