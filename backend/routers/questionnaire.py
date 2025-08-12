@@ -6,7 +6,7 @@ from backend.database.db import get_db
 from backend.models import latest_questionnaire, location_coordinates, users
 from backend.schemas import questionnaire, user
 from backend.utils import month_mapper
-from backend.utils.token import get_current_user
+from backend.utils.auth_token import get_current_user
 
 router = APIRouter(
     tags=["questionnaire"]

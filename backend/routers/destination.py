@@ -11,7 +11,7 @@ from backend.routers.weather import get_forecast
 from backend.schemas import user
 from backend.services.budget import cost_for_bicycle, cost_for_car, cost_for_p_bus, cost_for_transit, get_transit_fare
 from backend.services.distance import get_distance_and_duration_for_one_location
-from backend.utils.token import get_current_user
+from backend.utils.auth_token import get_current_user
 
 router = APIRouter(
     tags=["destination"]
