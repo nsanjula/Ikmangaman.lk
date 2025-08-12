@@ -23,7 +23,7 @@
     
     /* Layout */
     --radius: 16px;
-    --container-max: 1200px;
+    --container-max: 1280px;
     --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     --shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.10);
     --focus-ring: #94D9E0;

@@ -17,7 +17,111 @@ interface RecommendationCard {
   type: string;
   things_to_do: string;
   thumbnail_img: string;
+  distance: string;
+  travel_time: string;
+  distanceValue: number; // For sorting purposes
+  travelTimeValue: number; // For sorting purposes
 }
+
+interface DropdownOption {
+  value: string;
+  label: string;
+}
+
+interface CustomDropdownProps {
+  value: string;
+  onChange: (value: string) => void;
+  options: DropdownOption[];
+}
+
+const CustomDropdown: React.FC<CustomDropdownProps> = ({ value, onChange, options }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [hoveredOption, setHoveredOption] = useState<string | null>(null);
+
+  const selectedOption = options.find(option => option.value === value);
+
+  const handleOptionClick = (optionValue: string) => {
+    onChange(optionValue);
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="relative">
+      {/* Dropdown trigger */}
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full px-4 py-3 text-sm text-left bg-white border border-gray-200 rounded-lg hover:border-cyan-400 hover:bg-cyan-50/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all duration-200 cursor-pointer"
+        style={{
+          color: 'var(--text-900)',
+          backgroundColor: 'var(--surface)',
+          borderColor: '#E2E8F0',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+        }}
+      >
+        <span>{selectedOption?.label || 'Select option'}</span>
+        <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+          <svg
+            className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+            style={{ color: '#64748B' }}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+      </button>
+
+      {/* Dropdown menu */}
+      {isOpen && (
+        <div
+          className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden"
+          style={{
+            backgroundColor: 'var(--surface)',
+            borderColor: '#E2E8F0',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+          }}
+        >
+          {options.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => handleOptionClick(option.value)}
+              onMouseEnter={() => setHoveredOption(option.value)}
+              onMouseLeave={() => setHoveredOption(null)}
+              className={`w-full px-4 py-2 text-sm text-left transition-all duration-150 ${
+                option.value === value
+                  ? 'bg-cyan-500 text-white'
+                  : hoveredOption === option.value
+                  ? 'bg-cyan-50 text-cyan-700'
+                  : 'text-gray-900 hover:bg-cyan-50'
+              }`}
+              style={{
+                color: option.value === value ? 'white' : 'var(--text-900)',
+                backgroundColor: option.value === value
+                  ? '#06B6D4'
+                  : hoveredOption === option.value
+                  ? '#F0F9FF'
+                  : 'transparent'
+              }}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Backdrop to close dropdown */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+    </div>
+  );
+};
 
 const RecommendationForm = () => {
   const navigate = useNavigate();
@@ -33,6 +137,29 @@ const RecommendationForm = () => {
   const [cards, setCards] = useState<RecommendationCard[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<string>("best_match");
+
+  // Helper function to parse distance string to numeric value for sorting
+  const parseDistance = (distanceStr: string): number => {
+    const match = distanceStr.match(/(\d+(?:\.\d+)?)/);
+    return match ? parseFloat(match[1]) : 0;
+  };
+
+  // Helper function to parse travel time string to numeric value for sorting (in minutes)
+  const parseTravelTime = (timeStr: string): number => {
+    const hoursMatch = timeStr.match(/(\d+(?:\.\d+)?)\s*h/);
+    const minutesMatch = timeStr.match(/(\d+(?:\.\d+)?)\s*m/);
+
+    let totalMinutes = 0;
+    if (hoursMatch) {
+      totalMinutes += parseFloat(hoursMatch[1]) * 60;
+    }
+    if (minutesMatch) {
+      totalMinutes += parseFloat(minutesMatch[1]);
+    }
+
+    return totalMinutes || 0;
+  };
 
   // Helper function to determine area type from destination (simplified for backend format)
   const getAreaType = (
@@ -145,6 +272,10 @@ const RecommendationForm = () => {
             type: getAreaType(item.destination_id, item.name),
             things_to_do: "", // Not provided by backend currently
             thumbnail_img: item.thumbnail_img || "",
+            distance: item.distance || "N/A",
+            travel_time: item.travel_time || "N/A",
+            distanceValue: parseDistance(item.distance || "0"),
+            travelTimeValue: parseTravelTime(item.travel_time || "0"),
           };
         });
 
@@ -205,11 +336,29 @@ const RecommendationForm = () => {
     );
   };
 
+  // Sort function based on selected sort option
+  const getSortFunction = (sortOption: string) => {
+    switch (sortOption) {
+      case "best_match":
+        return (a: RecommendationCard, b: RecommendationCard) => (b.score || 0) - (a.score || 0);
+      case "budget_low_high":
+        return (a: RecommendationCard, b: RecommendationCard) => a.price - b.price;
+      case "budget_high_low":
+        return (a: RecommendationCard, b: RecommendationCard) => b.price - a.price;
+      case "distance":
+        return (a: RecommendationCard, b: RecommendationCard) => a.distanceValue - b.distanceValue;
+      case "travel_time":
+        return (a: RecommendationCard, b: RecommendationCard) => a.travelTimeValue - b.travelTimeValue;
+      default:
+        return (a: RecommendationCard, b: RecommendationCard) => (b.score || 0) - (a.score || 0);
+    }
+  };
+
   // Filter cards based on selected filters
   const filteredCards = cards
     .filter((card) => selectedAreas.includes(card.type))
     .filter((card) => card.price <= budget)
-    .sort((a, b) => (b.score || 0) - (a.score || 0));
+    .sort(getSortFunction(sortBy));
 
   // Redirect to login if not authenticated
   if (!isAuthenticated && !isLoading) {
@@ -303,11 +452,38 @@ const RecommendationForm = () => {
                     </div>
                   </div>
 
+                  {/* Sort Order Filter */}
+                  <div>
+                    <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-900)' }}>
+                      Sort by
+                    </label>
+                    <CustomDropdown
+                      value={sortBy}
+                      onChange={setSortBy}
+                      options={[
+                        { value: 'best_match', label: 'Best match' },
+                        { value: 'budget_low_high', label: 'Budget: Low → High' },
+                        { value: 'budget_high_low', label: 'Budget: High → Low' },
+                        { value: 'distance', label: 'Distance: Nearest first' },
+                        { value: 'travel_time', label: 'Travel time: Shortest first' }
+                      ]}
+                    />
+                    {/* Sort indicator */}
+                    <div className="mt-2 text-xs" style={{ color: 'var(--text-600)' }}>
+                      {sortBy === 'best_match' && 'Showing most relevant destinations first'}
+                      {sortBy === 'budget_low_high' && 'Showing cheapest destinations first'}
+                      {sortBy === 'budget_high_low' && 'Showing most expensive destinations first'}
+                      {sortBy === 'distance' && 'Showing nearest destinations first'}
+                      {sortBy === 'travel_time' && 'Showing quickest destinations first'}
+                    </div>
+                  </div>
+
                   {/* Reset Button */}
                   <button
                     onClick={() => {
                       setSelectedAreas(areas.map((a) => a.id));
                       setBudget(50000);
+                      setSortBy("best_match");
                     }}
                     className="w-full btn btn-secondary btn-sm"
                   >
@@ -334,12 +510,6 @@ const RecommendationForm = () => {
                   </p>
                 </div>
                 <div className="flex items-center gap-4">
-                  <select className="btn btn-secondary btn-sm">
-                    <option>Best match</option>
-                    <option>Budget low→high</option>
-                    <option>Distance</option>
-                    <option>Travel time</option>
-                  </select>
                   <button
                     onClick={() => navigate("/questionnaire")}
                     className="btn btn-secondary btn-md flex items-center gap-2 whitespace-nowrap"
