@@ -15,6 +15,8 @@ from backend.models.destinations import Destination
 from backend.models.destination_imgs import ImageEmbedding
 from backend.routers.hotels import get_hotel
 from backend.routers.weather import get_forecast
+from backend.schemas import user
+from backend.utils.auth_token import get_current_user
 
 router = APIRouter(
     tags=["search"],
@@ -42,7 +44,8 @@ async def search_by_image(
     file: UploadFile = File(...),
     k: int = 5,
     per_dest_k: int = 3,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: user.User = Depends(get_current_user)
 ):
     """Search visually similar destinations by uploaded image."""
     if file.content_type not in {"image/jpeg", "image/png", "image/webp"}:
@@ -136,7 +139,6 @@ async def search_by_image(
             "longitude": getattr(d, "longitude", None),
             "description": getattr(d, "description", None),
             "things_to_do": d.things_to_do.split("/") if getattr(d, "things_to_do", None) else [],
-            "weather_data": weather_data,
             "hotel_data": hotel_data,
             "guide_details": guide_details,
             "destination image": f"/destination-image/{d.destination_id}",
@@ -148,8 +150,9 @@ async def search_by_image(
 
 @router.get("/by-destination-name")
 async def search_by_name(
-        destination_name: str = Query(..., description="Name of the destination"),
-        db: Session = Depends(get_db)
+    destination_name: str = Query(..., description="Name of the destination"),
+    db: Session = Depends(get_db),
+    current_user: user.User = Depends(get_current_user)
 ):
     # Search destination(s) by name
     destinations = db.query(Destination).filter(Destination.name.ilike(f"%{destination_name}%")).all()
@@ -193,13 +196,10 @@ async def search_by_name(
             "longitude": getattr(d, "longitude", None),
             "description": getattr(d, "description", None),
             "things_to_do": d.things_to_do.split("/") if getattr(d, "things_to_do", None) else [],
-            "weather_data": weather_data,
             "hotel_data": hotel_data,
             "guide_details": guide_details,
             "destination image": f"/destination-image/{d.destination_id}"
         })
-
-
 
     return {"results": results}
 
