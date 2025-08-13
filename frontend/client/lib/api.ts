@@ -14,28 +14,21 @@ const handleAPIError = (error: any, context: string): never => {
 // Test connection to backend
 export const testConnection = async (): Promise<boolean> => {
   try {
-    console.log("Testing connection to:", `${API_BASE_URL}/docs`);
-
-    // Use Promise.race for cleaner timeout handling
+    // Use Promise.race for cleaner timeout handling with shorter timeout
     const fetchPromise = fetch(`${API_BASE_URL}/docs`, {
       method: "HEAD"
     });
 
     const timeoutPromise = new Promise<Response>((_, reject) => {
       setTimeout(() => {
-        reject(new Error('Request timeout after 15 seconds'));
-      }, 15000);
+        reject(new Error('Request timeout after 5 seconds'));
+      }, 5000);
     });
 
     const response = await Promise.race([fetchPromise, timeoutPromise]);
-    console.log("Connection test result:", response.ok, response.status);
     return response.ok;
   } catch (error: any) {
-    if (error.message?.includes('timeout')) {
-      console.warn("Connection test timed out");
-    } else {
-      console.error("Connection test failed:", error);
-    }
+    // Silently return false to avoid spamming console with error messages
     return false;
   }
 };

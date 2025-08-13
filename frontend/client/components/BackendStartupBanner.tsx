@@ -13,40 +13,28 @@ const BackendStartupBanner: React.FC = () => {
 
   const checkBackend = async () => {
     try {
-      console.log(`🔍 Checking backend connectivity at ${new Date().toISOString()}`);
-
-      // Use Promise.race for reliable timeout without AbortController issues
+      // Use Promise.race for reliable timeout with shorter timeout
       const fetchPromise = fetch("http://localhost:8000/docs", {
         method: "HEAD",
       });
 
       const timeoutPromise = new Promise<Response>((_, reject) => {
         setTimeout(() => {
-          reject(new Error('Backend check timeout after 15 seconds'));
-        }, 15000);
+          reject(new Error('Backend check timeout after 5 seconds'));
+        }, 5000);
       });
 
       const response = await Promise.race([fetchPromise, timeoutPromise]);
 
       if (response.ok) {
-        console.log("✅ Backend is online");
         setBackendStatus("online");
         setShowBanner(false);
       } else {
-        console.warn(`⚠️ Backend responded with status: ${response.status}`);
         setBackendStatus("offline");
         setShowBanner(true);
       }
     } catch (error: any) {
-      // Handle different types of errors
-      if (error.message?.includes('timeout')) {
-        console.warn("⏱️ Backend check timed out (>15s)");
-      } else if (error instanceof TypeError && error.message.includes("fetch")) {
-        console.warn("🌐 Network error - backend may not be running");
-      } else {
-        console.warn("❌ Backend connectivity check failed:", error);
-      }
-
+      // Silently handle errors to avoid console spam
       setBackendStatus("offline");
       setShowBanner(true);
     }
@@ -71,20 +59,25 @@ const BackendStartupBanner: React.FC = () => {
   };
 
   useEffect(() => {
-    checkBackend();
+    // Add small delay to avoid immediate fetch on page load
+    const initialTimeout = setTimeout(() => {
+      checkBackend();
+    }, 2000);
 
-    // More conservative checking to avoid timeout spam
+    // Check less frequently to avoid timeout spam
     const interval = setInterval(() => {
-      // Only check if we're not currently showing the banner or if it's been dismissed
       if (backendStatus === "online") {
-        checkBackend(); // Check every 30 seconds when online
+        checkBackend(); // Check every 60 seconds when online
       } else {
         // When offline, check less frequently to avoid timeout spam
-        checkBackend(); // Check every 30 seconds even when offline
+        checkBackend(); // Check every 60 seconds even when offline
       }
-    }, 30000); // Fixed 30-second interval for stability
+    }, 60000); // 60-second interval to reduce errors
 
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(initialTimeout);
+      clearInterval(interval);
+    };
   }, []); // Remove backendStatus dependency to avoid re-creating intervals
 
   if (!showBanner || backendStatus === "online") {

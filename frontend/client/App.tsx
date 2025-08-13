@@ -10,7 +10,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { LoadingProvider } from "./contexts/LoadingContext";
 import OfflineNotice from "./components/OfflineNotice";
 import BackendStartupBanner from "./components/BackendStartupBanner";
-import BackendConnectionDiagnostic from "./components/BackendConnectionDiagnostic";
+// import BackendConnectionDiagnostic from "./components/BackendConnectionDiagnostic";
 import LoadingOverlay from "./components/LoadingOverlay";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -34,7 +34,7 @@ const App = () => (
             <Sonner />
             <OfflineNotice />
             <BackendStartupBanner />
-            <BackendConnectionDiagnostic />
+            {/* <BackendConnectionDiagnostic /> */}
             <LoadingOverlay />
             <BrowserRouter>
               <Routes>
