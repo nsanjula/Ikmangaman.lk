@@ -28,7 +28,7 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({ className = '' }
         <SmokingTrainLoader
           progress={loadingState.progress}
           width={300}
-          height={120}
+          height={140}
           showPercent={false}
         />
         

@@ -43,7 +43,7 @@ export const SmokingTrainLoader: React.FC<SmokingTrainLoaderProps> = ({
 
     const clampedProgress = Math.max(0, Math.min(progress, 100));
     const startX = -120; // Train starts off-screen left
-    const endX = width - 110; // Train front stops at edge at 100%
+    const endX = width - 85; // Train front reaches closer to edge at 100%
     const bridgeLength = endX - startX;
 
     const newX = startX + (bridgeLength * clampedProgress) / 100;
@@ -58,9 +58,9 @@ export const SmokingTrainLoader: React.FC<SmokingTrainLoaderProps> = ({
     }
   }, [progress, isVisible, width]);
 
-  // Manage smoke puff frames - new puff every 0.5s
+  // Manage smoke puff frames - new puff every 0.5s (always active when visible)
   useEffect(() => {
-    if (!isVisible || progress === 0 || progress >= 100) {
+    if (!isVisible) {
       setSmokeFrames([]);
       return;
     }
@@ -76,7 +76,7 @@ export const SmokingTrainLoader: React.FC<SmokingTrainLoaderProps> = ({
     }, 500); // New puff every 0.5s
 
     return () => clearInterval(interval);
-  }, [isVisible, progress]);
+  }, [isVisible]); // Removed progress dependency so smoke always shows
 
   // Generate smoke animation for a single puff
   const generateSmokeFrames = (timestamp: number, index: number) => {
@@ -185,15 +185,15 @@ export const SmokingTrainLoader: React.FC<SmokingTrainLoaderProps> = ({
     >
       <svg
         width={width}
-        height={height + 120}
-        viewBox={`0 0 ${width} ${height + 120}`}
+        height={height + 180}
+        viewBox={`0 0 ${width} ${height + 180}`}
         style={{ overflow: 'visible', background: 'transparent' }}
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
           {/* Clip path for train visibility bounds only - not smoke */}
           <clipPath id="bridgeClip">
-            <rect x="0" y="0" width={width} height={height + 120} />
+            <rect x="0" y="60" width={width} height={height + 60} />
           </clipPath>
 
           {/* Gradients for bridge elements */}
@@ -209,393 +209,33 @@ export const SmokingTrainLoader: React.FC<SmokingTrainLoaderProps> = ({
           </linearGradient>
         </defs>
 
-        {/* Ground/Foundation */}
-        <rect
+        {/* Bridge Sprite */}
+        <image
+          href="https://cdn.builder.io/api/v1/image/assets%2Fc9ab74d0d22a403180b3c3116f1f10c6%2F080c438356354942a76bf58a8307dff0?format=webp&width=800"
           x="0"
-          y={height - 25}
+          y={height - 60}
           width={width}
-          height="25"
-          fill="#1A202C"
+          height="95"
+          preserveAspectRatio="xMidYMid slice"
         />
 
-        {/* Six Connected Bridge Sections */}
-        {[0, 1, 2, 3, 4, 5].map((sectionIndex) => {
-          const sectionWidth = width / 6;
-          const sectionX = sectionIndex * sectionWidth;
-          const bridgeHeight = 50;
-          const bridgeY = height - 75;
-
-          return (
-            <g key={`bridge-section-${sectionIndex}`}>
-              {/* Bridge Section Base */}
-              <rect
-                x={sectionX}
-                y={bridgeY + bridgeHeight - 10}
-                width={sectionWidth}
-                height="10"
-                fill="url(#bridgeGradient)"
-                stroke="white"
-                strokeWidth="1"
-              />
-
-              {/* Bridge Section Pillars */}
-              <rect
-                x={sectionX + 5}
-                y={bridgeY}
-                width="8"
-                height={bridgeHeight}
-                fill="#1A202C"
-                stroke="white"
-                strokeWidth="1"
-              />
-              <rect
-                x={sectionX + sectionWidth - 13}
-                y={bridgeY}
-                width="8"
-                height={bridgeHeight}
-                fill="#1A202C"
-                stroke="white"
-                strokeWidth="1"
-              />
-
-              {/* Bridge Section Arch */}
-              <path
-                d={`M ${sectionX + 13} ${bridgeY + bridgeHeight - 10}
-                    Q ${sectionX + sectionWidth/2} ${bridgeY + 15}
-                    ${sectionX + sectionWidth - 13} ${bridgeY + bridgeHeight - 10}`}
-                fill="none"
-                stroke="white"
-                strokeWidth="2"
-              />
-
-              {/* Arch Shadow/Interior */}
-              <path
-                d={`M ${sectionX + 13} ${bridgeY + bridgeHeight - 10}
-                    Q ${sectionX + sectionWidth/2} ${bridgeY + 20}
-                    ${sectionX + sectionWidth - 13} ${bridgeY + bridgeHeight - 10}`}
-                fill="url(#archShadow)"
-                stroke="white"
-                strokeWidth="0.5"
-              />
-
-              {/* Bridge Deck Details */}
-              <rect
-                x={sectionX}
-                y={bridgeY + bridgeHeight - 12}
-                width={sectionWidth}
-                height="2"
-                fill="#000000"
-                stroke="white"
-                strokeWidth="0.5"
-              />
-
-              {/* Connecting Elements between sections */}
-              {sectionIndex < 5 && (
-                <rect
-                  x={sectionX + sectionWidth - 2}
-                  y={bridgeY + bridgeHeight - 15}
-                  width="4"
-                  height="15"
-                  fill="#000000"
-                  stroke="white"
-                  strokeWidth="0.5"
-                />
-              )}
-            </g>
-          );
-        })}
-
-        {/* Main Bridge Deck */}
-        <rect
-          x="0"
-          y={height - 78}
-          width={width}
-          height="12"
-          fill="#1A202C"
-          stroke="white"
-          strokeWidth="1"
-        />
-
-        {/* Railway Tracks */}
-        <g>
-          {/* Left Rail */}
-          <line
-            x1="0"
-            y1={height - 72}
-            x2={width}
-            y2={height - 72}
-            stroke="#2D3748"
-            strokeWidth="3"
-          />
-          {/* Right Rail */}
-          <line
-            x1="0"
-            y1={height - 68}
-            x2={width}
-            y2={height - 68}
-            stroke="#2D3748"
-            strokeWidth="3"
-          />
-
-          {/* Railway Ties */}
-          {Array.from({ length: Math.floor(width / 15) }, (_, i) => (
-            <rect
-              key={`tie-${i}`}
-              x={i * 15}
-              y={height - 75}
-              width="10"
-              height="6"
-              fill="#1A202C"
-              stroke="white"
-              strokeWidth="0.5"
-            />
-          ))}
-        </g>
 
         {/* Train with clipping */}
         <g clipPath="url(#bridgeClip)">
-          {/* Steam Locomotive with black body and white outlines */}
+          {/* Train Sprite Image */}
           <g ref={trainRef} id="train" style={{ transform: 'translateX(-120px)' }}>
-            {/* Coal Tender Car */}
-            <g>
-              {/* Tender Body */}
-              <rect
-                x="-80"
-                y={height - 100}
-                width="50"
-                height="20"
-                fill="#000000"
-                stroke="white"
-                strokeWidth="2"
-                rx="2"
-              />
-
-              {/* Tender Coal Load */}
-              <path
-                d={`M -75 ${height - 100}
-                    L -35 ${height - 100}
-                    L -37 ${height - 105}
-                    L -73 ${height - 105}
-                    Z`}
-                fill="#000000"
-                stroke="white"
-                strokeWidth="1.5"
-              />
-
-              {/* Tender Wheels */}
-              <circle cx="-65" cy={height - 82} r="6" fill="#000000" stroke="white" strokeWidth="2" />
-              <circle cx="-45" cy={height - 82} r="6" fill="#000000" stroke="white" strokeWidth="2" />
-
-              {/* Tender Wheel Spokes */}
-              <g stroke="white" strokeWidth="1.5">
-                <line x1="-65" y1={height - 88} x2="-65" y2={height - 76} />
-                <line x1="-71" y1={height - 82} x2="-59" y2={height - 82} />
-                <line x1="-45" y1={height - 88} x2="-45" y2={height - 76} />
-                <line x1="-51" y1={height - 82} x2="-39" y2={height - 82} />
-              </g>
-
-              {/* Tender Coupling */}
-              <rect x="-30" y={height - 95} width="8" height="4" fill="#000000" stroke="white" strokeWidth="1.5" />
-            </g>
-
-            {/* Main Locomotive Body */}
-            <g>
-              {/* Locomotive Boiler */}
-              <rect
-                x="5"
-                y={height - 102}
-                width="70"
-                height="16"
-                fill="#000000"
-                stroke="white"
-                strokeWidth="2"
-                rx="8"
-              />
-
-              {/* Firebox */}
-              <rect
-                x="-5"
-                y={height - 108}
-                width="30"
-                height="22"
-                fill="#000000"
-                stroke="white"
-                strokeWidth="2"
-                rx="2"
-              />
-
-              {/* Steam Dome */}
-              <rect
-                x="16"
-                y={height - 115}
-                width="12"
-                height="12"
-                fill="#000000"
-                stroke="white"
-                strokeWidth="2"
-                rx="6"
-              />
-
-              {/* Sand Dome */}
-              <rect
-                x="37"
-                y={height - 110}
-                width="8"
-                height="8"
-                fill="#000000"
-                stroke="white"
-                strokeWidth="1.5"
-                rx="2"
-              />
-
-              {/* Bell */}
-              <rect
-                x="53"
-                y={height - 112}
-                width="6"
-                height="8"
-                fill="#000000"
-                stroke="white"
-                strokeWidth="1.5"
-                rx="3"
-              />
-
-              {/* Smokebox */}
-              <rect
-                x="65"
-                y={height - 105}
-                width="20"
-                height="18"
-                fill="#000000"
-                stroke="white"
-                strokeWidth="2"
-                rx="9"
-              />
-
-              {/* Smokestack/Chimney */}
-              <rect
-                x="72"
-                y={height - 128}
-                width="10"
-                height="20"
-                fill="#000000"
-                stroke="white"
-                strokeWidth="2"
-                rx="1"
-              />
-
-              {/* Chimney Flare */}
-              <rect
-                x="70"
-                y={height - 131}
-                width="14"
-                height="5"
-                fill="#000000"
-                stroke="white"
-                strokeWidth="2"
-                rx="1"
-              />
-
-              {/* Steam Pipes */}
-              <rect x="76" y={height - 114} width="4" height="4" fill="#000000" stroke="white" strokeWidth="1.5" rx="1" />
-              <rect x="68" y={height - 114} width="4" height="4" fill="#000000" stroke="white" strokeWidth="1.5" rx="1" />
-
-              {/* Boiler bands */}
-              <rect x="8" y={height - 98} width="65" height="1.5" fill="white" />
-              <rect x="8" y={height - 92} width="65" height="1.5" fill="white" />
-              <rect x="8" y={height - 90} width="65" height="1.5" fill="white" />
-            </g>
-
-            {/* Cab Structure */}
-            <g>
-              {/* Cab Body */}
-              <rect
-                x="-15"
-                y={height - 115}
-                width="20"
-                height="20"
-                fill="#000000"
-                stroke="white"
-                strokeWidth="2"
-              />
-
-              {/* Cab Roof */}
-              <path
-                d={`M -17 ${height - 115}
-                    L 7 ${height - 115}
-                    L 5 ${height - 118}
-                    L -15 ${height - 118}
-                    Z`}
-                fill="#000000"
-                stroke="white"
-                strokeWidth="2"
-              />
-
-              {/* Cab Windows */}
-              <rect x="-12" y={height - 112} width="6" height="8" fill="#000000" stroke="white" strokeWidth="1.5" />
-              <rect x="-4" y={height - 112} width="6" height="8" fill="#000000" stroke="white" strokeWidth="1.5" />
-            </g>
-
-            {/* Drive Wheels and Running Gear */}
-            <g>
-              {/* Large Drive Wheels */}
-              <circle cx="10" cy={height - 82} r="8" fill="#000000" stroke="white" strokeWidth="2" />
-              <circle cx="35" cy={height - 82} r="8" fill="#000000" stroke="white" strokeWidth="2" />
-              <circle cx="60" cy={height - 82} r="8" fill="#000000" stroke="white" strokeWidth="2" />
-
-              {/* Leading Truck Wheels */}
-              <circle cx="80" cy={height - 82} r="5" fill="#000000" stroke="white" strokeWidth="2" />
-
-              {/* Drive Wheel Spokes */}
-              {[10, 35, 60].map((x, i) => (
-                <g key={`drive-spokes-${i}`}>
-                  <line x1={x} y1={height - 90} x2={x} y2={height - 74} stroke="white" strokeWidth="1.5" />
-                  <line x1={x - 8} y1={height - 82} x2={x + 8} y2={height - 82} stroke="white" strokeWidth="1.5" />
-                  <line x1={x - 6} y1={height - 88} x2={x + 6} y2={height - 76} stroke="white" strokeWidth="1.5" />
-                  <line x1={x - 6} y1={height - 76} x2={x + 6} y2={height - 88} stroke="white" strokeWidth="1.5" />
-                  <circle cx={x} cy={height - 82} r="2" fill="#000000" stroke="white" strokeWidth="1" />
-                </g>
-              ))}
-
-              {/* Connecting Rods */}
-              <line x1="10" y1={height - 82} x2="35" y2={height - 82} stroke="white" strokeWidth="3" />
-              <line x1="35" y1={height - 82} x2="60" y2={height - 82} stroke="white" strokeWidth="3" />
-
-              {/* Side Rods */}
-              <line x1="12" y1={height - 85} x2="58" y2={height - 85} stroke="white" strokeWidth="2" />
-
-              {/* Pistons and Cylinders */}
-              <rect x="65" y={height - 98} width="15" height="6" fill="#000000" stroke="white" strokeWidth="2" rx="3" />
-              <rect x="67" y={height - 95} width="3" height="8" fill="#000000" stroke="white" strokeWidth="1.5" />
-              <rect x="75" y={height - 95} width="3" height="8" fill="#000000" stroke="white" strokeWidth="1.5" />
-            </g>
-
-            {/* Front Details */}
-            <g>
-              {/* Cowcatcher */}
-              <path
-                d={`M 85 ${height - 88}
-                    L 95 ${height - 82}
-                    L 95 ${height - 78}
-                    L 92 ${height - 75}
-                    L 85 ${height - 75}
-                    Z`}
-                fill="#000000"
-                stroke="white"
-                strokeWidth="2"
-              />
-
-              {/* Headlight */}
-              <circle cx="88" cy={height - 100} r="4" fill="#000000" stroke="white" strokeWidth="2" />
-              <circle cx="88" cy={height - 100} r="2" fill="#000000" stroke="white" strokeWidth="1" />
-
-              {/* Front Buffer */}
-              <circle cx="90" cy={height - 88} r="3" fill="#000000" stroke="white" strokeWidth="2" />
-            </g>
+            <image
+              href="https://cdn.builder.io/api/v1/image/assets%2Fc9ab74d0d22a403180b3c3116f1f10c6%2F5f405452f7564a47886458ad134593f1?format=webp&width=800"
+              x="-105"
+              y={height - 100}
+              width="280"
+              height="75"
+              preserveAspectRatio="xMidYMid meet"
+            />
 
             {/* Train Shadow */}
-            <g transform="translate(3, 3)" opacity="0.3">
-              <ellipse cx="0" cy={height - 82} rx="90" ry="8" fill="#000000" />
+            <g transform="translate(8, 25)" opacity="0.3">
+              <ellipse cx="35" cy={height + 5} rx="60" ry="6" fill="#000000" />
             </g>
           </g>
         </g>
@@ -603,44 +243,12 @@ export const SmokingTrainLoader: React.FC<SmokingTrainLoaderProps> = ({
         {/* Animated Smoke Effects - OUTSIDE CLIPPING */}
         <g ref={smokeContainerRef} style={{ transform: 'translateX(-120px)' }}>
           {smokeFrames.map((timestamp, index) => (
-            <g key={timestamp} transform={`translate(77, ${height - 135})`}>
+            <g key={timestamp} transform={`translate(75, ${height - 65})`}>
               {generateSmokeFrames(timestamp, index)}
             </g>
           ))}
         </g>
 
-        {/* Additional Bridge Support Details */}
-        {[0, 1, 2, 3, 4, 5].map((sectionIndex) => {
-          const sectionWidth = width / 6;
-          const sectionX = sectionIndex * sectionWidth;
-
-          return (
-            <g key={`support-${sectionIndex}`}>
-              {/* Decorative Bridge Railings */}
-              <line
-                x1={sectionX}
-                y1={height - 80}
-                x2={sectionX + sectionWidth}
-                y2={height - 80}
-                stroke="white"
-                strokeWidth="1"
-              />
-
-              {/* Vertical Support Posts */}
-              {Array.from({ length: 3 }, (_, i) => (
-                <line
-                  key={`post-${i}`}
-                  x1={sectionX + (i + 1) * (sectionWidth / 4)}
-                  y1={height - 80}
-                  x2={sectionX + (i + 1) * (sectionWidth / 4)}
-                  y2={height - 78}
-                  stroke="white"
-                  strokeWidth="0.5"
-                />
-              ))}
-            </g>
-          );
-        })}
       </svg>
 
       {/* Percentage text */}
