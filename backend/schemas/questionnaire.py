@@ -16,4 +16,8 @@ class Questionnaire(BaseModel):
     no_of_people : int
     start_location : str
 
-
+class TempQuestionnaire(BaseModel):
+    destination_id: int
+    travel_month: str
+    no_of_people: int
+    start_location: str

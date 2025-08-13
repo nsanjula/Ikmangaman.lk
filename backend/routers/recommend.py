@@ -10,7 +10,7 @@ from backend.services.distance import get_distance_and_duration_for_recommendati
 from backend.services.scoring import get_top_destinations
 from backend.utils import month_mapper
 from backend.utils.age_calc import calculate_age
-from backend.utils.token import get_current_user
+from backend.utils.auth_token import get_current_user
 
 router = APIRouter(
     tags=["recommend"]

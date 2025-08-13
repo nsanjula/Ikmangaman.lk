@@ -7,7 +7,7 @@ from backend.models import users
 from backend.database.db import get_db
 from backend.schemas.token import Token
 from backend.utils.hashing import verify_password
-from backend.utils.token import create_access_token
+from backend.utils.auth_token import create_access_token
 
 router = APIRouter(
     tags= ["auth"],
