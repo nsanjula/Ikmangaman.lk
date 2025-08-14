@@ -24,6 +24,8 @@ import DestinationDetail from "./pages/DestinationDetail";
 import Profile from "./pages/Profile";
 import AboutUsPage from "./pages/AboutUsPage";
 import CompassLoaderShowcase from "./pages/CompassLoaderShowcase";
+import SearchResults from "./pages/SearchResults";
+import SearchDestinationDetail from "./pages/SearchDestinationDetail";
 const queryClient = new QueryClient();
 
 const App = () => {
@@ -58,6 +60,8 @@ const App = () => {
                   <Route path="/questionnaire" element={<Questionare />} />
                   <Route path="/recommendation" element={<Recommendation />} />
                   <Route path="/destination/:id" element={<DestinationDetail />} />
+                  <Route path="/search" element={<SearchResults />} />
+                  <Route path="/search/destination/:id" element={<SearchDestinationDetail />} />
                   <Route path="/aboutus" element={<AboutUsPage />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/compass-loader" element={<CompassLoaderShowcase />} />

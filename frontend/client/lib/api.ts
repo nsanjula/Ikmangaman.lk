@@ -775,6 +775,79 @@ class AuthAPI {
       throw error;
     }
   }
+
+  async searchByText(query: string): Promise<any> {
+    try {
+      const token = this.getToken();
+      if (!token) {
+        throw new Error("Authentication required");
+      }
+
+      const response = await fetch(`${API_BASE_URL}/search/by-destination-name?destination_name=${encodeURIComponent(query)}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          this.removeToken();
+          throw new Error("Authentication required. Please log in again.");
+        }
+        const error: ApiError = await response.json();
+        throw new Error(error.detail || "Search failed");
+      }
+
+      return response.json();
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw new Error(
+          "Unable to connect to server. Please check your connection.",
+        );
+      }
+      throw error;
+    }
+  }
+
+  async searchByImage(imageFile: File): Promise<any> {
+    try {
+      const token = this.getToken();
+      if (!token) {
+        throw new Error("Authentication required");
+      }
+
+      const formData = new FormData();
+      formData.append('file', imageFile);
+
+      const response = await fetch(`${API_BASE_URL}/search/by-image`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          this.removeToken();
+          throw new Error("Authentication required. Please log in again.");
+        }
+        const error: ApiError = await response.json();
+        throw new Error(error.detail || "Image search failed");
+      }
+
+      return response.json();
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw new Error(
+          "Unable to connect to server. Please check your connection.",
+        );
+      }
+      throw error;
+    }
+  }
 }
 
 export const authAPI = new AuthAPI();

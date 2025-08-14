@@ -1,14 +1,19 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { FiUser } from "react-icons/fi";
+import SearchBar from "./SearchBar";
 
 export default function Header() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Show search bar only on recommendation and search pages
+  const showSearchBar = location.pathname === '/recommendation' || location.pathname.startsWith('/search');
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -35,10 +40,13 @@ export default function Header() {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="hidden md:flex items-center space-x-6">
+            {showSearchBar && (
+              <SearchBar className="w-80" />
+            )}
             <Link
               to="/aboutus"
-              className="font-medium transition-colors duration-150"
+              className="font-medium transition-colors duration-150 whitespace-nowrap"
               style={{ color: 'var(--text-600)' }}
               onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--primary-600)')}
               onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-600)')}
@@ -136,9 +144,14 @@ export default function Header() {
             }`}
         >
           <div className="border-t border-gray-200 pt-4 space-y-4">
+            {showSearchBar && (
+              <div className="px-2">
+                <SearchBar className="w-full" />
+              </div>
+            )}
             <Link
               to="/aboutus"
-              className="block font-medium transition-colors duration-150"
+              className="block font-medium transition-colors duration-150 px-2"
               style={{ color: 'var(--text-600)' }}
               onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--primary-600)')}
               onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-600)')}
