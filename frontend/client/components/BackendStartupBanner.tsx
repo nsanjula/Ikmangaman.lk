@@ -13,18 +13,17 @@ const BackendStartupBanner: React.FC = () => {
 
   const checkBackend = async () => {
     try {
-      // Use Promise.race for reliable timeout with shorter timeout
-      const fetchPromise = fetch("http://localhost:8000/docs", {
+      // Create an AbortController for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+      const response = await fetch("http://localhost:8000/docs", {
         method: "HEAD",
+        signal: controller.signal,
+        mode: 'cors'
       });
 
-      const timeoutPromise = new Promise<Response>((_, reject) => {
-        setTimeout(() => {
-          reject(new Error('Backend check timeout after 5 seconds'));
-        }, 5000);
-      });
-
-      const response = await Promise.race([fetchPromise, timeoutPromise]);
+      clearTimeout(timeoutId);
 
       if (response.ok) {
         setBackendStatus("online");
@@ -34,7 +33,8 @@ const BackendStartupBanner: React.FC = () => {
         setShowBanner(true);
       }
     } catch (error: any) {
-      // Silently handle errors to avoid console spam
+      // Silently handle all connection errors including AbortError
+      // This is expected when the backend is not running
       setBackendStatus("offline");
       setShowBanner(true);
     }
@@ -62,23 +62,21 @@ const BackendStartupBanner: React.FC = () => {
     // Add small delay to avoid immediate fetch on page load
     const initialTimeout = setTimeout(() => {
       checkBackend();
-    }, 2000);
+    }, 1000);
 
-    // Check less frequently to avoid timeout spam
+    // Check backend status periodically
     const interval = setInterval(() => {
-      if (backendStatus === "online") {
-        checkBackend(); // Check every 60 seconds when online
-      } else {
-        // When offline, check less frequently to avoid timeout spam
-        checkBackend(); // Check every 60 seconds even when offline
+      // Only check if currently offline to reduce unnecessary requests
+      if (backendStatus === "offline" || backendStatus === "checking") {
+        checkBackend();
       }
-    }, 60000); // 60-second interval to reduce errors
+    }, 30000); // Check every 30 seconds when offline
 
     return () => {
       clearTimeout(initialTimeout);
       clearInterval(interval);
     };
-  }, []); // Remove backendStatus dependency to avoid re-creating intervals
+  }, [backendStatus]);
 
   if (!showBanner || backendStatus === "online") {
     return null;

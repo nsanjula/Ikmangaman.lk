@@ -346,7 +346,7 @@ const PlacesToVisit: React.FC = () => {
   const getActivityCategory = (activity: string) => {
     const activityLower = activity.toLowerCase();
     if (activityLower.includes("hike") || activityLower.includes("trek")) {
-      return { name: "Hiking", color: "#22C55E" };
+      return { name: "Hiking", color: "#10B981" };
     } else if (activityLower.includes("falls") || activityLower.includes("waterfall")) {
       return { name: "Nature", color: "#3B82F6" };
     } else if (activityLower.includes("bridge")) {
@@ -354,7 +354,7 @@ const PlacesToVisit: React.FC = () => {
     } else if (activityLower.includes("tea")) {
       return { name: "Cultural", color: "#8B5CF6" };
     } else {
-      return { name: "Adventure", color: "#EF4444" };
+      return { name: "Adventure", color: "#F97316" };
     }
   };
 
@@ -417,7 +417,14 @@ const PlacesToVisit: React.FC = () => {
                 )}
 
                 {/* Category Badge */}
-                <div className="absolute top-3 left-3 px-2 py-1 rounded text-white text-xs font-semibold" style={{ backgroundColor: category.color }}>
+                <div
+                  className="absolute top-3 left-3 px-2 py-1 rounded text-white text-xs font-medium backdrop-blur-sm"
+                  style={{
+                    backgroundColor: `${category.color}CC`, // Add transparency
+                    border: `1px solid ${category.color}`,
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                  }}
+                >
                   {category.name}
                 </div>
               </div>

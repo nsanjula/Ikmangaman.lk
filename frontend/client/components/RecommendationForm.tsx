@@ -671,16 +671,29 @@ const RecommendationForm = () => {
                         onClick={async () => {
                           console.log("=== TESTING API CONNECTION ===");
                           try {
+                            const controller = new AbortController();
+                            const timeoutId = setTimeout(() => controller.abort(), 3000);
+
                             const response = await fetch(
                               "http://localhost:8000/docs",
+                              {
+                                signal: controller.signal,
+                                mode: 'cors'
+                              }
                             );
+
+                            clearTimeout(timeoutId);
                             console.log(
                               "Direct fetch to /docs:",
                               response.status,
                               response.ok,
                             );
-                          } catch (err) {
-                            console.error("Direct fetch failed:", err);
+                          } catch (err: any) {
+                            if (err.name === 'AbortError') {
+                              console.log("Test API: Request timeout");
+                            } else {
+                              console.log("Test API: Connection failed - this is expected when backend is not running");
+                            }
                           }
                         }}
                         className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded transition-colors font-medium text-sm"

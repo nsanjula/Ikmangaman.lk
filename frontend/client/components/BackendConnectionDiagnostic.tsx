@@ -34,19 +34,18 @@ const BackendConnectionDiagnostic: React.FC = () => {
       try {
         const startTime = Date.now();
 
-        // Use Promise.race for cleaner timeout handling
-        const fetchPromise = fetch(`http://localhost:8000${endpoint}`, {
+        // Use AbortController for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+        const response = await fetch(`http://localhost:8000${endpoint}`, {
           method,
-          headers: method === 'GET' ? { 'Content-Type': 'application/json' } : {}
+          headers: method === 'GET' ? { 'Content-Type': 'application/json' } : {},
+          signal: controller.signal,
+          mode: 'cors'
         });
 
-        const timeoutPromise = new Promise<Response>((_, reject) => {
-          setTimeout(() => {
-            reject(new Error('Request timeout after 20 seconds'));
-          }, 20000);
-        });
-
-        const response = await Promise.race([fetchPromise, timeoutPromise]);
+        clearTimeout(timeoutId);
         const responseTime = Date.now() - startTime;
 
         test.responseTime = responseTime;
@@ -54,12 +53,12 @@ const BackendConnectionDiagnostic: React.FC = () => {
         test.error = response.ok ? undefined : `HTTP ${response.status}`;
 
       } catch (error: any) {
-        if (error.message?.includes('timeout')) {
+        if (error.name === 'AbortError') {
           test.status = 'timeout';
-          test.error = 'Request timeout (>20s)';
+          test.error = 'Request timeout (>10s)';
         } else {
           test.status = 'failed';
-          test.error = error.message || 'Network error';
+          test.error = 'Network connection failed';
         }
       }
 
