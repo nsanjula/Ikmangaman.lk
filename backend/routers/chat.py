@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from backend.services.chat_service import chat_service
 from backend.schemas import user
-from backend.utils.token import get_current_user
+from backend.utils.auth_token import get_current_user
 from sqlalchemy.orm import Session
 from backend.database.db import get_db
 

@@ -15,4 +15,5 @@ class User(Base):
     password = Column(String)
 
     latest_questionnaire = relationship("LatestQuestionnaire", back_populates="user")
+    saved_places = relationship("SavedPlace", back_populates="user")
 
