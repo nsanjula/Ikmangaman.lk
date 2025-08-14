@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 
 export default function Header() {
@@ -26,24 +27,15 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <a
-              href="#"
+            <Link
+              to="/aboutus"
               className="font-medium transition-colors duration-150"
               style={{ color: 'var(--text-600)' }}
-              onMouseEnter={(e) => e.target.style.color = 'var(--primary-600)'}
-              onMouseLeave={(e) => e.target.style.color = 'var(--text-600)'}
+              onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--primary-600)')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-600)')}
             >
               About Us
-            </a>
-            <a
-              href="#"
-              className="font-medium transition-colors duration-150"
-              style={{ color: 'var(--text-600)' }}
-              onMouseEnter={(e) => e.target.style.color = 'var(--primary-600)'}
-              onMouseLeave={(e) => e.target.style.color = 'var(--text-600)'}
-            >
-              Future Improvements
-            </a>
+            </Link>
           </nav>
 
           {/* Desktop Auth Buttons - Hidden on mobile */}
@@ -107,27 +99,19 @@ export default function Header() {
 
         {/* Mobile Navigation */}
         <div
-          className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
-            isMobileMenuOpen ? "max-h-96 py-4" : "max-h-0 py-0"
-          }`}
+          className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${isMobileMenuOpen ? "max-h-96 py-4" : "max-h-0 py-0"
+            }`}
         >
           <div className="border-t border-gray-200 pt-4 space-y-4">
-            <a
-              href="#"
-              className="block font-medium transition-colors duration-150 px-4 py-2"
+            <Link
+              to="/aboutus"
+              className="font-medium transition-colors duration-150"
               style={{ color: 'var(--text-600)' }}
-              onClick={() => setIsMobileMenuOpen(false)}
+              onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--primary-600)')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-600)')}
             >
               About Us
-            </a>
-            <a
-              href="#"
-              className="block font-medium transition-colors duration-150 px-4 py-2"
-              style={{ color: 'var(--text-600)' }}
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Future Improvements
-            </a>
+            </Link>
             <div className="flex flex-col space-y-2 pt-2 px-4">
               <button
                 onClick={() => handleNavigation("/login")}

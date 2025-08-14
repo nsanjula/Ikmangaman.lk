@@ -91,20 +91,19 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({ value, onChange, option
               onClick={() => handleOptionClick(option.value)}
               onMouseEnter={() => setHoveredOption(option.value)}
               onMouseLeave={() => setHoveredOption(null)}
-              className={`w-full px-4 py-2 text-sm text-left transition-all duration-150 ${
-                option.value === value
-                  ? 'bg-cyan-500 text-white'
-                  : hoveredOption === option.value
+              className={`w-full px-4 py-2 text-sm text-left transition-all duration-150 ${option.value === value
+                ? 'bg-cyan-500 text-white'
+                : hoveredOption === option.value
                   ? 'bg-cyan-50 text-cyan-700'
                   : 'text-gray-900 hover:bg-cyan-50'
-              }`}
+                }`}
               style={{
                 color: option.value === value ? 'white' : 'var(--text-900)',
                 backgroundColor: option.value === value
                   ? '#06B6D4'
                   : hoveredOption === option.value
-                  ? '#F0F9FF'
-                  : 'transparent'
+                    ? '#F0F9FF'
+                    : 'transparent'
               }}
             >
               {option.label}
@@ -620,11 +619,10 @@ const RecommendationForm = () => {
                             </div>
                             <div className="progress-bar">
                               <div
-                                className={`progress-fill ${
-                                  card.score >= 0.85 ? 'progress-green' :
+                                className={`progress-fill ${card.score >= 0.85 ? 'progress-green' :
                                   card.score >= 0.70 ? 'progress-sky' :
-                                  'progress-amber'
-                                }`}
+                                    'progress-amber'
+                                  }`}
                                 style={{
                                   width: `${Math.min(card.score * 100, 100)}%`,
                                 }}
@@ -698,22 +696,34 @@ const RecommendationForm = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-cyan-600 p-8 rounded-lg text-center text-white">
-                    <p className="text-lg mb-4">
-                      No recommendations match your current filters.
-                    </p>
-                    <p className="text-sm text-cyan-200 mb-4">
-                      Try adjusting your budget or selecting different areas.
-                    </p>
-                    <button
-                      onClick={() => {
-                        setSelectedAreas(areas.map((a) => a.id));
-                        setBudget(50000);
-                      }}
-                      className="bg-white hover:bg-gray-100 text-cyan-700 px-6 py-2 rounded transition-colors font-medium"
-                    >
-                      Reset Filters
-                    </button>
+                  <div className="bg-cyan-600 p-6 rounded-lg shadow-md text-center text-white">
+                    <div className="flex flex-col items-center">
+                      <h3 className="text-xl font-semibold mb-2 text-cyan-100">
+                        No recommendations match your current filters
+                      </h3>
+                      <p className="text-sm mb-5 max-w-md text-cyan-100">
+                        We couldn't find any destinations that match your selected budget and areas.
+                        Try adjusting your filters to see more options.
+                      </p>
+                      <div className="flex flex-wrap gap-3 justify-center">
+                        <button
+                          onClick={() => {
+                            setSelectedAreas(areas.map((a) => a.id));
+                            setBudget(50000);
+                            setSortBy("best_match");
+                          }}
+                          className="bg-white text-cyan-700 hover:bg-gray-50 px-5 py-2 rounded-md transition-colors font-medium text-sm shadow-sm"
+                        >
+                          Reset All Filters
+                        </button>
+                        <button
+                          onClick={() => setBudget(500000)}
+                          className="bg-cyan-700 text-white hover:bg-cyan-800 px-5 py-2 rounded-md transition-colors font-medium text-sm shadow-sm border border-cyan-500"
+                        >
+                          Increase Budget
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 )}
               </>

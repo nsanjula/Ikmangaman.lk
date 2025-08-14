@@ -21,6 +21,7 @@ import Questionare from "./pages/Questionare";
 import Recommendation from "./pages/Recommendation";
 import DestinationDetail from "./pages/DestinationDetail";
 import Profile from "./pages/Profile";
+import AboutUsPage from "./pages/AboutUsPage";
 import CompassLoaderShowcase from "./pages/CompassLoaderShowcase";
 const queryClient = new QueryClient();
 
@@ -46,10 +47,11 @@ const App = () => (
                 <Route path="/questionnaire" element={<Questionare />} />
                 <Route path="/recommendation" element={<Recommendation />} />
                 <Route path="/destination/:id" element={<DestinationDetail />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/compass-loader" element={<CompassLoaderShowcase />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
+                <Route path="/aboutus" element={<AboutUsPage />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/compass-loader" element={<CompassLoaderShowcase />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
           </TooltipProvider>
