@@ -58,3 +58,4 @@ def get_distance_and_duration_for_one_location(origin_lat, origin_lng, dest_lat,
         "duration_seconds": leg["duration"]["value"]
     }
 
+

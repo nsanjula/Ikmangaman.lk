@@ -68,7 +68,11 @@ def get_recommendations(db: Session = Depends(get_db), current_user: user.User =
             "name": destination.name,
             "match_score": round(score, 2),
             "rating_label": rating_label,
-            "estimated_budget": calculate_the_budget(destination.avg_cost, distance_results[i]["distance"], latest_questionnaire_of_accessed_user.no_of_people),
+            "estimated_budget": calculate_the_budget(
+                destination.avg_cost,
+                distance_results[i]["distance"],
+                latest_questionnaire_of_accessed_user.no_of_people
+            ),
             "distance": distance_results[i]["distance"],
             "travel_time": distance_results[i]["travel_time"],
             "thumbnail_img": f"/destination-image/{destination.destination_id}"

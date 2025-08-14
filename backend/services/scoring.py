@@ -1,11 +1,16 @@
+from typing import Optional, List
+
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from backend.database.db import get_db
 from backend.models.destinations import Destination
 
-def get_top_destinations(traveler_type_lst, travel_season, db):
-    destinations = db.query(Destination).all()
+def get_top_destinations(traveler_type_lst, travel_season, db, exclude_ids: Optional[List[int]] = None):
+    query = db.query(Destination)
+    if exclude_ids:
+        query = query.filter(~Destination.destination_id.in_(exclude_ids))
+    destinations = query.all()
     scored = []
 
     for dest in destinations:

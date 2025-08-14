@@ -21,3 +21,25 @@ class TempQuestionnaire(BaseModel):
     travel_month: str
     no_of_people: int
     start_location: str
+
+class TripPlanQuestionnaire(BaseModel):
+    travel_month: str
+    no_of_people: int
+    start_location: str
+
+class TripPlanDayInterests(BaseModel):
+    nature: bool
+    adventure: bool
+    luxury: bool
+    culture: bool
+    relaxation: bool
+    wellness: bool
+    local_life: bool
+    wild_life: bool
+    food: bool
+    spirituality: bool
+    eco_tourism: bool
+
+class DayAssignment(BaseModel):
+    destination_id: int
+    estimated_budget: float
