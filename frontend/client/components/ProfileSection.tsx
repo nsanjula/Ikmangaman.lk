@@ -184,11 +184,11 @@ const Profile = () => {
 
   if (isLoading) {
     return (
-      <div className="bg-cyan-700 text-white min-h-screen py-8 px-4 md:px-8">
+      <div className="min-h-screen py-8 px-4 md:px-8" style={{background: 'var(--bg)'}}>
         <div className="max-w-6xl mx-auto flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-            <p className="text-lg">Loading profile...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" style={{borderBottomColor: 'var(--primary-600)'}}></div>
+            <p className="text-lg" style={{color: 'var(--text-600)'}}>Loading profile...</p>
           </div>
         </div>
       </div>
@@ -196,7 +196,7 @@ const Profile = () => {
   }
 
   return (
-    <div className="bg-cyan-700 text-white min-h-screen py-8 px-4 md:px-8">
+    <div className="min-h-screen py-8 px-4 md:px-8" style={{background: 'linear-gradient(135deg, var(--bg) 0%, var(--surface-alt) 100%)', color: 'var(--text-900)'}}>
       <div className="max-w-6xl mx-auto">
         {/* Error Message */}
         {error && (
@@ -212,25 +212,30 @@ const Profile = () => {
         )}
 
         {/* Profile Header */}
-        <div className="flex flex-col items-center mb-10">
-          <div className="relative w-32 h-32 bg-white rounded-full flex items-center justify-center text-cyan-700 text-4xl shadow-lg">
-            <FiUser size={48} />
-            <button
-              onClick={() => setEditMode(!editMode)}
-              className="absolute bottom-1 right-1 bg-cyan-500 p-2 rounded-full cursor-pointer hover:bg-cyan-600 transition-colors"
-            >
-              <FiEdit size={16} />
-            </button>
+        <div className="rounded-xl p-8 mb-8 relative overflow-hidden" style={{background: 'linear-gradient(135deg, var(--primary-100) 0%, var(--surface) 100%)', boxShadow: 'var(--shadow)'}}>
+          {/* Teal Geometric Low Poly Pattern */}
+          <div className="absolute inset-0 opacity-20" style={{
+            background: `url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2314B8A6' fill-opacity='0.6'%3E%3Cpolygon points='60 0 120 30 120 90 60 120 0 90 0 30'/%3E%3Cpolygon points='30 15 60 0 90 15 75 45 45 45'/%3E%3Cpolygon points='90 15 120 30 105 60 75 45'/%3E%3Cpolygon points='105 60 120 90 90 105 75 75'/%3E%3Cpolygon points='90 105 60 120 30 105 45 75 75 75'/%3E%3Cpolygon points='30 105 0 90 15 60 45 75'/%3E%3Cpolygon points='15 60 0 30 30 15 45 45'/%3E%3Cpolygon points='45 45 75 45 75 75 45 75' fill-opacity='0.3'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+          }}></div>
+          <div className="flex flex-col items-center relative z-10">
+            <div className="w-32 h-32 rounded-full flex items-center justify-center text-5xl font-bold shadow-lg" style={{background: 'var(--primary-600)', color: 'white', border: '4px solid var(--surface)'}}>
+              {userData.firstName ? userData.firstName.charAt(0).toUpperCase() : 'U'}
+            </div>
+            <h2 className="text-3xl mt-4 font-bold" style={{color: 'var(--text-900)'}}>
+              Hi, {userData.firstName || "User"}!{" "}
+              <span style={{color: 'var(--accent)'}}>✌️</span>
+            </h2>
+            <p className="mt-2 text-sm" style={{color: 'var(--text-600)'}}>
+              Welcome to your profile dashboard
+            </p>
           </div>
-          <h2 className="text-3xl mt-4 font-bold">
-            Hi, {userData.firstName || "User"}!{" "}
-            <span className="text-cyan-300">✌️</span>
-          </h2>
         </div>
 
         {/* Editable Info Form */}
-        <div className="bg-cyan-600 rounded-xl p-6 w-full max-w-md mx-auto mb-12 shadow-lg">
-          <h3 className="text-xl font-semibold mb-4">Personal Information</h3>
+        <div className="rounded-xl p-6 w-full max-w-2xl mx-auto mb-8" style={{background: 'var(--surface)', boxShadow: 'var(--shadow-lg)', border: '1px solid var(--border)'}}>
+          <div className="rounded-lg p-3 mb-4" style={{background: 'var(--surface-alt)'}}>
+            <h3 className="text-xl font-semibold" style={{color: 'var(--text-900)'}}>Personal Information</h3>
+          </div>
 
           {[
             {
@@ -270,7 +275,7 @@ const Profile = () => {
               disabled = false,
             }) => (
               <div className="mb-4" key={field}>
-                <label className="block text-sm font-medium mb-1">
+                <label className="block text-sm font-medium mb-1" style={{color: 'var(--text-600)'}}>
                   {label}
                 </label>
                 <div className="relative">
@@ -279,11 +284,17 @@ const Profile = () => {
                     value={userData[field as keyof typeof userData]}
                     placeholder={placeholder}
                     onChange={(e) => handleChange(field, e.target.value)}
-                    className="w-full p-3 rounded bg-white text-cyan-800 pr-10 disabled:bg-gray-200 disabled:cursor-not-allowed"
+                    className="w-full p-3 rounded pr-10 disabled:cursor-not-allowed"
+                    style={{
+                      background: 'var(--surface)',
+                      color: 'var(--text-900)',
+                      border: '1px solid var(--border)',
+                      opacity: (!editMode || disabled) ? '0.7' : '1'
+                    }}
                     disabled={!editMode || disabled}
                   />
                   {editMode && !disabled && (
-                    <FiEdit className="absolute right-3 top-1/2 transform -translate-y-1/2 text-cyan-600" />
+                    <FiEdit className="absolute right-3 top-1/2 transform -translate-y-1/2" style={{color: 'var(--primary-600)'}} />
                   )}
                 </div>
               </div>
@@ -293,7 +304,7 @@ const Profile = () => {
           {editMode && (
             <button
               onClick={handleSave}
-              className="w-full bg-cyan-500 hover:bg-cyan-600 text-white p-3 rounded mt-4 font-semibold shadow flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+              className="btn btn-primary btn-lg w-full mt-4 flex items-center justify-center gap-2 disabled:opacity-50"
               disabled={isSaving}
             >
               {isSaving ? (
@@ -305,40 +316,53 @@ const Profile = () => {
               )}
             </button>
           )}
+
+          {!editMode && (
+            <div className="mt-4 pt-4" style={{borderTop: '1px solid var(--border)'}}>
+              <button
+                onClick={() => setEditMode(true)}
+                className="btn btn-secondary btn-md w-full flex items-center justify-center gap-2"
+              >
+                <FiEdit /> Edit Profile
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Your Saved Places */}
         <div className="w-full">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-2xl font-semibold">Your Saved Places</h3>
-            {savedPlaces.length > placesPerPage && (
-              <div className="flex gap-2">
-                <button
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(prev - 1, 1))
-                  }
-                  disabled={currentPage === 1}
-                  className="p-2 bg-cyan-600 rounded hover:bg-cyan-500 disabled:opacity-50 transition-colors"
-                >
-                  <FiChevronLeft />
-                </button>
-                <button
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                  }
-                  disabled={currentPage === totalPages}
-                  className="p-2 bg-cyan-600 rounded hover:bg-cyan-500 disabled:opacity-50 transition-colors"
-                >
-                  <FiChevronRight />
-                </button>
-              </div>
-            )}
+          <div className="rounded-lg p-4 mb-6" style={{background: 'var(--surface)', border: '1px solid var(--border)'}}>
+            <div className="flex justify-between items-center">
+              <h3 className="text-2xl font-semibold" style={{color: 'var(--text-900)'}}>Your Saved Places</h3>
+              {savedPlaces.length > placesPerPage && (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(prev - 1, 1))
+                    }
+                    disabled={currentPage === 1}
+                    className="btn btn-secondary btn-sm disabled:opacity-50"
+                  >
+                    <FiChevronLeft />
+                  </button>
+                  <button
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    }
+                    disabled={currentPage === totalPages}
+                    className="btn btn-secondary btn-sm disabled:opacity-50"
+                  >
+                    <FiChevronRight />
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {savedPlacesLoading && (
             <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
-              <p>Loading your saved places...</p>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-4" style={{borderBottomColor: 'var(--primary-600)'}}></div>
+              <p style={{color: 'var(--text-600)'}}>Loading your saved places...</p>
             </div>
           )}
 
@@ -358,14 +382,17 @@ const Profile = () => {
           {!savedPlacesLoading &&
             !savedPlacesError &&
             savedPlaces.length === 0 && (
-              <div className="text-center py-8">
-                <p className="text-lg mb-4">No saved places yet</p>
-                <p className="text-gray-300 mb-4">
+              <div className="rounded-xl p-8 text-center" style={{background: 'var(--surface)', border: '1px solid var(--border)'}}>
+                <div className="w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center" style={{background: 'var(--surface-alt)'}}>
+                  <FiUser size={32} style={{color: 'var(--primary-600)'}} />
+                </div>
+                <p className="text-lg mb-4" style={{color: 'var(--text-900)'}}>No saved places yet</p>
+                <p className="mb-6" style={{color: 'var(--text-600)'}}>
                   Start exploring destinations and save your favorites!
                 </p>
                 <a
                   href="/recommendations"
-                  className="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-3 rounded-lg transition-colors"
+                  className="btn btn-primary btn-lg"
                 >
                   Explore Destinations
                 </a>
@@ -375,12 +402,13 @@ const Profile = () => {
           {!savedPlacesLoading &&
             !savedPlacesError &&
             savedPlaces.length > 0 && (
-              <>
+              <div className="rounded-xl p-6" style={{background: 'var(--surface-alt)'}}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                   {currentPlaces.map((place) => (
                     <div
                       key={place.id}
-                      className="bg-sky-300 text-cyan-900 p-4 rounded-xl shadow-md hover:shadow-lg transition-shadow flex flex-col"
+                      className="card p-4 rounded-xl hover:shadow-lg transition-all duration-300 flex flex-col transform hover:-translate-y-1"
+                      style={{background: 'var(--surface)', color: 'var(--text-900)', boxShadow: 'var(--shadow)', border: '1px solid var(--border)'}}
                     >
                       <div className="h-48 rounded-lg mb-4 overflow-hidden">
                         <img
@@ -394,15 +422,15 @@ const Profile = () => {
                           }}
                         />
                       </div>
-                      <h4 className="font-bold text-xl mb-2">{place.name}</h4>
-                      <p className="text-gray-700 mb-4 text-sm leading-relaxed flex-grow">
+                      <h4 className="font-bold text-xl mb-2" style={{color: 'var(--text-900)'}}>{place.name}</h4>
+                      <p className="mb-4 text-sm leading-relaxed flex-grow" style={{color: 'var(--text-600)'}}>
                         {place.description}
                       </p>
                       <button
                         onClick={() => {
                           /* Dummy button - no action */
                         }}
-                        className="w-full bg-cyan-600 hover:bg-cyan-700 text-white py-2 rounded-lg transition-colors mt-auto"
+                        className="btn btn-primary btn-md w-full mt-auto"
                       >
                         View Details
                       </button>
@@ -416,12 +444,17 @@ const Profile = () => {
                       <button
                         key={index}
                         onClick={() => setCurrentPage(index + 1)}
-                        className={`w-3 h-3 rounded-full ${currentPage === index + 1 ? "bg-white" : "bg-gray-400"}`}
+                        className="w-3 h-3 rounded-full transition-colors"
+                        style={{
+                          background: currentPage === index + 1
+                            ? 'var(--primary-600)'
+                            : 'var(--border)'
+                        }}
                       />
                     ))}
                   </div>
                 )}
-              </>
+              </div>
             )}
         </div>
 
@@ -429,7 +462,7 @@ const Profile = () => {
         <div className="flex justify-center">
           <button
             onClick={handleLogout}
-            className="mt-6 bg-cyan-800 hover:bg-cyan-900 px-8 py-3 rounded-lg text-white font-semibold flex items-center gap-2 transition-colors"
+            className="btn btn-secondary btn-lg mt-6 flex items-center gap-2"
           >
             <FiLogOut /> Log Out
           </button>

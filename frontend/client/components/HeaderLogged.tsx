@@ -3,15 +3,43 @@ import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { FiUser } from "react-icons/fi";
+import { useState, useEffect } from "react";
+import { authAPI, UserProfile } from "../lib/api";
 
 export default function HeaderLogged() {
   const navigate = useNavigate();
   const { logout } = useAuth();
-  const placeholderName = "User"; // Placeholder name for showcase
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        setProfileLoading(true);
+        const profile = await authAPI.getUserProfile();
+        setUserProfile(profile);
+      } catch (error) {
+        console.error("Failed to load user profile for header:", error);
+        // If profile fails to load, we'll use fallback
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    loadUserProfile();
+  }, []);
 
   const handleLogout = () => {
     logout();
     navigate("/");
+  };
+
+  // Get the first letter for profile display
+  const getProfileLetter = () => {
+    if (userProfile?.firstname) {
+      return userProfile.firstname.charAt(0).toUpperCase();
+    }
+    return "U"; // Fallback
   };
 
   return (
@@ -40,10 +68,18 @@ export default function HeaderLogged() {
           <div className="hidden md:flex items-center space-x-4">
             <div
               onClick={() => navigate("/profile")}
-              className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-cyan-700 shadow-lg cursor-pointer hover:bg-gray-50 transition border-2 border-cyan-600 ring-2 ring-cyan-200"
+              className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg cursor-pointer transition font-bold text-sm"
+              style={{
+                background: 'var(--primary-600)',
+                color: 'white',
+                border: '2px solid var(--surface)',
+                transform: 'scale(1)',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
               title="Profile"
             >
-              <FiUser size={20} />
+              {profileLoading ? <FiUser size={16} /> : getProfileLetter()}
             </div>
             <Button
               onClick={handleLogout}
@@ -90,10 +126,18 @@ export default function HeaderLogged() {
           <div className="flex items-center space-x-4 mt-4">
             <div
               onClick={() => navigate("/profile")}
-              className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-cyan-700 shadow-lg cursor-pointer hover:bg-gray-50 transition border-2 border-cyan-600 ring-2 ring-cyan-200"
+              className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg cursor-pointer transition font-bold text-sm"
+              style={{
+                background: 'var(--primary-600)',
+                color: 'white',
+                border: '2px solid var(--surface)',
+                transform: 'scale(1)',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
               title="Profile"
             >
-              <FiUser size={20} />
+              {profileLoading ? <FiUser size={16} /> : getProfileLetter()}
             </div>
             <Button
               onClick={handleLogout}
