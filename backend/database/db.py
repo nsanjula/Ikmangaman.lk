@@ -1,11 +1,15 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+import os
 
-# SQLALCHEMY_DATABASE_URL = "sqlite:///D:/FastAPI/TestProject/blog.db"    D:\Idealize 2025\Ikmangaman.lk_main\backend\database
-# SQLALCHEMY_DATABASE_URL = "sqlite:///D:/Idealize 2025/Ikmangaman.lk_main/backend/database/ikmangaman.db"
-# SQLALCHEMY_DATABASE_URL = "sqlite:///C:/Users/yasir/Desktop/Collab (Ikman)/Gitdesk/backend/database/ikmangaman.db"
-SQLALCHEMY_DATABASE_URL = "sqlite:///C:/Users/USER/Documents/GitHub/Ikmangaman.lk/backend/database/ikmangaman.db"
+# Create database directory if it doesn't exist
+database_dir = os.path.dirname(__file__)
+os.makedirs(database_dir, exist_ok=True)
+
+# Use absolute path to database file
+database_path = os.path.join(database_dir, "ikmangaman.db")
+SQLALCHEMY_DATABASE_URL = f"sqlite:///{database_path}"
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
 
@@ -19,11 +23,3 @@ def get_db():
         yield db
     finally:
         db.close()
-
-
-
-
-
-
-
-

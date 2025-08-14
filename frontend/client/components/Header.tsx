@@ -1,11 +1,19 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { FiUser } from "react-icons/fi";
+import SearchBar from "./SearchBar";
 
 export default function Header() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { isAuthenticated, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Show search bar only on recommendation and search pages
+  const showSearchBar = location.pathname === '/recommendation' || location.pathname.startsWith('/search');
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -13,6 +21,12 @@ export default function Header() {
 
   const handleNavigation = (path: string) => {
     navigate(path);
+    setIsMobileMenuOpen(false);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
     setIsMobileMenuOpen(false);
   };
 
@@ -26,10 +40,13 @@ export default function Header() {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="hidden md:flex items-center space-x-6">
+            {showSearchBar && (
+              <SearchBar className="w-80" />
+            )}
             <Link
               to="/aboutus"
-              className="font-medium transition-colors duration-150"
+              className="font-medium transition-colors duration-150 whitespace-nowrap"
               style={{ color: 'var(--text-600)' }}
               onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--primary-600)')}
               onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-600)')}
@@ -38,23 +55,47 @@ export default function Header() {
             </Link>
           </nav>
 
-          {/* Desktop Auth Buttons - Hidden on mobile */}
+          {/* Desktop Auth Section */}
           <div className="hidden md:flex items-center space-x-4">
-            <button
-              onClick={() => handleNavigation("/login")}
-              className="btn btn-tertiary"
-            >
-              Log in
-            </button>
-            <button
-              onClick={() => handleNavigation("/register")}
-              className="btn btn-primary btn-md"
-            >
-              Sign up
-            </button>
+            {isAuthenticated ? (
+              // Logged in state
+              <>
+                <div
+                  onClick={() => handleNavigation("/profile")}
+                  className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-cyan-700 shadow-lg cursor-pointer hover:bg-gray-50 transition border-2 border-cyan-600 ring-2 ring-cyan-200"
+                  title="Profile"
+                >
+                  <FiUser size={20} />
+                </div>
+                <Button
+                  onClick={handleLogout}
+                  variant="outline"
+                  size="sm"
+                  className="text-white bg-cyan-600 hover:bg-cyan-700 border-cyan-600 hover:border-cyan-700"
+                >
+                  Logout
+                </Button>
+              </>
+            ) : (
+              // Logged out state
+              <>
+                <button
+                  onClick={() => handleNavigation("/login")}
+                  className="btn btn-tertiary"
+                >
+                  Log in
+                </button>
+                <button
+                  onClick={() => handleNavigation("/register")}
+                  className="btn btn-primary btn-md"
+                >
+                  Sign up
+                </button>
+              </>
+            )}
           </div>
 
-          {/* Mobile Menu Button - Always visible on mobile */}
+          {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center">
             <Button
               variant="ghost"
@@ -103,29 +144,60 @@ export default function Header() {
             }`}
         >
           <div className="border-t border-gray-200 pt-4 space-y-4">
+            {showSearchBar && (
+              <div className="px-2">
+                <SearchBar className="w-full" />
+              </div>
+            )}
             <Link
               to="/aboutus"
-              className="font-medium transition-colors duration-150"
+              className="block font-medium transition-colors duration-150 px-2"
               style={{ color: 'var(--text-600)' }}
               onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--primary-600)')}
               onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-600)')}
+              onClick={() => setIsMobileMenuOpen(false)}
             >
               About Us
             </Link>
-            <div className="flex flex-col space-y-2 pt-2 px-4">
-              <button
-                onClick={() => handleNavigation("/login")}
-                className="btn btn-tertiary justify-start"
-              >
-                Log in
-              </button>
-              <button
-                onClick={() => handleNavigation("/register")}
-                className="btn btn-primary btn-md justify-start"
-              >
-                Sign up
-              </button>
-            </div>
+            
+            {isAuthenticated ? (
+              // Mobile logged in state
+              <div className="flex flex-col space-y-2 pt-2 px-4">
+                <div className="flex items-center space-x-4">
+                  <div
+                    onClick={() => handleNavigation("/profile")}
+                    className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-cyan-700 shadow-lg cursor-pointer hover:bg-gray-50 transition border-2 border-cyan-600 ring-2 ring-cyan-200"
+                    title="Profile"
+                  >
+                    <FiUser size={20} />
+                  </div>
+                  <Button
+                    onClick={handleLogout}
+                    variant="outline"
+                    size="sm"
+                    className="text-white bg-cyan-600 hover:bg-cyan-700 border-cyan-600 hover:border-cyan-700"
+                  >
+                    Logout
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              // Mobile logged out state
+              <div className="flex flex-col space-y-2 pt-2 px-4">
+                <button
+                  onClick={() => handleNavigation("/login")}
+                  className="btn btn-tertiary justify-start"
+                >
+                  Log in
+                </button>
+                <button
+                  onClick={() => handleNavigation("/register")}
+                  className="btn btn-primary btn-md justify-start"
+                >
+                  Sign up
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

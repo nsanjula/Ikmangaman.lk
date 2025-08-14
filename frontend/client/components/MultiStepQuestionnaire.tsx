@@ -377,7 +377,7 @@ const MultiStepQuestionnaire: React.FC = () => {
                     className={`relative h-32 overflow-hidden rounded-lg transition-all group ${
                       selectedInterests.includes(interest)
                         ? "ring-2 ring-cyan-500 shadow-2xl transform scale-105"
-                        : "hover:ring-2 hover:ring-cyan-300 hover:shadow-xl hover:transform hover:scale-102"
+                        : "hover:ring-2 hover:ring-cyan-300 hover:shadow-xl hover:transform hover:scale-101"
                     }`}
                     style={{
                       backgroundImage: `url(${interestImages[interest]})`,

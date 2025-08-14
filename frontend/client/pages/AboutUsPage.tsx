@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import Header from "../components/HeaderLogged";
+import Header from "../components/Header";
 import AboutUsSection from "../components/AboutUs";
 import Footer from "../components/Footer";
 

@@ -9,6 +9,7 @@ import {
 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useLoading } from "../contexts/LoadingContext";
 
 // API Base URL for image URL construction
 const API_BASE_URL = "http://localhost:8000";
@@ -22,6 +23,7 @@ import {
 const Profile = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const { startLoading, setProgress, finishLoading } = useLoading();
   const [userData, setUserData] = useState({
     firstName: "",
     lastName: "",
@@ -33,7 +35,6 @@ const Profile = () => {
   const [editMode, setEditMode] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [savedPlaces, setSavedPlaces] = useState<
     Array<{ id: number; name: string; description: string; image: string }>
@@ -91,9 +92,14 @@ const Profile = () => {
   useEffect(() => {
     const loadUserProfile = async () => {
       try {
-        setIsLoading(true);
+        // Start global loading for profile data
+        startLoading('profile-data', 'Loading your profile...');
+        setProgress(20);
         setError(null);
+
         const profile = await authAPI.getUserProfile();
+        setProgress(60);
+
         setOriginalData(profile);
         setUserData({
           firstName: profile.firstname,
@@ -102,6 +108,8 @@ const Profile = () => {
           username: profile.username,
           password: "********",
         });
+
+        setProgress(80);
       } catch (error) {
         console.error("Failed to load user profile:", error);
         setError(
@@ -114,14 +122,20 @@ const Profile = () => {
           logout();
           navigate("/login");
         }
-      } finally {
-        setIsLoading(false);
       }
     };
 
-    loadUserProfile();
-    loadSavedPlaces();
-  }, [logout, navigate]);
+    const loadAllData = async () => {
+      await loadUserProfile();
+      setProgress(90);
+      await loadSavedPlaces();
+      setProgress(100);
+      // Finish loading after all data is loaded
+      setTimeout(() => finishLoading('profile-data'), 200);
+    };
+
+    loadAllData();
+  }, [logout, navigate, startLoading, setProgress, finishLoading]);
 
   const handleChange = (field: string, value: string) => {
     setUserData({ ...userData, [field]: value });
@@ -182,21 +196,8 @@ const Profile = () => {
     navigate("/");
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen py-8 px-4 md:px-8" style={{background: 'var(--bg)'}}>
-        <div className="max-w-6xl mx-auto flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" style={{borderBottomColor: 'var(--primary-600)'}}></div>
-            <p className="text-lg" style={{color: 'var(--text-600)'}}>Loading profile...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen py-8 px-4 md:px-8" style={{background: 'linear-gradient(135deg, var(--bg) 0%, var(--surface-alt) 100%)', color: 'var(--text-900)'}}>
+    <div className="min-h-screen py-8 px-4 md:px-8" style={{ background: 'linear-gradient(135deg, var(--bg) 0%, var(--surface-alt) 100%)', color: 'var(--text-900)' }}>
       <div className="max-w-6xl mx-auto">
         {/* Error Message */}
         {error && (
@@ -212,29 +213,29 @@ const Profile = () => {
         )}
 
         {/* Profile Header */}
-        <div className="rounded-xl p-8 mb-8 relative overflow-hidden" style={{background: 'linear-gradient(135deg, var(--primary-100) 0%, var(--surface) 100%)', boxShadow: 'var(--shadow)'}}>
+        <div className="rounded-xl p-8 mb-8 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, var(--primary-100) 0%, var(--surface) 100%)', boxShadow: 'var(--shadow)' }}>
           {/* Teal Geometric Low Poly Pattern */}
           <div className="absolute inset-0 opacity-20" style={{
             background: `url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2314B8A6' fill-opacity='0.6'%3E%3Cpolygon points='60 0 120 30 120 90 60 120 0 90 0 30'/%3E%3Cpolygon points='30 15 60 0 90 15 75 45 45 45'/%3E%3Cpolygon points='90 15 120 30 105 60 75 45'/%3E%3Cpolygon points='105 60 120 90 90 105 75 75'/%3E%3Cpolygon points='90 105 60 120 30 105 45 75 75 75'/%3E%3Cpolygon points='30 105 0 90 15 60 45 75'/%3E%3Cpolygon points='15 60 0 30 30 15 45 45'/%3E%3Cpolygon points='45 45 75 45 75 75 45 75' fill-opacity='0.3'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
           }}></div>
           <div className="flex flex-col items-center relative z-10">
-            <div className="w-32 h-32 rounded-full flex items-center justify-center text-5xl font-bold shadow-lg" style={{background: 'var(--primary-600)', color: 'white', border: '4px solid var(--surface)'}}>
+            <div className="w-32 h-32 rounded-full flex items-center justify-center text-5xl font-bold shadow-lg" style={{ background: 'var(--primary-600)', color: 'white', border: '4px solid var(--surface)' }}>
               {userData.firstName ? userData.firstName.charAt(0).toUpperCase() : 'U'}
             </div>
-            <h2 className="text-3xl mt-4 font-bold" style={{color: 'var(--text-900)'}}>
+            <h2 className="text-3xl mt-4 font-bold" style={{ color: 'var(--text-900)' }}>
               Hi, {userData.firstName || "User"}!{" "}
-              <span style={{color: 'var(--accent)'}}>✌️</span>
+              <span style={{ color: 'var(--accent)' }}>✌️</span>
             </h2>
-            <p className="mt-2 text-sm" style={{color: 'var(--text-600)'}}>
+            <p className="mt-2 text-sm" style={{ color: 'var(--text-600)' }}>
               Welcome to your profile dashboard
             </p>
           </div>
         </div>
 
         {/* Editable Info Form */}
-        <div className="rounded-xl p-6 w-full max-w-2xl mx-auto mb-8" style={{background: 'var(--surface)', boxShadow: 'var(--shadow-lg)', border: '1px solid var(--border)'}}>
-          <div className="rounded-lg p-3 mb-4" style={{background: 'var(--surface-alt)'}}>
-            <h3 className="text-xl font-semibold" style={{color: 'var(--text-900)'}}>Personal Information</h3>
+        <div className="rounded-xl p-6 w-full max-w-2xl mx-auto mb-8" style={{ background: 'var(--surface)', boxShadow: 'var(--shadow-lg)', border: '1px solid var(--border)' }}>
+          <div className="rounded-lg p-3 mb-4" style={{ background: 'var(--surface-alt)' }}>
+            <h3 className="text-xl font-semibold" style={{ color: 'var(--text-900)' }}>Personal Information</h3>
           </div>
 
           {[
@@ -275,7 +276,7 @@ const Profile = () => {
               disabled = false,
             }) => (
               <div className="mb-4" key={field}>
-                <label className="block text-sm font-medium mb-1" style={{color: 'var(--text-600)'}}>
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-600)' }}>
                   {label}
                 </label>
                 <div className="relative">
@@ -294,7 +295,7 @@ const Profile = () => {
                     disabled={!editMode || disabled}
                   />
                   {editMode && !disabled && (
-                    <FiEdit className="absolute right-3 top-1/2 transform -translate-y-1/2" style={{color: 'var(--primary-600)'}} />
+                    <FiEdit className="absolute right-3 top-1/2 transform -translate-y-1/2" style={{ color: 'var(--primary-600)' }} />
                   )}
                 </div>
               </div>
@@ -318,7 +319,7 @@ const Profile = () => {
           )}
 
           {!editMode && (
-            <div className="mt-4 pt-4" style={{borderTop: '1px solid var(--border)'}}>
+            <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--border)' }}>
               <button
                 onClick={() => setEditMode(true)}
                 className="btn btn-secondary btn-md w-full flex items-center justify-center gap-2"
@@ -331,9 +332,9 @@ const Profile = () => {
 
         {/* Your Saved Places */}
         <div className="w-full">
-          <div className="rounded-lg p-4 mb-6" style={{background: 'var(--surface)', border: '1px solid var(--border)'}}>
+          <div className="rounded-lg p-4 mb-6" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
             <div className="flex justify-between items-center">
-              <h3 className="text-2xl font-semibold" style={{color: 'var(--text-900)'}}>Your Saved Places</h3>
+              <h3 className="text-2xl font-semibold" style={{ color: 'var(--text-900)' }}>Your Saved Places</h3>
               {savedPlaces.length > placesPerPage && (
                 <div className="flex gap-2">
                   <button
@@ -361,8 +362,8 @@ const Profile = () => {
 
           {savedPlacesLoading && (
             <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-4" style={{borderBottomColor: 'var(--primary-600)'}}></div>
-              <p style={{color: 'var(--text-600)'}}>Loading your saved places...</p>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-4" style={{ borderBottomColor: 'var(--primary-600)' }}></div>
+              <p style={{ color: 'var(--text-600)' }}>Loading your saved places...</p>
             </div>
           )}
 
@@ -382,12 +383,12 @@ const Profile = () => {
           {!savedPlacesLoading &&
             !savedPlacesError &&
             savedPlaces.length === 0 && (
-              <div className="rounded-xl p-8 text-center" style={{background: 'var(--surface)', border: '1px solid var(--border)'}}>
-                <div className="w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center" style={{background: 'var(--surface-alt)'}}>
-                  <FiUser size={32} style={{color: 'var(--primary-600)'}} />
+              <div className="rounded-xl p-8 text-center" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                <div className="w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ background: 'var(--surface-alt)' }}>
+                  <FiUser size={32} style={{ color: 'var(--primary-600)' }} />
                 </div>
-                <p className="text-lg mb-4" style={{color: 'var(--text-900)'}}>No saved places yet</p>
-                <p className="mb-6" style={{color: 'var(--text-600)'}}>
+                <p className="text-lg mb-4" style={{ color: 'var(--text-900)' }}>No saved places yet</p>
+                <p className="mb-6" style={{ color: 'var(--text-600)' }}>
                   Start exploring destinations and save your favorites!
                 </p>
                 <a
@@ -402,13 +403,13 @@ const Profile = () => {
           {!savedPlacesLoading &&
             !savedPlacesError &&
             savedPlaces.length > 0 && (
-              <div className="rounded-xl p-6" style={{background: 'var(--surface-alt)'}}>
+              <div className="rounded-xl p-6" style={{ background: 'var(--surface-alt)' }}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                   {currentPlaces.map((place) => (
                     <div
                       key={place.id}
                       className="card p-4 rounded-xl hover:shadow-lg transition-all duration-300 flex flex-col transform hover:-translate-y-1"
-                      style={{background: 'var(--surface)', color: 'var(--text-900)', boxShadow: 'var(--shadow)', border: '1px solid var(--border)'}}
+                      style={{ background: 'var(--surface)', color: 'var(--text-900)', boxShadow: 'var(--shadow)', border: '1px solid var(--border)' }}
                     >
                       <div className="h-48 rounded-lg mb-4 overflow-hidden">
                         <img
@@ -422,8 +423,8 @@ const Profile = () => {
                           }}
                         />
                       </div>
-                      <h4 className="font-bold text-xl mb-2" style={{color: 'var(--text-900)'}}>{place.name}</h4>
-                      <p className="mb-4 text-sm leading-relaxed flex-grow" style={{color: 'var(--text-600)'}}>
+                      <h4 className="font-bold text-xl mb-2" style={{ color: 'var(--text-900)' }}>{place.name}</h4>
+                      <p className="mb-4 text-sm leading-relaxed flex-grow" style={{ color: 'var(--text-600)' }}>
                         {place.description}
                       </p>
                       <button

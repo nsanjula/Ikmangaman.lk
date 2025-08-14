@@ -2,6 +2,7 @@ import "./global.css";
 
 import { Toaster } from "@/components/ui/toaster";
 import { createRoot } from "react-dom/client";
+import { useEffect } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -23,42 +24,57 @@ import DestinationDetail from "./pages/DestinationDetail";
 import Profile from "./pages/Profile";
 import AboutUsPage from "./pages/AboutUsPage";
 import CompassLoaderShowcase from "./pages/CompassLoaderShowcase";
+import SearchResults from "./pages/SearchResults";
+import SearchDestinationDetail from "./pages/SearchDestinationDetail";
 const queryClient = new QueryClient();
 
-const App = () => (
-  <div className="iframe-safe stable-layout">
-    <QueryClientProvider client={queryClient}>
-      <LoadingProvider>
-        <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <OfflineNotice />
-            <BackendStartupBanner />
-            {/* <BackendConnectionDiagnostic /> */}
-            <LoadingOverlay />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
-                <Route path="/norecommendation" element={<NoRecommendation />} />
-                <Route path="/questionare" element={<Questionare />} />
-                <Route path="/questionnaire" element={<Questionare />} />
-                <Route path="/recommendation" element={<Recommendation />} />
-                <Route path="/destination/:id" element={<DestinationDetail />} />
-                <Route path="/aboutus" element={<AboutUsPage />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/compass-loader" element={<CompassLoaderShowcase />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </TooltipProvider>
-        </AuthProvider>
-      </LoadingProvider>
-    </QueryClientProvider>
-  </div>
-);
+const App = () => {
+  useEffect(() => {
+    // Minimal iframe cache prevention
+    if (window.frameElement) {
+      // Simple cache busting for iframe
+      const timestamp = Date.now();
+      document.documentElement.setAttribute('data-iframe-timestamp', timestamp.toString());
+    }
+  }, []);
+
+  return (
+    <div className="iframe-safe stable-layout">
+      <QueryClientProvider client={queryClient}>
+        <LoadingProvider>
+          <AuthProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <OfflineNotice />
+              <BackendStartupBanner />
+              {/* <BackendConnectionDiagnostic /> */}
+              <LoadingOverlay />
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/norecommendation" element={<NoRecommendation />} />
+                  <Route path="/questionare" element={<Questionare />} />
+                  <Route path="/questionnaire" element={<Questionare />} />
+                  <Route path="/recommendation" element={<Recommendation />} />
+                  <Route path="/destination/:id" element={<DestinationDetail />} />
+                  <Route path="/search" element={<SearchResults />} />
+                  <Route path="/search/destination/:id" element={<SearchDestinationDetail />} />
+                  <Route path="/aboutus" element={<AboutUsPage />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/compass-loader" element={<CompassLoaderShowcase />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+            </TooltipProvider>
+          </AuthProvider>
+        </LoadingProvider>
+      </QueryClientProvider>
+    </div>
+  );
+};
 
 createRoot(document.getElementById("root")!).render(<App />);

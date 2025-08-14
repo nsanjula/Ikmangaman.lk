@@ -92,6 +92,13 @@
     min-height: 100vh;
   }
 
+  /* Force repaint only for interactive elements in iframe environments */
+  .iframe-safe .card,
+  .iframe-safe button,
+  .iframe-safe a {
+    backface-visibility: hidden;
+  }
+
   /* Typography Scale */
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
@@ -182,6 +189,20 @@
     min-height: 80vh !important;
     height: auto !important;
   }
+
+  /* Simplified card hover for iframe */
+  .iframe-safe .card {
+    transition: box-shadow 0.2s ease;
+  }
+
+  .iframe-safe .card:hover {
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* Minimal iframe fixes */
+  .iframe-safe {
+    overflow-x: hidden;
+  }
 }
 
 @layer components {
@@ -214,7 +235,6 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    box-shadow: var(--shadow);
   }
 
   /* Buttons */

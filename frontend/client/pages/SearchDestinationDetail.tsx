@@ -3,23 +3,21 @@ import { useParams } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import HeroSection from "../components/sections/HeroSection";
-import BudgetSection from "../components/sections/BudgetSection";
 import MapSection from "../components/sections/MapSection";
 import PlacesToVisit from "../components/sections/PlacesToVist";
-import WeatherCard from "../components/sections/WeatherCard";
 import HotelsNearby from "../components/sections/HotelsNearby";
 import LocalGuides from "../components/sections/LocalGuides";
 import { DestinationProvider, useDestination } from "../contexts/DestinationContext";
 import { GoogleMapsProvider } from "../contexts/GoogleMapsContext";
 
-const DestinationDetailContent: React.FC = () => {
+const SearchDestinationDetailContent: React.FC = () => {
   const { destinationData } = useDestination();
 
   useEffect(() => {
     if (destinationData?.destination_name) {
-      document.title = `${destinationData.destination_name} | Destination | Ikmangaman.lk`;
+      document.title = `${destinationData.destination_name} | Search Result | Ikmangaman.lk`;
     } else {
-      document.title = "Destination | Ikmangaman.lk";
+      document.title = "Search Result | Ikmangaman.lk";
     }
   }, [destinationData]);
 
@@ -28,12 +26,10 @@ const DestinationDetailContent: React.FC = () => {
       <Header />
       <div className="container mx-auto px-4 py-6">
         <HeroSection />
-        <BudgetSection />
         <div id="map-section">
           <MapSection />
         </div>
         <PlacesToVisit />
-        <WeatherCard />
         <HotelsNearby />
         <LocalGuides />
       </div>
@@ -42,7 +38,7 @@ const DestinationDetailContent: React.FC = () => {
   );
 };
 
-const DestinationDetail: React.FC = () => {
+const SearchDestinationDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
 
   // Immediately scroll to top when the destination page loads
@@ -54,10 +50,10 @@ const DestinationDetail: React.FC = () => {
   return (
     <GoogleMapsProvider>
       <DestinationProvider destinationId={id}>
-        <DestinationDetailContent />
+        <SearchDestinationDetailContent />
       </DestinationProvider>
     </GoogleMapsProvider>
   );
 };
 
-export default DestinationDetail;
+export default SearchDestinationDetail;

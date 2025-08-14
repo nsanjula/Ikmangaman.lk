@@ -5,7 +5,7 @@ import {
   DirectionsService,
   DirectionsRenderer,
 } from "@react-google-maps/api";
-import { FiTruck } from "react-icons/fi";
+import { FiTruck, FiMapPin, FiClock, FiNavigation } from "react-icons/fi";
 import { FaCar } from "react-icons/fa";
 import { IoPersonSharp } from "react-icons/io5";
 import { useGoogleMaps } from "../contexts/GoogleMapsContext";
@@ -160,11 +160,27 @@ const OptimizedRouteMapComponent: React.FC<OptimizedRouteMapComponentProps> = ({
 
       {/* Route Information */}
       {routeInfo && (
-        <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-          <div className="flex gap-4 text-sm text-blue-800">
-            <span>📍 Distance: {routeInfo.distance}</span>
-            <span>⏱️ Duration: {routeInfo.duration}</span>
-            <span>🚗 Via: {selectedTravelMode.toLowerCase()}</span>
+        <div className="mb-4 grid grid-cols-3 gap-6">
+          <div className="text-center p-4 rounded-lg" style={{ background: 'var(--primary-100)' }}>
+            <div className="w-8 h-8 mx-auto mb-2 flex items-center justify-center">
+              <FiMapPin className="w-5 h-5" style={{ color: 'var(--primary-600)' }} />
+            </div>
+            <h3 className="text-sm font-medium mb-1" style={{ color: 'var(--text-900)' }}>Distance</h3>
+            <p className="text-sm" style={{ color: 'var(--text-600)' }}>{routeInfo.distance}</p>
+          </div>
+          <div className="text-center p-4 rounded-lg" style={{ background: 'var(--primary-100)' }}>
+            <div className="w-8 h-8 mx-auto mb-2 flex items-center justify-center">
+              <FiClock className="w-5 h-5" style={{ color: 'var(--primary-600)' }} />
+            </div>
+            <h3 className="text-sm font-medium mb-1" style={{ color: 'var(--text-900)' }}>Duration</h3>
+            <p className="text-sm" style={{ color: 'var(--text-600)' }}>{routeInfo.duration}</p>
+          </div>
+          <div className="text-center p-4 rounded-lg" style={{ background: 'var(--primary-100)' }}>
+            <div className="w-8 h-8 mx-auto mb-2 flex items-center justify-center">
+              <FiNavigation className="w-5 h-5" style={{ color: 'var(--primary-600)' }} />
+            </div>
+            <h3 className="text-sm font-medium mb-1" style={{ color: 'var(--text-900)' }}>Coordinates</h3>
+            <p className="text-sm" style={{ color: 'var(--text-600)' }}>9.66, 80.03</p>
           </div>
         </div>
       )}

@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { FiMapPin, FiNavigation, FiCompass } from "react-icons/fi";
 import OptimizedRouteMapComponent from "../OptimizedRouteMapComponent";
-import OptimizedTouristAttractionsMapComponent from "../OptimizedTouristAttractionsMapComponent";
+import EnhancedTouristAttractionsMapComponent from "../EnhancedTouristAttractionsMapComponent";
 import { useDestination } from "../../contexts/DestinationContext";
 
 const MapSection: React.FC = () => {
@@ -96,7 +96,7 @@ const MapSection: React.FC = () => {
         </div>
 
         {/* Route Map Container */}
-        <div className="rounded-lg overflow-hidden border" style={{ borderColor: 'var(--border)' }}>
+        <div className="rounded-lg overflow-hidden">
           <OptimizedRouteMapComponent
             destination={destination}
             startingLocation={startingLocation}
@@ -124,36 +124,7 @@ const MapSection: React.FC = () => {
           </div>
         </div>
 
-        {/* Quick Route Stats */}
-        <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4">
-          <div className="text-center p-3 rounded-lg" style={{ background: 'var(--surface-alt)' }}>
-            <FiMapPin className="w-5 h-5 mx-auto mb-1" style={{ color: 'var(--primary-600)' }} />
-            <p className="text-sm font-medium" style={{ color: 'var(--text-900)' }}>
-              Distance
-            </p>
-            <p className="text-xs" style={{ color: 'var(--text-600)' }}>
-              {destinationData.distance} km
-            </p>
-          </div>
-          <div className="text-center p-3 rounded-lg" style={{ background: 'var(--surface-alt)' }}>
-            <FiNavigation className="w-5 h-5 mx-auto mb-1" style={{ color: 'var(--primary-600)' }} />
-            <p className="text-sm font-medium" style={{ color: 'var(--text-900)' }}>
-              Duration
-            </p>
-            <p className="text-xs" style={{ color: 'var(--text-600)' }}>
-              {destinationData.duration}
-            </p>
-          </div>
-          <div className="text-center p-3 rounded-lg md:block hidden" style={{ background: 'var(--surface-alt)' }}>
-            <FiCompass className="w-5 h-5 mx-auto mb-1" style={{ color: 'var(--primary-600)' }} />
-            <p className="text-sm font-medium" style={{ color: 'var(--text-900)' }}>
-              Coordinates
-            </p>
-            <p className="text-xs" style={{ color: 'var(--text-600)' }}>
-              {destinationData.latitude.toFixed(2)}, {destinationData.longitude.toFixed(2)}
-            </p>
-          </div>
-        </div>
+
       </div>
 
       {/* Tourist Attractions Section */}
@@ -166,18 +137,16 @@ const MapSection: React.FC = () => {
             </h2>
           </div>
           <p className="text-sm" style={{ color: 'var(--text-600)' }}>
-            Explore nearby attractions, restaurants, and points of interest around {destinationData.destination_name}
+            Filter and explore parks, museums, attractions, hotels, and restaurants around {destinationData.destination_name}
           </p>
         </div>
 
         {/* Tourist Attractions Map Container */}
-        <div className="rounded-lg overflow-hidden border" style={{ borderColor: 'var(--border)' }}>
-          <OptimizedTouristAttractionsMapComponent
-            destination={destination}
-            destinationName={destinationData.destination_name}
-            className="w-full"
-          />
-        </div>
+        <EnhancedTouristAttractionsMapComponent
+          destination={destination}
+          destinationName={destinationData.destination_name}
+          className="w-full"
+        />
 
         {/* Attractions Information */}
         <div className="mt-4 p-4 rounded-lg border-l-4" style={{ 
@@ -191,8 +160,8 @@ const MapSection: React.FC = () => {
                 Interactive Attractions Map
               </p>
               <p className="text-sm" style={{ color: 'var(--text-600)' }}>
-                Discover restaurants, hotels, tourist spots, and local services near your destination.
-                Click on markers for detailed information and reviews.
+                Use the category filters to find specific types of places: parks, museums, attractions, hotels, and restaurants.
+                Toggle place names visibility and click markers for detailed information.
               </p>
             </div>
           </div>

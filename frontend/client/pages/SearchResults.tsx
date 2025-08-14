@@ -1,23 +1,23 @@
 import { useEffect } from "react";
 import Header from "../components/Header";
-import RecommendationForm from "../components/RecommendationForm";
+import SearchResultsForm from "../components/SearchResultsForm";
 import Footer from "../components/Footer";
 import ProtectedRoute from "../components/ProtectedRoute";
 
-const Recommendation: React.FC = () => {
+const SearchResults: React.FC = () => {
   useEffect(() => {
-    document.title = "Recommendations | Ikmangaman.lk";
+    document.title = "Search Results | Ikmangaman.lk";
   }, []);
 
   return (
     <ProtectedRoute>
       <div className="min-h-screen">
         <Header />
-        <RecommendationForm />
+        <SearchResultsForm />
         <Footer />
       </div>
     </ProtectedRoute>
   );
 };
 
-export default Recommendation;
+export default SearchResults;

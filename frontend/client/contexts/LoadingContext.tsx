@@ -13,6 +13,7 @@ interface LoadingContextType {
   setProgress: (progress: number) => void;
   finishLoading: (key: string) => void;
   isLoadingKey: (key: string) => boolean;
+  forceStopLoading: () => void;
 }
 
 const LoadingContext = createContext<LoadingContextType | undefined>(undefined);
@@ -113,7 +114,9 @@ export const LoadingProvider: React.FC<LoadingProviderProps> = ({ children }) =>
 
   const finishLoading = useCallback((key: string) => {
     console.log('🏁 finishLoading called with key:', key, 'current key:', loadingState.loadingKey);
-    if (loadingState.loadingKey === key) {
+
+    // Force finish loading regardless of key mismatch to prevent stuck states
+    if (loadingState.isLoading && (loadingState.loadingKey === key || key === 'force')) {
       // Quickly finish progress to 100%
       if (progressIntervalRef.current) {
         clearInterval(progressIntervalRef.current);
@@ -133,14 +136,41 @@ export const LoadingProvider: React.FC<LoadingProviderProps> = ({ children }) =>
         });
         progressRef.current = 0;
       }, 300); // Match the needle stabilization animation
+    } else if (!loadingState.isLoading) {
+      console.log('⚠️ finishLoading called but loading is already finished');
     } else {
-      console.log('⚠️ finishLoading key mismatch - not finishing');
+      console.log('⚠️ finishLoading key mismatch - forcing finish immediately to prevent stuck states');
+      // Force finish immediately for auth/timeout errors to prevent 85% stuck issue
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
+      setLoadingState({
+        isLoading: false,
+        progress: 0,
+        loadingKey: null,
+        message: undefined
+      });
+      progressRef.current = 0;
     }
-  }, [loadingState.loadingKey]);
+  }, [loadingState.loadingKey, loadingState.isLoading]);
 
   const isLoadingKey = useCallback((key: string) => {
     return loadingState.isLoading && loadingState.loadingKey === key;
   }, [loadingState.isLoading, loadingState.loadingKey]);
+
+  const forceStopLoading = useCallback(() => {
+    console.log('🛑 Force stopping loading - emergency reset');
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+    }
+    setLoadingState({
+      isLoading: false,
+      progress: 0,
+      loadingKey: null,
+      message: undefined
+    });
+    progressRef.current = 0;
+  }, []);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -156,7 +186,8 @@ export const LoadingProvider: React.FC<LoadingProviderProps> = ({ children }) =>
     startLoading,
     setProgress,
     finishLoading,
-    isLoadingKey
+    isLoadingKey,
+    forceStopLoading
   };
 
   return (
@@ -168,20 +199,37 @@ export const LoadingProvider: React.FC<LoadingProviderProps> = ({ children }) =>
 
 // Hook for API calls with automatic loading management
 export const useApiWithLoading = () => {
-  const { startLoading, setProgress, finishLoading } = useLoading();
+  const { startLoading, setProgress, finishLoading, forceStopLoading } = useLoading();
 
   const callWithLoading = useCallback(async <T,>(
     apiCall: () => Promise<T>,
     loadingKey: string,
-    message?: string
+    message?: string,
+    timeoutMs: number = 30000 // 30 second default timeout
   ): Promise<T> => {
+    let timeoutId: NodeJS.Timeout;
+
     try {
       console.log('🔄 callWithLoading starting for key:', loadingKey);
       startLoading(loadingKey, message);
       setProgress(20); // Initial progress
 
-      const result = await apiCall();
+      // Set up timeout handler
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => {
+          console.log('⏰ API call timeout for key:', loadingKey);
+          reject(new Error('Request timeout - please check your connection and try again'));
+        }, timeoutMs);
+      });
+
+      // Race between API call and timeout
+      const result = await Promise.race([
+        apiCall(),
+        timeoutPromise
+      ]);
+
       console.log('✅ API call completed for key:', loadingKey);
+      clearTimeout(timeoutId);
 
       setProgress(95); // Near completion
       await new Promise(resolve => setTimeout(resolve, 200)); // Brief pause for UX
@@ -189,12 +237,29 @@ export const useApiWithLoading = () => {
       setProgress(100); // Complete
       await new Promise(resolve => setTimeout(resolve, 100)); // Let progress reach 100%
 
-      return result;
+      return result as T;
+    } catch (error) {
+      console.error('❌ API call failed for key:', loadingKey, error);
+      if (timeoutId) clearTimeout(timeoutId);
+
+      // Check if it's an authentication error or timeout
+      if (error instanceof Error &&
+          (error.message.includes('Authentication required') ||
+           error.message.includes('Please log in again') ||
+           error.message.includes('401') ||
+           error.message.includes('timeout') ||
+           error.message.includes('Request timeout'))) {
+        console.log('🔐 Authentication/timeout error detected, stopping loading');
+        forceStopLoading();
+      }
+
+      throw error;
     } finally {
       console.log('🏁 callWithLoading finishing for key:', loadingKey);
+      if (timeoutId) clearTimeout(timeoutId);
       finishLoading(loadingKey);
     }
-  }, [startLoading, setProgress, finishLoading]);
+  }, [startLoading, setProgress, finishLoading, forceStopLoading]);
 
   return { callWithLoading };
 };

@@ -65,28 +65,28 @@ const BudgetSection: React.FC = () => {
       cost: budgetData["cost for bicycle"],
       icon: <BiCycling className="w-8 h-8 mb-3 mx-auto" />,
       field: "cost for bicycle",
-      color: "#22C55E"
+      color: "#0f97a1"
     },
     {
       name: "Car",
       cost: budgetData["cost for car"],
       icon: <BiCar className="w-8 h-8 mb-3 mx-auto" />,
       field: "cost for car",
-      color: "#3B82F6"
+      color: "#0f97a1"
     },
     {
       name: "Bus",
       cost: budgetData["cost for private bus"],
       icon: <BiBus className="w-8 h-8 mb-3 mx-auto" />,
       field: "cost for private bus",
-      color: "#F59E0B"
+      color: "#0f97a1"
     },
     {
       name: "Transit",
       cost: budgetData["cost for transit"],
       icon: <MdDirectionsTransit className="w-8 h-8 mb-3 mx-auto" />,
       field: "cost for transit",
-      color: "#8B5CF6"
+      color: "#0f97a1"
     },
   ];
 

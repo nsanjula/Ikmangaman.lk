@@ -51,67 +51,67 @@ const getPlaceIcon = (types: string[]) => {
   const iconMap: { [key: string]: { markerUrl: string; bgColor: string } } = {
     tourist_attraction: {
       markerUrl:
-        "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2Fe4b0a2b0be8b4ba2b4dea6780c6d48a4?format=webp&width=800",
+        "https://cdn.builder.io/api/v1/image/assets%2F82634153cda843eda981be3786ff3b99%2Fe83da429003043968f2abb8423c2bfaa?format=webp&width=800",
       bgColor: "#9333EA",
     },
     museum: {
       markerUrl:
-        "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2F41e73cbd493d4ad5bec6b78b4ff04f21?format=webp&width=800",
+        "https://cdn.builder.io/api/v1/image/assets%2F82634153cda843eda981be3786ff3b99%2F618f81b4d111438e96751c3297dec1c0?format=webp&width=800",
       bgColor: "#A0522D",
     },
     park: {
       markerUrl:
-        "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2Fb3bd44fe8a83416fb8a3c6093980c5f1?format=webp&width=800",
+        "https://cdn.builder.io/api/v1/image/assets%2F82634153cda843eda981be3786ff3b99%2F3ea4f89c53214306bc32b0479b56b0fe?format=webp&width=800",
       bgColor: "#5F8A5F",
     },
     restaurant: {
       markerUrl:
-        "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2Fa993504970cb4128a822d87ff78471e6?format=webp&width=800",
+        "https://cdn.builder.io/api/v1/image/assets%2F82634153cda843eda981be3786ff3b99%2Fa28050a33fee42049a939ef4384447d2?format=webp&width=800",
       bgColor: "#DAA520",
     },
     lodging: {
       markerUrl:
-        "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2F6b7f49b0e5084cb8acdddd601b194c85?format=webp&width=800",
+        "https://cdn.builder.io/api/v1/image/assets%2F82634153cda843eda981be3786ff3b99%2F0d9ec12e71ea4301b961706ff64b213b?format=webp&width=800",
       bgColor: "#1E40AF",
     },
     church: {
       markerUrl:
-        "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2Fe4b0a2b0be8b4ba2b4dea6780c6d48a4?format=webp&width=800",
+        "https://cdn.builder.io/api/v1/image/assets%2F82634153cda843eda981be3786ff3b99%2Fe83da429003043968f2abb8423c2bfaa?format=webp&width=800",
       bgColor: "#9333EA",
     },
     temple: {
       markerUrl:
-        "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2Fe4b0a2b0be8b4ba2b4dea6780c6d48a4?format=webp&width=800",
+        "https://cdn.builder.io/api/v1/image/assets%2F82634153cda843eda981be3786ff3b99%2Fe83da429003043968f2abb8423c2bfaa?format=webp&width=800",
       bgColor: "#9333EA",
     },
     zoo: {
       markerUrl:
-        "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2Fb3bd44fe8a83416fb8a3c6093980c5f1?format=webp&width=800",
+        "https://cdn.builder.io/api/v1/image/assets%2F82634153cda843eda981be3786ff3b99%2F3ea4f89c53214306bc32b0479b56b0fe?format=webp&width=800",
       bgColor: "#5F8A5F",
     },
     aquarium: {
       markerUrl:
-        "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2Fb3bd44fe8a83416fb8a3c6093980c5f1?format=webp&width=800",
+        "https://cdn.builder.io/api/v1/image/assets%2F82634153cda843eda981be3786ff3b99%2F3ea4f89c53214306bc32b0479b56b0fe?format=webp&width=800",
       bgColor: "#5F8A5F",
     },
     shopping_mall: {
       markerUrl:
-        "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2Fa993504970cb4128a822d87ff78471e6?format=webp&width=800",
+        "https://cdn.builder.io/api/v1/image/assets%2F82634153cda843eda981be3786ff3b99%2Fa28050a33fee42049a939ef4384447d2?format=webp&width=800",
       bgColor: "#DAA520",
     },
     amusement_park: {
       markerUrl:
-        "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2Fe4b0a2b0be8b4ba2b4dea6780c6d48a4?format=webp&width=800",
+        "https://cdn.builder.io/api/v1/image/assets%2F82634153cda843eda981be3786ff3b99%2Fe83da429003043968f2abb8423c2bfaa?format=webp&width=800",
       bgColor: "#9333EA",
     },
     natural_feature: {
       markerUrl:
-        "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2Fb3bd44fe8a83416fb8a3c6093980c5f1?format=webp&width=800",
+        "https://cdn.builder.io/api/v1/image/assets%2F82634153cda843eda981be3786ff3b99%2F3ea4f89c53214306bc32b0479b56b0fe?format=webp&width=800",
       bgColor: "#5F8A5F",
     },
     point_of_interest: {
       markerUrl:
-        "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2Fe4b0a2b0be8b4ba2b4dea6780c6d48a4?format=webp&width=800",
+        "https://cdn.builder.io/api/v1/image/assets%2F82634153cda843eda981be3786ff3b99%2Fe83da429003043968f2abb8423c2bfaa?format=webp&width=800",
       bgColor: "#9333EA",
     },
   };
@@ -182,7 +182,7 @@ const TouristAttractionsMapComponent: React.FC<
           const request = {
             location: destination,
             radius: 20000, // 20km radius for better coverage
-            type: type as google.maps.places.PlaceType,
+            type: type as any, // google.maps.places.PlaceType compatibility
           };
 
           service.nearbySearch(request, (results, status) => {
@@ -270,27 +270,27 @@ const TouristAttractionsMapComponent: React.FC<
             {
               value: "park",
               label: "Parks",
-              icon: "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2Fb3bd44fe8a83416fb8a3c6093980c5f1?format=webp&width=800",
+              icon: "https://cdn.builder.io/api/v1/image/assets%2F82634153cda843eda981be3786ff3b99%2F3ea4f89c53214306bc32b0479b56b0fe?format=webp&width=800",
             },
             {
               value: "museum",
               label: "Museums",
-              icon: "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2F41e73cbd493d4ad5bec6b78b4ff04f21?format=webp&width=800",
+              icon: "https://cdn.builder.io/api/v1/image/assets%2F82634153cda843eda981be3786ff3b99%2F618f81b4d111438e96751c3297dec1c0?format=webp&width=800",
             },
             {
               value: "tourist_attraction",
               label: "Attractions",
-              icon: "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2Fe4b0a2b0be8b4ba2b4dea6780c6d48a4?format=webp&width=800",
+              icon: "https://cdn.builder.io/api/v1/image/assets%2F82634153cda843eda981be3786ff3b99%2Fe83da429003043968f2abb8423c2bfaa?format=webp&width=800",
             },
             {
               value: "lodging",
               label: "Hotels",
-              icon: "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2F6b7f49b0e5084cb8acdddd601b194c85?format=webp&width=800",
+              icon: "https://cdn.builder.io/api/v1/image/assets%2F82634153cda843eda981be3786ff3b99%2F0d9ec12e71ea4301b961706ff64b213b?format=webp&width=800",
             },
             {
               value: "restaurant",
               label: "Restaurants",
-              icon: "https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2Fa993504970cb4128a822d87ff78471e6?format=webp&width=800",
+              icon: "https://cdn.builder.io/api/v1/image/assets%2F82634153cda843eda981be3786ff3b99%2Fa28050a33fee42049a939ef4384447d2?format=webp&width=800",
             },
           ].map((category, index) => (
             <button
@@ -398,7 +398,7 @@ const TouristAttractionsMapComponent: React.FC<
                 icon={{
                   url: placeIcon.markerUrl,
                   scaledSize: window.google?.maps?.Size
-                    ? new window.google.maps.Size(40, 40)
+                    ? new window.google.maps.Size(32, 32)
                     : undefined,
                 }}
                 label={

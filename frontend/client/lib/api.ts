@@ -14,21 +14,21 @@ const handleAPIError = (error: any, context: string): never => {
 // Test connection to backend
 export const testConnection = async (): Promise<boolean> => {
   try {
-    // Use Promise.race for cleaner timeout handling with shorter timeout
-    const fetchPromise = fetch(`${API_BASE_URL}/docs`, {
-      method: "HEAD"
+    // Use AbortController for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+    const response = await fetch(`${API_BASE_URL}/docs`, {
+      method: "HEAD",
+      signal: controller.signal,
+      mode: 'cors'
     });
 
-    const timeoutPromise = new Promise<Response>((_, reject) => {
-      setTimeout(() => {
-        reject(new Error('Request timeout after 5 seconds'));
-      }, 5000);
-    });
-
-    const response = await Promise.race([fetchPromise, timeoutPromise]);
+    clearTimeout(timeoutId);
     return response.ok;
   } catch (error: any) {
     // Silently return false to avoid spamming console with error messages
+    // This is expected when the backend is not running
     return false;
   }
 };
@@ -191,15 +191,23 @@ class AuthAPI {
     }
 
     try {
+      // Use AbortController for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+
       const response = await fetch(`${API_BASE_URL}/docs`, {
         method: "HEAD",
+        signal: controller.signal,
+        mode: 'cors'
       });
 
+      clearTimeout(timeoutId);
       this.backendAvailable = response.ok;
       this.lastConnectivityCheck = now;
       return this.backendAvailable;
     } catch (error) {
       // Any error means backend is not available
+      // This is expected when the backend is not running
       this.backendAvailable = false;
       this.lastConnectivityCheck = now;
       return false;
@@ -764,6 +772,79 @@ class AuthAPI {
         );
       }
 
+      throw error;
+    }
+  }
+
+  async searchByText(query: string): Promise<any> {
+    try {
+      const token = this.getToken();
+      if (!token) {
+        throw new Error("Authentication required");
+      }
+
+      const response = await fetch(`${API_BASE_URL}/search/by-destination-name?destination_name=${encodeURIComponent(query)}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          this.removeToken();
+          throw new Error("Authentication required. Please log in again.");
+        }
+        const error: ApiError = await response.json();
+        throw new Error(error.detail || "Search failed");
+      }
+
+      return response.json();
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw new Error(
+          "Unable to connect to server. Please check your connection.",
+        );
+      }
+      throw error;
+    }
+  }
+
+  async searchByImage(imageFile: File): Promise<any> {
+    try {
+      const token = this.getToken();
+      if (!token) {
+        throw new Error("Authentication required");
+      }
+
+      const formData = new FormData();
+      formData.append('file', imageFile);
+
+      const response = await fetch(`${API_BASE_URL}/search/by-image`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          this.removeToken();
+          throw new Error("Authentication required. Please log in again.");
+        }
+        const error: ApiError = await response.json();
+        throw new Error(error.detail || "Image search failed");
+      }
+
+      return response.json();
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw new Error(
+          "Unable to connect to server. Please check your connection.",
+        );
+      }
       throw error;
     }
   }
