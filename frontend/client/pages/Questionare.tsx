@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import HeaderLogged from "../components/HeaderLogged";
+import Header from "../components/Header";
 import MultiStepQuestionnaire from "../components/MultiStepQuestionnaire";
 import Footer from "../components/Footer";
 import ProtectedRoute from "../components/ProtectedRoute";
@@ -12,7 +12,7 @@ const Questionare: React.FC = () => {
   return (
     <ProtectedRoute>
       <div className="min-h-screen">
-        <HeaderLogged />
+        <Header />
         <MultiStepQuestionnaire />
         <Footer />
       </div>

@@ -129,7 +129,7 @@ const LocalGuides: React.FC = () => {
           return (
             <div
               key={guide.guide_id || index}
-              className="card p-0 hover:shadow-lg hover:scale-105 transition-all duration-200 flex flex-col overflow-hidden cursor-pointer"
+              className="group card p-0 hover:scale-102 transition-all duration-300 flex flex-col overflow-hidden cursor-pointer hover:shadow-lg"
               style={{ background: 'var(--surface)' }}
             >
               {/* Guide Header */}
@@ -141,7 +141,7 @@ const LocalGuides: React.FC = () => {
                       <img
                         src={`${API_BASE_URL}${guide.photo_url}`}
                         alt={guide.name}
-                        className="w-16 h-16 rounded-full object-cover border-2"
+                        className="w-16 h-16 rounded-full object-cover border-2 transition-transform duration-500 group-hover:scale-110"
                         style={{ borderColor: 'var(--primary-600)' }}
                         onError={(e) => {
                           (e.target as HTMLImageElement).style.display = "none";

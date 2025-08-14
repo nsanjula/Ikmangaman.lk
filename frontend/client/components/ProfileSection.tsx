@@ -9,6 +9,7 @@ import {
 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useLoading } from "../contexts/LoadingContext";
 
 // API Base URL for image URL construction
 const API_BASE_URL = "http://localhost:8000";
@@ -22,6 +23,7 @@ import {
 const Profile = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const { startLoading, setProgress, finishLoading } = useLoading();
   const [userData, setUserData] = useState({
     firstName: "",
     lastName: "",
@@ -33,7 +35,6 @@ const Profile = () => {
   const [editMode, setEditMode] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [savedPlaces, setSavedPlaces] = useState<
     Array<{ id: number; name: string; description: string; image: string }>
@@ -91,9 +92,14 @@ const Profile = () => {
   useEffect(() => {
     const loadUserProfile = async () => {
       try {
-        setIsLoading(true);
+        // Start global loading for profile data
+        startLoading('profile-data', 'Loading your profile...');
+        setProgress(20);
         setError(null);
+
         const profile = await authAPI.getUserProfile();
+        setProgress(60);
+
         setOriginalData(profile);
         setUserData({
           firstName: profile.firstname,
@@ -102,6 +108,8 @@ const Profile = () => {
           username: profile.username,
           password: "********",
         });
+
+        setProgress(80);
       } catch (error) {
         console.error("Failed to load user profile:", error);
         setError(
@@ -114,14 +122,20 @@ const Profile = () => {
           logout();
           navigate("/login");
         }
-      } finally {
-        setIsLoading(false);
       }
     };
 
-    loadUserProfile();
-    loadSavedPlaces();
-  }, [logout, navigate]);
+    const loadAllData = async () => {
+      await loadUserProfile();
+      setProgress(90);
+      await loadSavedPlaces();
+      setProgress(100);
+      // Finish loading after all data is loaded
+      setTimeout(() => finishLoading('profile-data'), 200);
+    };
+
+    loadAllData();
+  }, [logout, navigate, startLoading, setProgress, finishLoading]);
 
   const handleChange = (field: string, value: string) => {
     setUserData({ ...userData, [field]: value });
@@ -181,19 +195,6 @@ const Profile = () => {
     logout();
     navigate("/");
   };
-
-  if (isLoading) {
-    return (
-      <div className="bg-cyan-700 text-white min-h-screen py-8 px-4 md:px-8">
-        <div className="max-w-6xl mx-auto flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-            <p className="text-lg">Loading profile...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="bg-cyan-700 text-white min-h-screen py-8 px-4 md:px-8">

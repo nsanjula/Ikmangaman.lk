@@ -31,14 +31,21 @@ const LoginForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth();
+  const { login, isTimeout, clearTimeout } = useAuth();
 
   useEffect(() => {
     // Check for success message from registration
     if (location.state?.message) {
       setSuccessMessage(location.state.message);
     }
-  }, [location.state]);
+
+    // Clear timeout state when user navigates to login
+    return () => {
+      if (isTimeout) {
+        clearTimeout();
+      }
+    };
+  }, [location.state, isTimeout, clearTimeout]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,6 +127,12 @@ const LoginForm = () => {
                 }}
               >
                 <h2 className="text-center mb-6" style={{ color: 'var(--text-900)' }}>Log In</h2>
+
+                {isTimeout && (
+                  <div className="mb-4 p-3 rounded" style={{ background: '#FEF3C7', color: '#D97706', borderLeft: '4px solid #F59E0B' }}>
+                    ⏰ Your session timed out. Please log in again to continue.
+                  </div>
+                )}
 
                 {successMessage && (
                   <div className="mb-4 p-3 rounded" style={{ background: 'var(--primary-100)', color: 'var(--primary-700)', borderLeft: '4px solid var(--primary-600)' }}>

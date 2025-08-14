@@ -394,7 +394,7 @@ const QuestionnairePage: React.FC = () => {
                     className={`relative h-24 overflow-hidden rounded-lg transition-all group ${
                       selectedInterests.includes(interest)
                         ? "ring-4 ring-white shadow-2xl transform scale-105"
-                        : "hover:ring-2 hover:ring-cyan-300 hover:shadow-xl hover:transform hover:scale-102"
+                        : "hover:ring-2 hover:ring-cyan-300 hover:shadow-xl hover:transform hover:scale-101"
                     }`}
                     style={{
                       backgroundImage: `url(${interestImages[interest]})`,

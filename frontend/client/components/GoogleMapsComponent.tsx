@@ -92,7 +92,7 @@ const GoogleMapsComponent: React.FC<GoogleMapsComponentProps> = ({
         const request = {
           location: destination,
           radius: 10000, // 10km radius
-          type: "tourist_attraction" as google.maps.places.PlaceType,
+          type: "tourist_attraction" as any, // google.maps.places.PlaceType compatibility
         };
 
         service.nearbySearch(request, (results, status) => {

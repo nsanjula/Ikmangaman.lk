@@ -184,7 +184,10 @@ const WeatherCard: React.FC = () => {
             <div
               key={day.date}
               className="card p-4 text-center"
-              style={{ background: 'var(--surface)' }}
+              style={{
+                background: 'linear-gradient(135deg, #E6FFFA 0%, #B2F5EA 100%)',
+                borderColor: '#81E6D9'
+              }}
             >
               {/* Date Header */}
               <div className="mb-4">

@@ -57,8 +57,10 @@ export const DestinationProvider: React.FC<DestinationProviderProps> = ({
       setError(null);
       setIsFallbackData(false);
 
-      // Start loading screen
+      // Start loading screen and ensure it's visible by scrolling to top
       startLoading('destination-data', `Loading destination details...`);
+      // Scroll to top immediately to ensure loading animation is visible
+      window.scrollTo({ top: 0, behavior: 'instant' });
       setProgress(10);
 
       // Check authentication status first

@@ -131,7 +131,7 @@ const HotelsNearby: React.FC = () => {
           return (
             <div
               key={hotel.id}
-              className="card p-0 flex flex-col overflow-hidden"
+              className="group card p-0 flex flex-col overflow-hidden transition-all duration-300 cursor-pointer hover:scale-102 hover:shadow-lg"
               style={{ background: 'var(--surface)' }}
             >
               {/* Hotel Image with Price Badge */}
@@ -139,7 +139,7 @@ const HotelsNearby: React.FC = () => {
                 <img
                   src={hotel.image_url}
                   alt={hotel.hotel_name}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   loading="lazy"
                   onError={(e) => {
                     (e.target as HTMLImageElement).style.display = "none";

@@ -125,7 +125,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({ value, onChange, option
 
 const RecommendationForm = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, handleAuthError } = useAuth();
   const { callWithLoading } = useApiWithLoading();
   const { startRouteTransition } = useRouteLoading();
   const [showFilters, setShowFilters] = useState(true);
@@ -308,16 +308,17 @@ const RecommendationForm = () => {
       if (err instanceof Error) {
         if (
           err.message.includes("Authentication required") ||
-          err.message.includes("Please log in again")
+          err.message.includes("Please log in again") ||
+          err.message.includes("401")
         ) {
-          console.log("🔐 Authentication error detected, logging out user");
-          logout(); // Clear authentication state
+          console.log("🔐 Authentication error detected, handling gracefully");
+          handleAuthError(err);
           setError(
-            "Your session has expired. Please log in again to view recommendations.",
+            "Your session has expired. Redirecting to login page...",
           );
-        } else if (err.message.includes("Unable to connect")) {
+        } else if (err.message.includes("Unable to connect") || err.message.includes("timeout")) {
           setError(
-            "Unable to connect to the backend server. Please check if the backend is running on port 8000 and try again.",
+            "Unable to connect to the backend server. Please check if the backend is running and try again.",
           );
         } else {
           setError(err.message);
@@ -561,7 +562,7 @@ const RecommendationForm = () => {
                     {filteredCards.map((card) => (
                       <div
                         key={card.id}
-                        className="card p-0 hover:shadow-lg transition-all duration-200 flex flex-col overflow-hidden"
+                        className="group card p-0 flex flex-col overflow-hidden cursor-pointer hover:scale-102 transition-all duration-300 hover:shadow-lg"
                         style={{ background: 'var(--surface)' }}
                       >
                         {/* Destination Image with Price Badge */}
@@ -570,7 +571,7 @@ const RecommendationForm = () => {
                             <img
                               src={`http://localhost:8000${card.thumbnail_img}`}
                               alt={card.name}
-                              className="w-full h-full object-cover transition-transform duration-200 hover:scale-105"
+                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                               loading="lazy"
                               onError={(e) => {
                                 e.currentTarget.style.display = "none";

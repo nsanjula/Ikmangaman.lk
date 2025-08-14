@@ -218,7 +218,7 @@ const EnhancedTouristAttractionsMapComponent: React.FC<EnhancedTouristAttraction
       const request = {
         location: destination,
         radius: searchRadius,
-        type: placeType as google.maps.places.PlaceType,
+        type: placeType as any, // google.maps.places.PlaceType compatibility
       };
 
       service.nearbySearch(request, (results, status) => {

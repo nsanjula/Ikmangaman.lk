@@ -1,20 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { FiMapPin, FiCamera, FiClock } from "react-icons/fi";
 import { useDestination } from "../../contexts/DestinationContext";
 import { useGoogleMaps } from "../../contexts/GoogleMapsContext";
-
-interface PlaceImage {
-  placeName: string;
-  imageUrl: string | null;
-  isLoading: boolean;
-}
+import useOptimizedImageLoading from "../../hooks/useOptimizedImageLoading";
+import ProgressiveImage from "../ui/progressive-image";
 
 const PlacesToVisit: React.FC = () => {
   const { destinationData, loading, error } = useDestination();
   const { isLoaded: isGoogleMapsLoaded } = useGoogleMaps();
-  const [placeImages, setPlaceImages] = useState<Map<string, PlaceImage>>(
-    new Map(),
-  );
 
   // Function to check if Google Maps is available
   const isGoogleMapsAvailable = () => {
@@ -41,7 +34,6 @@ const PlacesToVisit: React.FC = () => {
         return;
       }
 
-      // Wait up to 10 seconds for Google Maps to load
       let attempts = 0;
       const maxAttempts = 50; // 50 * 200ms = 10 seconds
 
@@ -53,172 +45,37 @@ const PlacesToVisit: React.FC = () => {
           resolve();
         } else if (attempts >= maxAttempts) {
           clearInterval(checkInterval);
-          console.warn('Google Maps failed to load after 10 seconds, proceeding without images');
+          console.warn('Google Maps failed to load after 10 seconds, proceeding with placeholders');
           resolve();
         }
       }, 200);
     });
   };
 
-  // Function to fetch place image from Google Places API
-  const fetchPlaceImage = async (
-    placeName: string,
-    destinationName: string,
-  ): Promise<string | null> => {
-    return new Promise((resolve) => {
-      if (!isGoogleMapsAvailable()) {
-        console.warn('Google Maps not available for place:', placeName);
-        resolve(null);
-        return;
-      }
-
-      try {
-        // Double-check Google Maps availability before creating service
-        if (!window.google?.maps?.places?.PlacesService) {
-          console.warn('PlacesService not available for place:', placeName);
-          resolve(null);
-          return;
-        }
-
-        const service = new window.google.maps.places.PlacesService(
-          document.createElement("div"),
-        );
-
-        const request = {
-          query: `${placeName} ${destinationName} Sri Lanka`,
-          fields: ["place_id", "name", "photos"],
-        };
-
-        service.textSearch(request, (results, status) => {
-          try {
-            // Check if Google Maps is still available in callback
-            if (!window.google?.maps?.places?.PlacesServiceStatus) {
-              console.warn('Google Maps PlacesServiceStatus not available in callback for:', placeName);
-              resolve(null);
-              return;
-            }
-
-            if (
-              status === window.google.maps.places.PlacesServiceStatus.OK &&
-              results &&
-              results[0] &&
-              results[0].photos &&
-              results[0].photos.length > 0
-            ) {
-              try {
-                const photoUrl = results[0].photos[0].getUrl({
-                  maxWidth: 400,
-                  maxHeight: 300,
-                });
-                resolve(photoUrl);
-              } catch (error) {
-                console.warn(`Error getting photo URL for ${placeName}:`, error);
-                resolve(null);
-              }
-            } else {
-              console.warn(`No photos found for ${placeName}, status:`, status);
-              resolve(null);
-            }
-          } catch (callbackError) {
-            console.warn(`Error in textSearch callback for ${placeName}:`, callbackError);
-            resolve(null);
-          }
-        });
-      } catch (error) {
-        console.warn(`Error fetching image for ${placeName}:`, error);
-        resolve(null);
-      }
-    });
-  };
-
-  // Function to load images for all places
-  const loadPlaceImages = async (places: string[], destinationName: string) => {
-    if (!places.length) {
-      console.log("No places to load images for");
-      return;
-    }
-
-    try {
-      // Wait for Google Maps to be available
-      await waitForGoogleMaps();
-
-      if (!isGoogleMapsAvailable()) {
-        console.warn("Google Maps not available - skipping image loading");
-        return;
-      }
-
-      console.log(`Starting to load images for ${places.length} places`);
-    } catch (error) {
-      console.error("Error in loadPlaceImages setup:", error);
-      return;
-    }
-
-    // Initialize loading state for all places
-    const initialImageMap = new Map<string, PlaceImage>();
-    places.forEach((place) => {
-      initialImageMap.set(place, {
-        placeName: place,
-        imageUrl: null,
-        isLoading: true,
-      });
-    });
-    setPlaceImages(initialImageMap);
-
-    // Fetch images one by one to avoid rate limiting
-    for (const place of places) {
-      try {
-        const imageUrl = await fetchPlaceImage(place, destinationName);
-
-        setPlaceImages((prevMap) => {
-          const newMap = new Map(prevMap);
-          newMap.set(place, {
-            placeName: place,
-            imageUrl,
-            isLoading: false,
-          });
-          return newMap;
-        });
-
-        // Add a small delay between requests to avoid rate limiting
-        await new Promise((resolve) => setTimeout(resolve, 500));
-      } catch (error) {
-        console.warn(`Failed to load image for ${place}:`, error);
-        setPlaceImages((prevMap) => {
-          const newMap = new Map(prevMap);
-          newMap.set(place, {
-            placeName: place,
-            imageUrl: null,
-            isLoading: false,
-          });
-          return newMap;
-        });
-      }
-    }
-  };
+  const placesToDo = destinationData?.["things to do"] || [];
+  
+  const { placeImages, loadPlaceImages, isLoading: imagesLoading } = useOptimizedImageLoading({
+    places: placesToDo,
+    destinationName: destinationData?.destination_name || '',
+    isGoogleMapsAvailable,
+    waitForGoogleMaps
+  });
 
   // Load place images after component has loaded
   useEffect(() => {
     if (
       destinationData &&
-      destinationData["things to do"] &&
-      destinationData["things to do"].length > 0 &&
+      placesToDo.length > 0 &&
       isGoogleMapsLoaded
     ) {
-      // Small delay to ensure all Google Maps services are ready
-      const timer = setTimeout(async () => {
-        try {
-          await loadPlaceImages(
-            destinationData["things to do"],
-            destinationData.destination_name,
-          );
-        } catch (error) {
-          console.error("Error loading place images:", error);
-        }
+      // Small delay to ensure Google Maps services are ready
+      const timer = setTimeout(() => {
+        loadPlaceImages();
       }, 1000);
 
       return () => clearTimeout(timer);
     }
-  }, [destinationData, isGoogleMapsLoaded]);
+  }, [destinationData, placesToDo.length, isGoogleMapsLoaded, loadPlaceImages]);
 
   if (loading) {
     return (
@@ -259,8 +116,6 @@ const PlacesToVisit: React.FC = () => {
     );
   }
 
-  const placesToDo = destinationData["things to do"] || [];
-
   if (placesToDo.length === 0) {
     return (
       <div id="places-to-visit" className="card p-6 mb-6" style={{ background: 'var(--surface)' }}>
@@ -280,7 +135,7 @@ const PlacesToVisit: React.FC = () => {
     );
   }
 
-  // Sample activity categories and times (you can enhance this with more detailed data)
+  // Activity helper functions
   const getActivityIcon = (activity: string) => {
     const activityLower = activity.toLowerCase();
     if (
@@ -332,6 +187,16 @@ const PlacesToVisit: React.FC = () => {
       "bambaragala falls": "Hidden gem waterfall perfect for a refreshing dip.",
       "tea plantation":
         "Experience authentic Ceylon tea culture and learn about tea processing.",
+      "koneswaram temple":
+        "Ancient Hindu temple with stunning ocean views and rich history.",
+      "fort frederick":
+        "Historic Dutch fort offering panoramic views of Trincomalee harbor.",
+      "nilaveli beach":
+        "Pristine white sand beach perfect for swimming and snorkeling.",
+      "pigeon island":
+        "Marine national park ideal for diving and coral reef exploration.",
+      "hot springs":
+        "Natural hot springs believed to have therapeutic properties.",
     };
 
     const activityLower = activity.toLowerCase();
@@ -353,6 +218,12 @@ const PlacesToVisit: React.FC = () => {
       return { name: "Sightseeing", color: "#F59E0B" };
     } else if (activityLower.includes("tea")) {
       return { name: "Cultural", color: "#8B5CF6" };
+    } else if (activityLower.includes("temple") || activityLower.includes("fort")) {
+      return { name: "Heritage", color: "#DC2626" };
+    } else if (activityLower.includes("beach") || activityLower.includes("island")) {
+      return { name: "Beach", color: "#06B6D4" };
+    } else if (activityLower.includes("springs")) {
+      return { name: "Wellness", color: "#84CC16" };
     } else {
       return { name: "Adventure", color: "#F97316" };
     }
@@ -372,49 +243,32 @@ const PlacesToVisit: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
         {placesToDo.map((place, index) => {
           const placeImageData = placeImages.get(place);
-          const hasRealImage = placeImageData && placeImageData.imageUrl && !placeImageData.isLoading;
           const category = getActivityCategory(place);
 
           return (
             <div
               key={index}
-              className="card p-0 flex flex-col overflow-hidden hover:shadow-lg hover:scale-105 transition-all duration-200 cursor-pointer"
-              style={{ background: 'var(--surface)' }}
+              className="group place-card card p-0 flex flex-col overflow-hidden transition-all duration-300 cursor-pointer hover:scale-102"
+              style={{ 
+                background: 'var(--surface)',
+                boxShadow: 'var(--shadow)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = 'var(--shadow)';
+              }}
             >
-              {/* Activity Image */}
+              {/* Activity Image with Progressive Loading */}
               <div className="relative h-48 overflow-hidden">
-                {hasRealImage && (
-                  <img
-                    src={placeImageData.imageUrl}
-                    alt={place}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = "none";
-                      (e.target as HTMLImageElement).parentElement
-                        ?.querySelector(".fallback-content")
-                        ?.classList.remove("hidden");
-                    }}
-                  />
-                )}
-                
-                <div
-                  className={`fallback-content absolute inset-0 flex flex-col items-center justify-center text-center p-4 ${hasRealImage ? "hidden" : ""}`}
-                  style={{ 
-                    background: 'linear-gradient(135deg, var(--primary-600), var(--accent))',
-                    color: 'white'
-                  }}
-                >
-                  <div className="text-4xl mb-3">🏞️</div>
-                  <div className="text-sm font-medium">{place}</div>
-                </div>
-
-                {/* Loading indicator */}
-                {placeImageData && placeImageData.isLoading && (
-                  <div className="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center" style={{ background: 'rgba(255, 255, 255, 0.9)' }}>
-                    <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--primary-600)' }}></div>
-                  </div>
-                )}
+                <ProgressiveImage
+                  src={placeImageData?.imageUrl || null}
+                  placeholder={placeImageData?.placeholder}
+                  alt={place}
+                  className="h-full transition-transform duration-500 group-hover:scale-110"
+                  loading="lazy"
+                />
 
                 {/* Category Badge */}
                 <div
@@ -463,7 +317,7 @@ const PlacesToVisit: React.FC = () => {
                       "_blank",
                     );
                   }}
-                  className="btn btn-primary btn-md w-full flex items-center justify-center gap-2"
+                  className="btn btn-primary btn-md w-full flex items-center justify-center gap-2 transition-all duration-200 hover:transform hover:scale-105"
                 >
                   <FiMapPin className="w-4 h-4" />
                   View on Map
@@ -473,6 +327,21 @@ const PlacesToVisit: React.FC = () => {
           );
         })}
       </div>
+
+      {/* Performance Stats (Development only) */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mb-4 p-3 rounded text-xs" style={{ 
+          background: 'var(--surface-alt)', 
+          color: 'var(--text-600)' 
+        }}>
+          <div className="flex items-center gap-4 flex-wrap">
+            <span>🗺️ Google Maps: {isGoogleMapsLoaded ? 'Ready' : 'Loading...'}</span>
+            <span>🖼️ Images: {placeImages.size}/{placesToDo.length}</span>
+            <span>⏳ Loading: {imagesLoading ? 'Yes' : 'No'}</span>
+            <span>📦 Cached: {Array.from(placeImages.values()).filter(img => img.imageUrl && !img.isLoading).length}</span>
+          </div>
+        </div>
+      )}
 
       {/* Additional Tips */}
       <div className="p-4 rounded-lg border-l-4" style={{ 
@@ -488,22 +357,11 @@ const PlacesToVisit: React.FC = () => {
             <p className="text-sm" style={{ color: 'var(--text-600)' }}>
               Plan your visits based on weather conditions and your fitness level. 
               Early morning visits often provide the best views and fewer crowds.
+              {imagesLoading && ' Images are loading in the background for better performance.'}
             </p>
           </div>
         </div>
       </div>
-
-      {/* Debug info for development */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="mt-4 p-2 rounded text-xs" style={{ 
-          background: 'var(--surface-alt)', 
-          color: 'var(--text-600)' 
-        }}>
-          Google Maps Ready: {isGoogleMapsLoaded ? 'Yes' : 'No'} |
-          Images Loaded: {placeImages.size} |
-          Places: {placesToDo.length}
-        </div>
-      )}
     </div>
   );
 };

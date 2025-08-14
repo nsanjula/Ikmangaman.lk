@@ -240,7 +240,7 @@ const HeroSection: React.FC = () => {
               <img
                 src={images[currentImageIndex]}
                 alt={destinationData.destination_name}
-                className="w-full h-full object-cover transition-transform duration-200 hover:scale-105"
+                className="w-full h-full object-cover transition-transform duration-300 hover:scale-101"
                 onError={(e) => {
                   // Fallback to default image if destination image fails
                   console.warn("Failed to load destination image:", images[currentImageIndex]);

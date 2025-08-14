@@ -182,7 +182,7 @@ const TouristAttractionsMapComponent: React.FC<
           const request = {
             location: destination,
             radius: 20000, // 20km radius for better coverage
-            type: type as google.maps.places.PlaceType,
+            type: type as any, // google.maps.places.PlaceType compatibility
           };
 
           service.nearbySearch(request, (results, status) => {

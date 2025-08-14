@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import Header from "../components/HeaderLogged";
+import Header from "../components/Header";
 import RecommendationForm from "../components/RecommendationForm";
 import Footer from "../components/Footer";
 import ProtectedRoute from "../components/ProtectedRoute";
