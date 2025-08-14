@@ -9,11 +9,11 @@ import PlacesToVisit from "../components/sections/PlacesToVist";
 import WeatherCard from "../components/sections/WeatherCard";
 import HotelsNearby from "../components/sections/HotelsNearby";
 import LocalGuides from "../components/sections/LocalGuides";
-import { useDestinationData } from "../hooks/useDestinationData";
+import { DestinationProvider, useDestination } from "../contexts/DestinationContext";
+import { GoogleMapsProvider } from "../contexts/GoogleMapsContext";
 
-const DestinationDetail: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const { data: destinationData } = useDestinationData(id);
+const DestinationDetailContent: React.FC = () => {
+  const { destinationData } = useDestination();
 
   useEffect(() => {
     if (destinationData?.destination_name) {
@@ -39,6 +39,18 @@ const DestinationDetail: React.FC = () => {
       </div>
       <Footer />
     </div>
+  );
+};
+
+const DestinationDetail: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+
+  return (
+    <GoogleMapsProvider>
+      <DestinationProvider destinationId={id}>
+        <DestinationDetailContent />
+      </DestinationProvider>
+    </GoogleMapsProvider>
   );
 };
 

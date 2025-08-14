@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
   GoogleMap,
-  LoadScript,
   Marker,
   DirectionsService,
   DirectionsRenderer,
@@ -9,8 +8,7 @@ import {
 import { FiTruck } from "react-icons/fi";
 import { FaCar } from "react-icons/fa";
 import { IoPersonSharp } from "react-icons/io5";
-
-const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+import { useGoogleMaps } from "../contexts/GoogleMapsContext";
 
 interface Coordinates {
   lat: number;

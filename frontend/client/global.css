@@ -215,12 +215,6 @@
     border: 1px solid var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
-    transition: all 150ms ease;
-  }
-
-  .card:hover {
-    box-shadow: var(--shadow-lg);
-    transform: scale(1.02);
   }
 
   /* Buttons */

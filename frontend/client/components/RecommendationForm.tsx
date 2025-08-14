@@ -7,7 +7,7 @@ import {
   BackendRecommendation,
 } from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
-import { useApiWithLoading } from "../contexts/LoadingContext";
+import { useApiWithLoading, useRouteLoading } from "../contexts/LoadingContext";
 
 interface RecommendationCard {
   id: number;
@@ -128,6 +128,7 @@ const RecommendationForm = () => {
   const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuth();
   const { callWithLoading } = useApiWithLoading();
+  const { startRouteTransition } = useRouteLoading();
   const [showFilters, setShowFilters] = useState(true);
   const [budget, setBudget] = useState(500000);
   const [selectedAreas, setSelectedAreas] = useState<string[]>([
@@ -635,7 +636,10 @@ const RecommendationForm = () => {
                         {/* Button always at bottom */}
                         <div className="p-4 pt-0">
                           <button
-                            onClick={() => navigate(`/destination/${card.id}`)}
+                            onClick={() => {
+                              startRouteTransition('destination');
+                              navigate(`/destination/${card.id}`);
+                            }}
                             className="btn btn-primary btn-md w-full"
                           >
                             View Details

@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
 import { FiNavigation, FiTruck, FiUsers } from "react-icons/fi";
 import { BiCycling, BiCar, BiBus } from "react-icons/bi";
 import { MdDirectionsTransit } from "react-icons/md";
-import { DestinationDetails, authAPI } from "../../lib/api";
-import { useDestinationData } from "../../hooks/useDestinationData";
+import { DestinationDetails } from "../../lib/api";
+import { useDestination } from "../../contexts/DestinationContext";
 import WeatherServiceNotice from "../WeatherServiceNotice";
 
 interface TransportOption {
@@ -12,63 +11,25 @@ interface TransportOption {
   cost: number;
   icon: React.ReactNode;
   field: keyof DestinationDetails;
+  color: string;
 }
 
 const BudgetSection: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const [budgetData, setBudgetData] = useState<DestinationDetails | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchBudgetData = async () => {
-      if (!id) return;
-
-      try {
-        setLoading(true);
-        setError(null);
-
-        const data = await authAPI.getDestinationDetails(parseInt(id));
-        setBudgetData(data);
-      } catch (error) {
-        console.error("Failed to fetch budget data:", error);
-
-        if (error instanceof Error && error.message.includes("Weather")) {
-          setError(
-            "Budget calculation may be incomplete due to service issues",
-          );
-          // Set fallback budget data
-          setBudgetData({
-            "cost for bicycle": 0,
-            "cost for car": 0,
-            "cost for private bus": 0,
-            "cost for transit": 0,
-            destination_name: "Destination",
-            distance: "N/A",
-          });
-        } else {
-          setError(
-            error instanceof Error
-              ? error.message
-              : "Failed to load budget data",
-          );
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBudgetData();
-  }, [id]);
+  const { destinationData: budgetData, loading, error } = useDestination();
 
   if (loading) {
     return (
-      <div className="bg-cyan-600 p-6 rounded-lg mb-10">
-        <h2 className="text-xl font-semibold mb-4 text-white">Budget</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="card p-6 mb-6 animate-pulse" style={{ background: 'var(--surface)' }}>
+        <div className="h-6 bg-gray-200 rounded mb-4 w-48"></div>
+        <div className="h-4 bg-gray-200 rounded mb-6 w-full"></div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-white p-4 rounded shadow animate-pulse">
-              <div className="h-4 bg-gray-300 rounded mb-2"></div>
+            <div key={i} className="p-4 rounded-lg border" style={{ 
+              background: 'var(--surface-alt)',
+              borderColor: 'var(--border)'
+            }}>
+              <div className="h-8 bg-gray-200 rounded mb-3 mx-auto w-8"></div>
+              <div className="h-4 bg-gray-200 rounded mb-2"></div>
               <div className="h-3 bg-gray-200 rounded"></div>
             </div>
           ))}
@@ -79,9 +40,14 @@ const BudgetSection: React.FC = () => {
 
   if (error || !budgetData) {
     return (
-      <div className="bg-red-100 border border-red-300 p-6 rounded-lg mb-10">
-        <h2 className="text-xl font-semibold mb-4 text-red-800">Budget</h2>
-        <p className="text-red-600">
+      <div className="card p-6 mb-6 border-l-4" style={{ 
+        background: 'var(--surface)', 
+        borderLeftColor: '#EF4444' 
+      }}>
+        <h2 className="text-xl font-semibold mb-4" style={{ color: '#DC2626' }}>
+          Budget Information
+        </h2>
+        <p style={{ color: '#DC2626' }}>
           {error || "Budget information not available"}
         </p>
       </div>
@@ -97,28 +63,30 @@ const BudgetSection: React.FC = () => {
     {
       name: "Bicycle",
       cost: budgetData["cost for bicycle"],
-      icon: <BiCycling className="w-8 h-8 mb-2 mx-auto text-cyan-700" />,
+      icon: <BiCycling className="w-8 h-8 mb-3 mx-auto" />,
       field: "cost for bicycle",
+      color: "#22C55E"
     },
     {
       name: "Car",
       cost: budgetData["cost for car"],
-      icon: <BiCar className="w-8 h-8 mb-2 mx-auto text-cyan-700" />,
+      icon: <BiCar className="w-8 h-8 mb-3 mx-auto" />,
       field: "cost for car",
+      color: "#3B82F6"
     },
     {
       name: "Bus",
       cost: budgetData["cost for private bus"],
-      icon: <BiBus className="w-8 h-8 mb-2 mx-auto text-cyan-700" />,
+      icon: <BiBus className="w-8 h-8 mb-3 mx-auto" />,
       field: "cost for private bus",
+      color: "#F59E0B"
     },
     {
       name: "Transit",
       cost: budgetData["cost for transit"],
-      icon: (
-        <MdDirectionsTransit className="w-8 h-8 mb-2 mx-auto text-cyan-700" />
-      ),
+      icon: <MdDirectionsTransit className="w-8 h-8 mb-3 mx-auto" />,
       field: "cost for transit",
+      color: "#8B5CF6"
     },
   ];
 
@@ -132,35 +100,56 @@ const BudgetSection: React.FC = () => {
   };
 
   return (
-    <div className="bg-gradient-to-r from-cyan-600 to-cyan-700 p-6 rounded-lg mb-10 text-white">
-      <h2 className="text-xl font-semibold mb-4">Budget Breakdown</h2>
-      <p className="text-cyan-100 mb-6 text-sm">
-        Estimated transportation costs to {budgetData.destination_name} (
-        {budgetData.distance} km)
-      </p>
+    <div className="card p-6 mb-6" style={{ background: 'var(--surface)' }}>
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-900)' }}>
+          Budget Breakdown
+        </h2>
+        <p className="text-sm" style={{ color: 'var(--text-600)' }}>
+          Estimated transportation costs to {budgetData.destination_name} ({budgetData.distance} km)
+        </p>
+      </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {transportOptions.map((option) => (
           <div
             key={option.name}
-            className="bg-white text-cyan-700 p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
+            className="card p-4 text-center"
+            style={{ background: 'var(--surface)' }}
           >
-            {option.icon}
-            <p className="font-bold text-lg mb-1">{option.name}</p>
-            <p className="text-sm text-cyan-600">
+            <div style={{ color: option.color }}>
+              {option.icon}
+            </div>
+            <h3 className="font-bold text-lg mb-1" style={{ color: 'var(--text-900)' }}>
+              {option.name}
+            </h3>
+            <div className="text-sm font-semibold px-2 py-1 rounded" style={{
+              background: 'var(--primary-100)',
+              color: 'var(--primary-700)'
+            }}>
               {formatCurrency(option.cost)}
-            </p>
+            </div>
           </div>
         ))}
       </div>
 
       {/* Additional Information */}
-      <div className="mt-6 p-4 bg-white bg-opacity-10 rounded-lg">
-        <p className="text-cyan-100 text-sm">
-          💡 <strong>Note:</strong> These estimates include fuel, tolls, and
-          other transportation costs. Actual costs may vary based on current
-          prices and specific route conditions.
-        </p>
+      <div className="p-4 rounded-lg border-l-4" style={{ 
+        background: 'var(--surface-alt)', 
+        borderLeftColor: 'var(--primary-600)' 
+      }}>
+        <div className="flex items-start gap-3">
+          <span className="text-xl">💡</span>
+          <div>
+            <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-900)' }}>
+              Cost Estimation Note
+            </p>
+            <p className="text-sm" style={{ color: 'var(--text-600)' }}>
+              These estimates include fuel, tolls, and other transportation costs. 
+              Actual costs may vary based on current prices and specific route conditions.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

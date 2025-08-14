@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
 import { FiMapPin, FiCamera, FiClock } from "react-icons/fi";
-import { authAPI, DestinationDetails } from "../../lib/api";
+import { useDestination } from "../../contexts/DestinationContext";
+import { useGoogleMaps } from "../../contexts/GoogleMapsContext";
 
 interface PlaceImage {
   placeName: string;
@@ -10,23 +10,54 @@ interface PlaceImage {
 }
 
 const PlacesToVisit: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const [destinationData, setDestinationData] =
-    useState<DestinationDetails | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { destinationData, loading, error } = useDestination();
+  const { isLoaded: isGoogleMapsLoaded } = useGoogleMaps();
   const [placeImages, setPlaceImages] = useState<Map<string, PlaceImage>>(
     new Map(),
   );
 
   // Function to check if Google Maps is available
   const isGoogleMapsAvailable = () => {
-    return (
-      typeof window !== "undefined" &&
-      window.google &&
-      window.google.maps &&
-      window.google.maps.places
-    );
+    try {
+      return (
+        isGoogleMapsLoaded &&
+        typeof window !== "undefined" &&
+        window.google &&
+        window.google.maps &&
+        window.google.maps.places &&
+        window.google.maps.places.PlacesService
+      );
+    } catch (error) {
+      console.warn('Error checking Google Maps availability:', error);
+      return false;
+    }
+  };
+
+  // Function to wait for Google Maps to be available
+  const waitForGoogleMaps = () => {
+    return new Promise<void>((resolve) => {
+      if (isGoogleMapsAvailable()) {
+        resolve();
+        return;
+      }
+
+      // Wait up to 10 seconds for Google Maps to load
+      let attempts = 0;
+      const maxAttempts = 50; // 50 * 200ms = 10 seconds
+
+      const checkInterval = setInterval(() => {
+        attempts++;
+
+        if (isGoogleMapsAvailable()) {
+          clearInterval(checkInterval);
+          resolve();
+        } else if (attempts >= maxAttempts) {
+          clearInterval(checkInterval);
+          console.warn('Google Maps failed to load after 10 seconds, proceeding without images');
+          resolve();
+        }
+      }, 200);
+    });
   };
 
   // Function to fetch place image from Google Places API
@@ -36,11 +67,19 @@ const PlacesToVisit: React.FC = () => {
   ): Promise<string | null> => {
     return new Promise((resolve) => {
       if (!isGoogleMapsAvailable()) {
+        console.warn('Google Maps not available for place:', placeName);
         resolve(null);
         return;
       }
 
       try {
+        // Double-check Google Maps availability before creating service
+        if (!window.google?.maps?.places?.PlacesService) {
+          console.warn('PlacesService not available for place:', placeName);
+          resolve(null);
+          return;
+        }
+
         const service = new window.google.maps.places.PlacesService(
           document.createElement("div"),
         );
@@ -51,24 +90,37 @@ const PlacesToVisit: React.FC = () => {
         };
 
         service.textSearch(request, (results, status) => {
-          if (
-            status === window.google.maps.places.PlacesServiceStatus.OK &&
-            results &&
-            results[0] &&
-            results[0].photos &&
-            results[0].photos.length > 0
-          ) {
-            try {
-              const photoUrl = results[0].photos[0].getUrl({
-                maxWidth: 400,
-                maxHeight: 300,
-              });
-              resolve(photoUrl);
-            } catch (error) {
-              console.warn(`Error getting photo URL for ${placeName}:`, error);
+          try {
+            // Check if Google Maps is still available in callback
+            if (!window.google?.maps?.places?.PlacesServiceStatus) {
+              console.warn('Google Maps PlacesServiceStatus not available in callback for:', placeName);
+              resolve(null);
+              return;
+            }
+
+            if (
+              status === window.google.maps.places.PlacesServiceStatus.OK &&
+              results &&
+              results[0] &&
+              results[0].photos &&
+              results[0].photos.length > 0
+            ) {
+              try {
+                const photoUrl = results[0].photos[0].getUrl({
+                  maxWidth: 400,
+                  maxHeight: 300,
+                });
+                resolve(photoUrl);
+              } catch (error) {
+                console.warn(`Error getting photo URL for ${placeName}:`, error);
+                resolve(null);
+              }
+            } else {
+              console.warn(`No photos found for ${placeName}, status:`, status);
               resolve(null);
             }
-          } else {
+          } catch (callbackError) {
+            console.warn(`Error in textSearch callback for ${placeName}:`, callbackError);
             resolve(null);
           }
         });
@@ -81,7 +133,25 @@ const PlacesToVisit: React.FC = () => {
 
   // Function to load images for all places
   const loadPlaceImages = async (places: string[], destinationName: string) => {
-    if (!places.length || !isGoogleMapsAvailable()) return;
+    if (!places.length) {
+      console.log("No places to load images for");
+      return;
+    }
+
+    try {
+      // Wait for Google Maps to be available
+      await waitForGoogleMaps();
+
+      if (!isGoogleMapsAvailable()) {
+        console.warn("Google Maps not available - skipping image loading");
+        return;
+      }
+
+      console.log(`Starting to load images for ${places.length} places`);
+    } catch (error) {
+      console.error("Error in loadPlaceImages setup:", error);
+      return;
+    }
 
     // Initialize loading state for all places
     const initialImageMap = new Map<string, PlaceImage>();
@@ -126,59 +196,48 @@ const PlacesToVisit: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchDestinationData = async () => {
-      if (!id) return;
-
-      try {
-        setLoading(true);
-        setError(null);
-
-        const data = await authAPI.getDestinationDetails(parseInt(id));
-        setDestinationData(data);
-      } catch (error) {
-        console.error("Failed to fetch destination data:", error);
-        setError(
-          error instanceof Error
-            ? error.message
-            : "Failed to load destination data",
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDestinationData();
-  }, [id]);
-
-  // Separate useEffect to load place images after component has loaded
+  // Load place images after component has loaded
   useEffect(() => {
     if (
       destinationData &&
       destinationData["things to do"] &&
-      destinationData["things to do"].length > 0
+      destinationData["things to do"].length > 0 &&
+      isGoogleMapsLoaded
     ) {
-      // Delay image loading to ensure component is fully rendered
-      const timer = setTimeout(() => {
-        loadPlaceImages(
-          destinationData["things to do"],
-          destinationData.destination_name,
-        );
-      }, 1000); // 1 second delay to ensure smooth rendering
+      // Small delay to ensure all Google Maps services are ready
+      const timer = setTimeout(async () => {
+        try {
+          await loadPlaceImages(
+            destinationData["things to do"],
+            destinationData.destination_name,
+          );
+        } catch (error) {
+          console.error("Error loading place images:", error);
+        }
+      }, 1000);
 
       return () => clearTimeout(timer);
     }
-  }, [destinationData]);
+  }, [destinationData, isGoogleMapsLoaded]);
 
   if (loading) {
     return (
-      <div id="places-to-visit" className="mb-10">
-        <h2 className="text-xl font-semibold mb-4">Places to Visit</h2>
-        <div className="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center">
-          <div className="text-gray-500">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-500 mx-auto mb-2"></div>
-            Loading places to visit...
-          </div>
+      <div id="places-to-visit" className="card p-6 mb-6 animate-pulse" style={{ background: 'var(--surface)' }}>
+        <div className="h-6 bg-gray-200 rounded mb-4 w-64"></div>
+        <div className="h-4 bg-gray-200 rounded mb-6 w-full"></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="card p-0 overflow-hidden" style={{ background: 'var(--surface)' }}>
+              <div className="h-48 bg-gray-200"></div>
+              <div className="p-4">
+                <div className="h-5 bg-gray-200 rounded mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded mb-3 w-3/4"></div>
+                <div className="h-3 bg-gray-200 rounded mb-1"></div>
+                <div className="h-3 bg-gray-200 rounded mb-3"></div>
+                <div className="h-8 bg-gray-200 rounded"></div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -186,16 +245,16 @@ const PlacesToVisit: React.FC = () => {
 
   if (error || !destinationData) {
     return (
-      <div id="places-to-visit" className="mb-10">
-        <h2 className="text-xl font-semibold mb-4">Places to Visit</h2>
-        <div className="w-full h-32 bg-red-50 border border-red-200 rounded-lg flex items-center justify-center">
-          <div className="text-red-600 text-center">
-            <p className="font-medium">Failed to load places</p>
-            <p className="text-sm mt-1">
-              {error || "Places data not available"}
-            </p>
-          </div>
-        </div>
+      <div id="places-to-visit" className="card p-6 mb-6 border-l-4" style={{ 
+        background: 'var(--surface)', 
+        borderLeftColor: '#EF4444' 
+      }}>
+        <h2 className="text-2xl font-bold mb-4" style={{ color: '#DC2626' }}>
+          Places to Visit
+        </h2>
+        <p style={{ color: '#DC2626' }}>
+          {error || "Places data not available"}
+        </p>
       </div>
     );
   }
@@ -204,15 +263,18 @@ const PlacesToVisit: React.FC = () => {
 
   if (placesToDo.length === 0) {
     return (
-      <div id="places-to-visit" className="mb-10">
-        <h2 className="text-xl font-semibold mb-4">Places to Visit</h2>
-        <div className="w-full h-32 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center justify-center">
-          <div className="text-yellow-700 text-center">
-            <p className="font-medium">No places listed</p>
-            <p className="text-sm mt-1">
-              Check back later for activity recommendations
-            </p>
-          </div>
+      <div id="places-to-visit" className="card p-6 mb-6" style={{ background: 'var(--surface)' }}>
+        <h2 className="text-2xl font-bold mb-4" style={{ color: 'var(--text-900)' }}>
+          Places to Visit
+        </h2>
+        <div className="text-center py-8">
+          <div className="text-6xl mb-4">🏞️</div>
+          <p className="font-medium mb-2" style={{ color: 'var(--text-900)' }}>
+            No places listed
+          </p>
+          <p className="text-sm" style={{ color: 'var(--text-600)' }}>
+            Check back later for activity recommendations
+          </p>
         </div>
       </div>
     );
@@ -226,15 +288,15 @@ const PlacesToVisit: React.FC = () => {
       activityLower.includes("view") ||
       activityLower.includes("peak")
     ) {
-      return <FiCamera className="w-5 h-5 text-blue-600" />;
+      return <FiCamera className="w-5 h-5" />;
     } else if (
       activityLower.includes("hike") ||
       activityLower.includes("trek") ||
       activityLower.includes("walk")
     ) {
-      return <FiMapPin className="w-5 h-5 text-green-600" />;
+      return <FiMapPin className="w-5 h-5" />;
     } else {
-      return <FiMapPin className="w-5 h-5 text-purple-600" />;
+      return <FiMapPin className="w-5 h-5" />;
     }
   };
 
@@ -281,132 +343,122 @@ const PlacesToVisit: React.FC = () => {
     return `Explore this amazing ${activity.toLowerCase()} and create unforgettable memories.`;
   };
 
-  const PlacesToVisitContent = () => (
-    <div id="places-to-visit" className="mb-10">
-      <h2 className="text-xl font-semibold mb-4">
-        Places to Visit in {destinationData.destination_name}
-      </h2>
-      <p className="text-gray-200 dark:text-gray-200 mb-6">
-        Discover the must-visit attractions and activities that make this
-        destination special
-      </p>
+  const getActivityCategory = (activity: string) => {
+    const activityLower = activity.toLowerCase();
+    if (activityLower.includes("hike") || activityLower.includes("trek")) {
+      return { name: "Hiking", color: "#22C55E" };
+    } else if (activityLower.includes("falls") || activityLower.includes("waterfall")) {
+      return { name: "Nature", color: "#3B82F6" };
+    } else if (activityLower.includes("bridge")) {
+      return { name: "Sightseeing", color: "#F59E0B" };
+    } else if (activityLower.includes("tea")) {
+      return { name: "Cultural", color: "#8B5CF6" };
+    } else {
+      return { name: "Adventure", color: "#EF4444" };
+    }
+  };
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  return (
+    <div id="places-to-visit" className="card p-6 mb-6" style={{ background: 'var(--surface)' }}>
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-900)' }}>
+          Places to Visit in {destinationData.destination_name}
+        </h2>
+        <p className="text-sm" style={{ color: 'var(--text-600)' }}>
+          Discover the must-visit attractions and activities that make this destination special
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
         {placesToDo.map((place, index) => {
           const placeImageData = placeImages.get(place);
-          const hasRealImage =
-            placeImageData &&
-            placeImageData.imageUrl &&
-            !placeImageData.isLoading;
+          const hasRealImage = placeImageData && placeImageData.imageUrl && !placeImageData.isLoading;
+          const category = getActivityCategory(place);
 
           return (
             <div
               key={index}
-              className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow"
+              className="card p-0 flex flex-col overflow-hidden hover:shadow-lg hover:scale-105 transition-all duration-200 cursor-pointer"
+              style={{ background: 'var(--surface)' }}
             >
-              {/* Activity Image - Real image or gradient fallback */}
-              <div className="h-40 relative overflow-hidden">
-                {/* Google Places Image */}
+              {/* Activity Image */}
+              <div className="relative h-48 overflow-hidden">
                 {hasRealImage && (
                   <img
                     src={placeImageData.imageUrl}
                     alt={place}
-                    className="w-full h-full object-cover transition-opacity duration-500"
+                    className="w-full h-full object-cover"
+                    loading="lazy"
                     onError={(e) => {
-                      // If image fails to load, hide it and show gradient
-                      (e.target as HTMLImageElement).style.opacity = "0";
+                      (e.target as HTMLImageElement).style.display = "none";
+                      (e.target as HTMLImageElement).parentElement
+                        ?.querySelector(".fallback-content")
+                        ?.classList.remove("hidden");
                     }}
                   />
                 )}
-
-                {/* Gradient Overlay for text readability when image is present */}
-                {hasRealImage && (
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-                )}
-
-                {/* Gradient Background (shows when no image or image is loading) */}
+                
                 <div
-                  className={`absolute inset-0 bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center transition-opacity duration-500 ${
-                    hasRealImage ? "opacity-0" : "opacity-100"
-                  }`}
+                  className={`fallback-content absolute inset-0 flex flex-col items-center justify-center text-center p-4 ${hasRealImage ? "hidden" : ""}`}
+                  style={{ 
+                    background: 'linear-gradient(135deg, var(--primary-600), var(--accent))',
+                    color: 'white'
+                  }}
                 >
-                  <div className="text-white text-center">
-                    {getActivityIcon(place)}
-                    <p className="text-sm mt-2 font-medium">{place}</p>
-                  </div>
+                  <div className="text-4xl mb-3">🏞️</div>
+                  <div className="text-sm font-medium">{place}</div>
                 </div>
 
                 {/* Loading indicator */}
                 {placeImageData && placeImageData.isLoading && (
-                  <div className="absolute top-2 right-2 bg-white/80 rounded-full p-1">
-                    <div className="w-4 h-4 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+                  <div className="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center" style={{ background: 'rgba(255, 255, 255, 0.9)' }}>
+                    <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--primary-600)' }}></div>
                   </div>
                 )}
 
-                {/* Place name overlay for real images */}
-                {hasRealImage && (
-                  <div className="absolute bottom-2 left-2 right-2">
-                    <p className="text-white font-medium text-sm drop-shadow-lg">
-                      {place}
-                    </p>
-                  </div>
-                )}
+                {/* Category Badge */}
+                <div className="absolute top-3 left-3 px-2 py-1 rounded text-white text-xs font-semibold" style={{ backgroundColor: category.color }}>
+                  {category.name}
+                </div>
               </div>
 
-              {/* Activity Information */}
-              <div className="p-4">
-                <h3 className="font-semibold text-lg text-gray-800 mb-2">
+              {/* Activity Content */}
+              <div className="flex-grow p-4">
+                <h3 className="font-bold text-lg mb-2" style={{ color: 'var(--text-900)' }}>
                   {place}
                 </h3>
 
-                <p className="text-sm text-gray-600 mb-3 leading-relaxed">
+                <p className="text-sm mb-3 leading-relaxed" style={{ color: 'var(--text-600)' }}>
                   {getActivityDescription(place)}
                 </p>
 
                 {/* Activity Details */}
                 <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2 text-gray-500">
-                    <FiClock className="w-4 h-4" />
+                  <div className="flex items-center gap-2" style={{ color: 'var(--text-600)' }}>
+                    <FiClock className="w-4 h-4" style={{ color: 'var(--primary-600)' }} />
                     <span>Estimated time: {getEstimatedTime(place)}</span>
                   </div>
 
-                  <div className="flex items-center gap-2 text-gray-500">
-                    <FiMapPin className="w-4 h-4" />
+                  <div className="flex items-center gap-2" style={{ color: 'var(--text-600)' }}>
+                    <FiMapPin className="w-4 h-4" style={{ color: 'var(--primary-600)' }} />
                     <span>Location: {destinationData.destination_name}</span>
                   </div>
-                </div>
-
-                {/* Activity Type Badge */}
-                <div className="mt-3 inline-block">
-                  <span className="bg-cyan-100 text-cyan-800 text-xs px-2 py-1 rounded-full">
-                    {place.toLowerCase().includes("hike") ||
-                    place.toLowerCase().includes("trek")
-                      ? "Hiking"
-                      : place.toLowerCase().includes("falls") ||
-                          place.toLowerCase().includes("waterfall")
-                        ? "Nature"
-                        : place.toLowerCase().includes("bridge")
-                          ? "Sightseeing"
-                          : place.toLowerCase().includes("tea")
-                            ? "Cultural"
-                            : "Adventure"}
-                  </span>
                 </div>
               </div>
 
               {/* Action Footer */}
-              <div className="px-4 pb-4">
+              <div className="p-4 pt-0">
                 <button
                   onClick={() => {
-                    // You can add more detailed view or Google Maps integration here
                     const query = `${place} ${destinationData.destination_name} Sri Lanka`;
                     window.open(
                       `https://www.google.com/maps/search/${encodeURIComponent(query)}`,
                       "_blank",
                     );
                   }}
-                  className="w-full bg-cyan-600 hover:bg-cyan-700 text-white py-2 px-4 rounded-lg transition-colors font-medium"
+                  className="btn btn-primary btn-md w-full flex items-center justify-center gap-2"
                 >
+                  <FiMapPin className="w-4 h-4" />
                   View on Map
                 </button>
               </div>
@@ -416,17 +468,37 @@ const PlacesToVisit: React.FC = () => {
       </div>
 
       {/* Additional Tips */}
-      <div className="mt-8 p-4 bg-green-50 border border-green-200 rounded-lg">
-        <p className="text-green-800 text-sm">
-          🌟 <strong>Travel Tip:</strong> Plan your visits based on weather
-          conditions and your fitness level. Early morning visits often provide
-          the best views and fewer crowds.
-        </p>
+      <div className="p-4 rounded-lg border-l-4" style={{ 
+        background: 'var(--surface-alt)', 
+        borderLeftColor: '#22C55E' 
+      }}>
+        <div className="flex items-start gap-3">
+          <span className="text-xl">🌟</span>
+          <div>
+            <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-900)' }}>
+              Travel Tip
+            </p>
+            <p className="text-sm" style={{ color: 'var(--text-600)' }}>
+              Plan your visits based on weather conditions and your fitness level. 
+              Early morning visits often provide the best views and fewer crowds.
+            </p>
+          </div>
+        </div>
       </div>
+
+      {/* Debug info for development */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mt-4 p-2 rounded text-xs" style={{ 
+          background: 'var(--surface-alt)', 
+          color: 'var(--text-600)' 
+        }}>
+          Google Maps Ready: {isGoogleMapsLoaded ? 'Yes' : 'No'} |
+          Images Loaded: {placeImages.size} |
+          Places: {placesToDo.length}
+        </div>
+      )}
     </div>
   );
-
-  return <PlacesToVisitContent />;
 };
 
 export default PlacesToVisit;

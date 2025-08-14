@@ -73,7 +73,7 @@ export const SmokingTrainLoader: React.FC<SmokingTrainLoaderProps> = ({
         // Remove old smoke puffs (after 3 seconds)
         return newFrames.filter(timestamp => now - timestamp < 3000);
       });
-    }, 500); // New puff every 0.5s
+    }, 300); // New puff every 0.3s
 
     return () => clearInterval(interval);
   }, [isVisible]); // Removed progress dependency so smoke always shows
@@ -101,7 +101,7 @@ export const SmokingTrainLoader: React.FC<SmokingTrainLoaderProps> = ({
         // Frame 1: Small initial puff
         return (
           <g>
-            <circle cx="0" cy="0" r="8" fill="#000000" stroke="white" strokeWidth="1.5" />
+            <circle cx="-5" cy="-3" r="8" fill="#000000" stroke="white" strokeWidth="1.5" />
           </g>
         );
       } else if (phase < 0.4) {
@@ -109,7 +109,7 @@ export const SmokingTrainLoader: React.FC<SmokingTrainLoaderProps> = ({
         return (
           <g>
             <circle cx="-2" cy="-3" r="10" fill="#000000" stroke="white" strokeWidth="1.5" />
-            <circle cx="3" cy="2" r="8" fill="#000000" stroke="white" strokeWidth="1.5" />
+            <circle cx="-3" cy="-6" r="8" fill="#000000" stroke="white" strokeWidth="1.5" />
           </g>
         );
       } else if (phase < 0.6) {
@@ -234,8 +234,15 @@ export const SmokingTrainLoader: React.FC<SmokingTrainLoaderProps> = ({
             />
 
             {/* Train Shadow */}
-            <g transform="translate(8, 25)" opacity="0.3">
-              <ellipse cx="35" cy={height + 5} rx="60" ry="6" fill="#000000" />
+            <g transform="translate(8, 25)" opacity="0.4">
+              <image
+                href="https://cdn.builder.io/api/v1/image/assets%2Fa1c5dbf260fa4e85b0c45061d6234b64%2F9e3f2d4e61c6491399be215df77cb99f?format=webp&width=800"
+                x="-120"
+                y={height - 37}
+                width="280"
+                height="75"
+                preserveAspectRatio="xMidYMid meet"
+              />
             </g>
           </g>
         </g>
@@ -243,7 +250,7 @@ export const SmokingTrainLoader: React.FC<SmokingTrainLoaderProps> = ({
         {/* Animated Smoke Effects - OUTSIDE CLIPPING */}
         <g ref={smokeContainerRef} style={{ transform: 'translateX(-120px)' }}>
           {smokeFrames.map((timestamp, index) => (
-            <g key={timestamp} transform={`translate(75, ${height - 65})`}>
+            <g key={timestamp} transform={`translate(65, ${height - 65})`}>
               {generateSmokeFrames(timestamp, index)}
             </g>
           ))}

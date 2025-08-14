@@ -9,6 +9,9 @@ import {
 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+
+// API Base URL for image URL construction
+const API_BASE_URL = "http://localhost:8000";
 import {
   authAPI,
   UserProfile,
@@ -63,8 +66,8 @@ const Profile = () => {
             id: destinationData.destination_id,
             name: destinationData.destination_name,
             description: destinationData.description,
-            image: destinationData["destiantion image"]
-              ? `http://localhost:8000${destinationData["destiantion image"]}`
+            image: destinationData["destination image"]
+              ? `${API_BASE_URL}${destinationData["destination image"]}`
               : "https://images.unsplash.com/photo-1588666309990-d68f08e3d4a6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
           });
         } catch (error) {

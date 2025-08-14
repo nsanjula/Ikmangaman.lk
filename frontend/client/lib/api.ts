@@ -144,7 +144,7 @@ export interface DestinationDetails {
   "cost for private bus": number;
   "cost for transit": number;
   "guide details": GuideDetails[];
-  "destiantion image": string;
+  "destination image": string;
 }
 
 export interface Destination {
@@ -663,7 +663,7 @@ class AuthAPI {
           photo_url: "",
         },
       ],
-      "destiantion image": `/destination-image/${destinationId}`,
+      "destination image": `/destination-image/${destinationId}`,
     };
   }
 
