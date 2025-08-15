@@ -1,7 +1,4 @@
-import "./global.css";
-
 import { Toaster } from "@/components/ui/toaster";
-import { createRoot } from "react-dom/client";
 import { useEffect } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -30,6 +27,8 @@ import QuestionnaireMetricsPage from "./pages/QuestionnaireMetricsPage";
 import SavedPlaceDestinationDetail from "./pages/SavedPlaceDestinationDetail";
 import CreateItinerary from "./pages/CreateItinerary";
 import ItineraryDestinationDetail from "./pages/ItineraryDestinationDetail";
+import ChatBot from "./components/ChatBot";
+
 const queryClient = new QueryClient();
 
 const App = () => {
@@ -51,8 +50,7 @@ const App = () => {
     <div className="iframe-safe stable-layout">
       <QueryClientProvider client={queryClient}>
         <LoadingProvider>
-          <AuthProvider>
-            <TooltipProvider>
+          <TooltipProvider>
               <Toaster />
               <Sonner />
               <OfflineNotice />
@@ -60,6 +58,8 @@ const App = () => {
               {/* <BackendConnectionDiagnostic /> */}
               <LoadingOverlay />
               <BrowserRouter>
+                <AuthProvider>
+                  <ChatBot />
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/login" element={<LoginPage />} />
@@ -81,13 +81,13 @@ const App = () => {
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
+                </AuthProvider>
               </BrowserRouter>
             </TooltipProvider>
-          </AuthProvider>
         </LoadingProvider>
       </QueryClientProvider>
     </div>
   );
 };
 
-createRoot(document.getElementById("root")!).render(<App />);
+export default App;

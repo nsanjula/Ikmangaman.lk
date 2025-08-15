@@ -392,6 +392,49 @@
     }
   }
 
+  /* Chat animation */
+  @keyframes bounce {
+    0%, 60%, 100% {
+      animation-timing-function: cubic-bezier(0.215, 0.610, 0.355, 1.000);
+      transform: translate3d(0,0,0);
+    }
+    40% {
+      animation-timing-function: cubic-bezier(0.755, 0.050, 0.855, 0.060);
+      transform: translate3d(0, -6px, 0);
+    }
+    80% {
+      animation-timing-function: cubic-bezier(0.755, 0.050, 0.855, 0.060);
+      transform: translate3d(0, -3px, 0);
+    }
+  }
+
+  .animate-bounce {
+    animation: bounce 1.4s infinite;
+  }
+
+  /* Chatbot floating button - ensure it's always fixed to viewport */
+  .chatbot-floating-button {
+    position: fixed !important;
+    z-index: 9999 !important;
+    pointer-events: auto !important;
+  }
+
+  .chatbot-popup {
+    position: fixed !important;
+    z-index: 9999 !important;
+    pointer-events: auto !important;
+  }
+
+  /* Ensure no parent containers affect the floating button */
+  .chatbot-floating-button,
+  .chatbot-popup {
+    top: auto !important;
+    left: auto !important;
+    transform: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
   /* Responsive adjustments */
   @media (max-width: 768px) {
     .container {

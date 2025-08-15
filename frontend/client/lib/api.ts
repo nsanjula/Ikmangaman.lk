@@ -255,10 +255,20 @@ export interface DayAssignment {
   estimated_budget: number;
 }
 
+export interface ChatRequest {
+  message: string;
+}
+
+export interface ChatResponse {
+  "reply: ": string;
+}
+
 class AuthAPI {
   private backendAvailable: boolean | null = null;
   private lastConnectivityCheck: number = 0;
   private readonly CONNECTIVITY_CHECK_INTERVAL = 30000; // 30 seconds
+  private savedPlacesCache: { data: any; timestamp: number } | null = null;
+  private readonly CACHE_DURATION = 3 * 60 * 1000; // 3 minutes cache
 
   private async checkBackendConnectivity(): Promise<boolean> {
     const now = Date.now();
@@ -313,11 +323,17 @@ class AuthAPI {
 
       if (!response.ok) {
         handleDatabaseTimeout(response);
-        const error: ApiError = await response.json();
-        throw new Error(error.detail || "Login failed");
+        let errorMessage = "Login failed";
+        try {
+          const error: ApiError = await response.json();
+          errorMessage = error.detail || errorMessage;
+        } catch (jsonError) {
+          console.warn("Failed to parse login error response:", jsonError);
+        }
+        throw new Error(errorMessage);
       }
 
-      return response.json();
+      return await response.json();
     } catch (error) {
       if (error instanceof TypeError && error.message.includes("fetch")) {
         throw new Error(
@@ -339,11 +355,17 @@ class AuthAPI {
       });
 
       if (!response.ok) {
-        const error: ApiError = await response.json();
-        throw new Error(error.detail || "Registration failed");
+        let errorMessage = "Registration failed";
+        try {
+          const error: ApiError = await response.json();
+          errorMessage = error.detail || errorMessage;
+        } catch (jsonError) {
+          console.warn("Failed to parse registration error response:", jsonError);
+        }
+        throw new Error(errorMessage);
       }
 
-      return response.json();
+      return await response.json();
     } catch (error) {
       if (error instanceof TypeError && error.message.includes("fetch")) {
         throw new Error(
@@ -491,11 +513,17 @@ class AuthAPI {
           this.removeToken();
           throw new Error("Authentication required. Please log in again.");
         }
-        const error: ApiError = await response.json();
-        throw new Error(error.detail || "Failed to fetch user profile");
+        let errorMessage = "Failed to fetch user profile";
+        try {
+          const error: ApiError = await response.json();
+          errorMessage = error.detail || errorMessage;
+        } catch (jsonError) {
+          console.warn("Failed to parse user profile error response:", jsonError);
+        }
+        throw new Error(errorMessage);
       }
 
-      return response.json();
+      return await response.json();
     } catch (error) {
       if (error instanceof TypeError && error.message.includes("fetch")) {
         throw new Error(
@@ -530,11 +558,17 @@ class AuthAPI {
           this.removeToken();
           throw new Error("Authentication required. Please log in again.");
         }
-        const error: ApiError = await response.json();
-        throw new Error(error.detail || "Failed to update profile");
+        let errorMessage = "Failed to update profile";
+        try {
+          const error: ApiError = await response.json();
+          errorMessage = error.detail || errorMessage;
+        } catch (jsonError) {
+          console.warn("Failed to parse update profile error response:", jsonError);
+        }
+        throw new Error(errorMessage);
       }
 
-      return response.json();
+      return await response.json();
     } catch (error) {
       if (error instanceof TypeError && error.message.includes("fetch")) {
         throw new Error(
@@ -611,11 +645,17 @@ class AuthAPI {
           this.removeToken();
           throw new Error("Authentication required. Please log in again.");
         }
-        const error: ApiError = await response.json();
-        throw new Error(error.detail || "Failed to submit questionnaire");
+        let errorMessage = "Failed to submit questionnaire";
+        try {
+          const error: ApiError = await response.json();
+          errorMessage = error.detail || errorMessage;
+        } catch (jsonError) {
+          console.warn("Failed to parse questionnaire error response:", jsonError);
+        }
+        throw new Error(errorMessage);
       }
 
-      return response.json();
+      return await response.json();
     } catch (error) {
       if (error instanceof TypeError && error.message.includes("fetch")) {
         throw new Error(
@@ -952,11 +992,17 @@ class AuthAPI {
           this.removeToken();
           throw new Error("Authentication required. Please log in again.");
         }
-        const error: ApiError = await response.json();
-        throw new Error(error.detail || "Failed to fetch saved places");
+        let errorMessage = "Failed to fetch saved places";
+        try {
+          const error: ApiError = await response.json();
+          errorMessage = error.detail || errorMessage;
+        } catch (jsonError) {
+          console.warn("Failed to parse saved places error response:", jsonError);
+        }
+        throw new Error(errorMessage);
       }
 
-      return response.json();
+      return await response.json();
     } catch (error) {
       if (error instanceof TypeError && error.message.includes("fetch")) {
         throw new Error(
@@ -987,11 +1033,20 @@ class AuthAPI {
           this.removeToken();
           throw new Error("Authentication required. Please log in again.");
         }
-        const error: ApiError = await response.json();
-        throw new Error(error.detail || "Failed to save place");
+        let errorMessage = "Failed to save place";
+        try {
+          const error: ApiError = await response.json();
+          errorMessage = error.detail || errorMessage;
+        } catch (jsonError) {
+          console.warn("Failed to parse save place error response:", jsonError);
+        }
+        throw new Error(errorMessage);
       }
 
-      return response.json();
+      const result = await response.json();
+      // Clear cache since places have changed
+      this.clearSavedPlacesCache();
+      return result;
     } catch (error) {
       if (error instanceof TypeError && error.message.includes("fetch")) {
         throw new Error(
@@ -1002,14 +1057,24 @@ class AuthAPI {
     }
   }
 
-  async getSavedPlacesWithDetails(): Promise<{ saved_places: any[] }> {
+  async getSavedPlacesOptimized(useCache = true): Promise<{ saved_places: any[] }> {
     try {
       const token = this.getToken();
       if (!token) {
         throw new Error("Authentication required");
       }
 
-      const response = await fetch(`${API_BASE_URL}/saved_places/saved_places_with_details`, {
+      // Check cache first if enabled
+      if (useCache && this.savedPlacesCache) {
+        const now = Date.now();
+        if (now - this.savedPlacesCache.timestamp < this.CACHE_DURATION) {
+          console.log('✅ Using cached saved places data');
+          return this.savedPlacesCache.data;
+        }
+      }
+
+      // Fetch fresh data
+      const response = await fetch(`${API_BASE_URL}/saved_places/saved_places`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -1022,11 +1087,88 @@ class AuthAPI {
           this.removeToken();
           throw new Error("Authentication required. Please log in again.");
         }
-        const error: ApiError = await response.json();
-        throw new Error(error.detail || "Failed to fetch saved places with details");
+
+        let errorMessage = "Failed to fetch saved places";
+        try {
+          const error: ApiError = await response.json();
+          errorMessage = error.detail || errorMessage;
+        } catch (jsonError) {
+          console.warn("Failed to parse error response:", jsonError);
+        }
+        throw new Error(errorMessage);
       }
 
-      return response.json();
+      const savedPlaces: SavedPlace[] = await response.json();
+
+      // Optimize: Process places in smaller batches to avoid overwhelming the API
+      const batchSize = 3;
+      const transformedPlaces: any[] = [];
+
+      for (let i = 0; i < savedPlaces.length; i += batchSize) {
+        const batch = savedPlaces.slice(i, i + batchSize);
+
+        const batchResults = await Promise.allSettled(
+          batch.map(async (place) => {
+            try {
+              // Try to find the destination ID by searching for this place name
+              const destinationId = await this.getDestinationIdByName(place.name);
+
+              return {
+                destination_id: destinationId || place.id,
+                saved_place_id: place.id,
+                destination_name: place.name,
+                destination_image: destinationId
+                  ? `${API_BASE_URL}/destination-image/${destinationId}`
+                  : this.getFallbackImageUrl(place.name),
+                created_at: place.created_at
+              };
+            } catch (error) {
+              console.warn(`Failed to get destination ID for ${place.name}:`, error);
+              // Fallback to basic data with fallback image
+              return {
+                destination_id: place.id,
+                saved_place_id: place.id,
+                destination_name: place.name,
+                destination_image: this.getFallbackImageUrl(place.name),
+                created_at: place.created_at
+              };
+            }
+          })
+        );
+
+        // Add successful results to transformedPlaces
+        batchResults.forEach((result, index) => {
+          if (result.status === 'fulfilled') {
+            transformedPlaces.push(result.value);
+          } else {
+            // Fallback for failed batch items
+            const place = batch[index];
+            transformedPlaces.push({
+              destination_id: place.id,
+              saved_place_id: place.id,
+              destination_name: place.name,
+              destination_image: this.getFallbackImageUrl(place.name),
+              created_at: place.created_at
+            });
+          }
+        });
+      }
+
+      const result = { saved_places: transformedPlaces };
+
+      // Cache the result
+      this.savedPlacesCache = {
+        data: result,
+        timestamp: Date.now()
+      };
+
+      console.log('✅ Fetched and cached saved places data with real images');
+      console.log('📸 Image sources:', transformedPlaces.map(p => ({
+        name: p.destination_name,
+        hasDestinationId: !!p.destination_id,
+        imageSource: p.destination_image.includes('destination-image') ? 'backend' : 'fallback'
+      })));
+      return result;
     } catch (error) {
       if (error instanceof TypeError && error.message.includes("fetch")) {
         throw new Error(
@@ -1034,6 +1176,103 @@ class AuthAPI {
         );
       }
       throw error;
+    }
+  }
+
+  // Method to clear saved places cache (call after save/unsave operations)
+  clearSavedPlacesCache(): void {
+    this.savedPlacesCache = null;
+  }
+
+  // Helper method to get destination ID by name (with caching)
+  private destinationIdCache: Map<string, number> = new Map();
+
+  private async getDestinationIdByName(placeName: string): Promise<number | null> {
+    // Check cache first
+    if (this.destinationIdCache.has(placeName)) {
+      return this.destinationIdCache.get(placeName) || null;
+    }
+
+    try {
+      // First try a simple name-to-ID mapping for common Sri Lankan destinations
+      const staticMapping = this.getStaticDestinationId(placeName);
+      if (staticMapping) {
+        this.destinationIdCache.set(placeName, staticMapping);
+        return staticMapping;
+      }
+
+      // Fall back to search endpoint
+      const searchResponse = await this.searchByDestinationName(placeName);
+
+      if (searchResponse.results && searchResponse.results.length > 0) {
+        const result = searchResponse.results[0];
+        const destinationId = result.destination_id;
+
+        // Cache the result
+        this.destinationIdCache.set(placeName, destinationId);
+        return destinationId;
+      }
+
+      return null;
+    } catch (error) {
+      console.warn(`Could not find destination ID for ${placeName}:`, error);
+      return null;
+    }
+  }
+
+  // Static mapping for common destinations (improves performance)
+  private getStaticDestinationId(placeName: string): number | null {
+    const name = placeName.toLowerCase().trim();
+    const mapping: { [key: string]: number } = {
+      'kandy': 1,
+      'galle': 2,
+      'ella': 3,
+      'nuwara eliya': 4,
+      'colombo': 5,
+      'sigiriya': 6,
+      'anuradhapura': 7,
+      'polonnaruwa': 8,
+      'dambulla': 9,
+      'bentota': 10,
+      'mirissa': 11,
+      'unawatuna': 12,
+      'hikkaduwa': 13,
+      'yala': 14,
+      'udawalawe': 15,
+      'arugam bay': 16,
+      'trincomalee': 17,
+      'jaffna': 18,
+      'badulla': 19,
+      'ratnapura': 20,
+      'negombo': 21,
+      'matara': 22,
+      'hambantota': 23,
+      'batticaloa': 24,
+      'kurunegala': 25,
+      'kegalle': 26,
+      'kalutara': 27,
+      'gampaha': 28
+    };
+
+    return mapping[name] || null;
+  }
+
+  // Helper method to get fallback image URLs (when backend image not available)
+  private getFallbackImageUrl(placeName: string): string {
+    // Sri Lankan destination-specific fallback images
+    const lowerName = placeName.toLowerCase();
+
+    if (lowerName.includes('kandy')) {
+      return "https://images.unsplash.com/photo-1513326738677-b964603b136d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"; // Temple
+    } else if (lowerName.includes('galle') || lowerName.includes('coast') || lowerName.includes('beach')) {
+      return "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"; // Beach
+    } else if (lowerName.includes('ella') || lowerName.includes('nuwara') || lowerName.includes('mountain') || lowerName.includes('hill')) {
+      return "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"; // Mountain
+    } else if (lowerName.includes('colombo') || lowerName.includes('city')) {
+      return "https://images.unsplash.com/photo-1539650116574-75c0c6d73f6e?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"; // City
+    } else {
+      // Default Sri Lankan landscape
+      return "https://images.unsplash.com/photo-1588666309990-d68f08e3d4a6?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80";
     }
   }
 
@@ -1057,11 +1296,20 @@ class AuthAPI {
           this.removeToken();
           throw new Error("Authentication required. Please log in again.");
         }
-        const error: ApiError = await response.json();
-        throw new Error(error.detail || "Failed to remove saved place");
+        let errorMessage = "Failed to remove saved place";
+        try {
+          const error: ApiError = await response.json();
+          errorMessage = error.detail || errorMessage;
+        } catch (jsonError) {
+          console.warn("Failed to parse unsave place error response:", jsonError);
+        }
+        throw new Error(errorMessage);
       }
 
-      return response.json();
+      const result = await response.json();
+      // Clear cache since places have changed
+      this.clearSavedPlacesCache();
+      return result;
     } catch (error) {
       if (error instanceof TypeError && error.message.includes("fetch")) {
         throw new Error(
@@ -1240,6 +1488,52 @@ class AuthAPI {
       return response.json();
     } catch (error) {
       handleAPIError(error, 'getItineraryDestinationDetails');
+    }
+  }
+
+  async sendChatMessage(message: string): Promise<ChatResponse> {
+    try {
+      const token = this.getToken();
+      if (!token) {
+        throw new Error("Authentication required");
+      }
+
+      const response = await fetch(`${API_BASE_URL}/chat/?message=${encodeURIComponent(message)}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          this.removeToken();
+          throw new Error("Authentication required. Please log in again.");
+        }
+
+        // Handle error response safely
+        let errorMessage = "Failed to send chat message";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.detail || errorMessage;
+        } catch (jsonError) {
+          // If we can't parse JSON, just use the default message
+          console.warn("Could not parse error response as JSON:", jsonError);
+        }
+
+        throw new Error(errorMessage);
+      }
+
+      return response.json();
+    } catch (error) {
+      // Don't use handleAPIError as it might cause issues with response reading
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw new Error(
+          `Unable to connect to backend server at ${API_BASE_URL}. Please check if the backend is running and CORS is configured correctly.`,
+        );
+      }
+      throw error;
     }
   }
 }

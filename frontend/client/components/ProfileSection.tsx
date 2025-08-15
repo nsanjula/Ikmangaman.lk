@@ -42,6 +42,7 @@ const Profile = () => {
   >([]);
   const [savedPlacesLoading, setSavedPlacesLoading] = useState(false);
   const [savedPlacesError, setSavedPlacesError] = useState<string | null>(null);
+  const [imagesLoading, setImagesLoading] = useState(0); // Track loading images
 
   const placesPerPage = 3;
   const totalPages = Math.ceil(savedPlaces.length / placesPerPage);
@@ -50,43 +51,46 @@ const Profile = () => {
     currentPage * placesPerPage,
   );
 
-  // Optimized function to load saved places using batch API
-  const loadSavedPlaces = async () => {
+  // Optimized function to load saved places with better performance
+  const loadSavedPlaces = async (showLoading = true) => {
     try {
-      setSavedPlacesLoading(true);
+      if (showLoading) {
+        setSavedPlacesLoading(true);
+      }
       setSavedPlacesError(null);
 
-      // Use the optimized batch API endpoint
-      const response = await authAPI.getSavedPlacesWithDetails();
+      // Use the optimized API endpoint with caching
+      const response = await authAPI.getSavedPlacesOptimized(true);
 
       if (response.saved_places.length === 0) {
         setSavedPlaces([]);
         return [];
       }
 
-      // Transform the response to match the expected format
+      // Transform the response to match the expected format with optimized images
       const savedPlacesData = response.saved_places.map(place => ({
         id: place.destination_id || place.saved_place_id,
         name: place.destination_name,
-        image: place.destination_image
-          ? `${API_BASE_URL}${place.destination_image}`
-          : "https://images.unsplash.com/photo-1588666309990-d68f08e3d4a6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        image: place.destination_image || "https://images.unsplash.com/photo-1588666309990-d68f08e3d4a6?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
       }));
 
       setSavedPlaces(savedPlacesData);
       return savedPlacesData;
     } catch (error) {
       console.error("Failed to load saved places:", error);
-      setSavedPlacesError(
-        error instanceof Error ? error.message : "Failed to load saved places",
-      );
-      return [];
+      const errorMessage = error instanceof Error ? error.message : "Failed to load saved places";
+      setSavedPlacesError(errorMessage);
+
+      // Don't return empty array on error to distinguish from empty results
+      return null;
     } finally {
-      setSavedPlacesLoading(false);
+      if (showLoading) {
+        setSavedPlacesLoading(false);
+      }
     }
   };
 
-  // Load user profile data on component mount
+  // Load user profile data on component mount with progressive loading
   useEffect(() => {
     const loadAllData = async () => {
       try {
@@ -95,17 +99,9 @@ const Profile = () => {
         setProgress(20);
         setError(null);
 
-        // Load profile and saved places in parallel for faster loading
-        const [profileResult, savedPlacesResult] = await Promise.allSettled([
-          authAPI.getUserProfile(),
-          loadSavedPlaces()
-        ]);
-
-        setProgress(70);
-
-        // Handle profile data
-        if (profileResult.status === 'fulfilled') {
-          const profile = profileResult.value;
+        // Load profile first (critical data)
+        try {
+          const profile = await authAPI.getUserProfile();
           setOriginalData(profile);
           setUserData({
             firstName: profile.firstname,
@@ -114,14 +110,15 @@ const Profile = () => {
             username: profile.username,
             password: "********",
           });
-        } else {
-          console.error("Failed to load user profile:", profileResult.reason);
+          setProgress(60);
+        } catch (profileError) {
+          console.error("Failed to load user profile:", profileError);
           setError(
-            profileResult.reason instanceof Error ? profileResult.reason.message : "Failed to load profile",
+            profileError instanceof Error ? profileError.message : "Failed to load profile",
           );
           if (
-            profileResult.reason instanceof Error &&
-            profileResult.reason.message.includes("Authentication required")
+            profileError instanceof Error &&
+            profileError.message.includes("Authentication required")
           ) {
             logout();
             navigate("/login");
@@ -129,21 +126,20 @@ const Profile = () => {
           }
         }
 
-        // Saved places loading is handled in loadSavedPlaces function
-        if (savedPlacesResult.status === 'rejected') {
-          console.warn("Saved places loading failed, but continuing with profile:", savedPlacesResult.reason);
-        }
-
+        // Finish profile loading quickly
         setProgress(100);
-
-        // Finish loading after all data is processed
         setTimeout(() => {
           finishLoading('profile-data');
           setIsLoading(false);
+        }, 150);
+
+        // Load saved places in background (non-blocking)
+        setTimeout(() => {
+          loadSavedPlaces(true);
         }, 200);
+
       } catch (error) {
         console.error("Failed to load profile data:", error);
-        // Ensure loading is stopped on any error
         finishLoading('profile-data');
         setIsLoading(false);
       }
@@ -151,7 +147,7 @@ const Profile = () => {
 
     loadAllData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [logout, navigate]); // Removed loading functions from dependencies as they're stable context functions
+  }, [logout, navigate]);
 
   const handleChange = (field: string, value: string) => {
     setUserData({ ...userData, [field]: value });
@@ -393,22 +389,46 @@ const Profile = () => {
           </div>
 
           {savedPlacesLoading && (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-4" style={{borderBottomColor: 'var(--primary-600)'}}></div>
-              <p style={{color: 'var(--text-600)'}}>Loading your saved places...</p>
+            <div className="rounded-xl p-6" style={{background: 'var(--surface-alt)'}}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="card p-4 rounded-xl" style={{background: 'var(--surface)', border: '1px solid var(--border)'}}>
+                    <div className="h-48 rounded-lg mb-4 skeleton"></div>
+                    <div className="h-6 skeleton mb-2 rounded w-3/4"></div>
+                    <div className="flex gap-2 mt-4">
+                      <div className="h-8 skeleton rounded flex-1"></div>
+                      <div className="h-8 w-8 skeleton rounded"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="text-center mt-4">
+                <p style={{color: 'var(--text-600)'}} className="text-sm">Loading your saved places...</p>
+              </div>
             </div>
           )}
 
           {savedPlacesError && (
-            <div className="bg-red-500 text-white p-4 rounded-lg mb-6">
-              <p className="font-medium">Error loading saved places</p>
-              <p className="text-sm mt-1">{savedPlacesError}</p>
-              <button
-                onClick={loadSavedPlaces}
-                className="mt-2 bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-sm transition-colors"
-              >
-                Try Again
-              </button>
+            <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-lg mb-6">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3 flex-1">
+                  <p className="font-medium text-sm">Unable to load saved places</p>
+                  <p className="text-sm mt-1 text-red-600">{savedPlacesError}</p>
+                  <div className="mt-3">
+                    <button
+                      onClick={() => loadSavedPlaces(true)}
+                      className="bg-red-100 hover:bg-red-200 text-red-800 px-3 py-1 rounded text-sm transition-colors font-medium"
+                    >
+                      Try Again
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
@@ -443,17 +463,41 @@ const Profile = () => {
                       className="card p-4 rounded-xl hover:shadow-lg transition-all duration-300 flex flex-col transform hover:-translate-y-1"
                       style={{background: 'var(--surface)', color: 'var(--text-900)', boxShadow: 'var(--shadow)', border: '1px solid var(--border)'}}
                     >
-                      <div className="h-48 rounded-lg mb-4 overflow-hidden">
+                      <div className="h-48 rounded-lg mb-4 overflow-hidden relative">
                         <img
                           src={place.image}
                           alt={place.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            // Fallback to default image if image fails
-                            (e.target as HTMLImageElement).src =
-                              "https://images.unsplash.com/photo-1588666309990-d68f08e3d4a6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+                          className="w-full h-full object-cover transition-opacity duration-300"
+                          loading="lazy"
+                          onLoad={(e) => {
+                            // Remove any loading overlay when image loads
+                            const img = e.target as HTMLImageElement;
+                            img.style.opacity = '1';
                           }}
+                          onError={(e) => {
+                            // Fallback to contextual image if backend image fails
+                            const img = e.target as HTMLImageElement;
+                            const placeName = place.name.toLowerCase();
+
+                            if (placeName.includes('kandy')) {
+                              img.src = "https://images.unsplash.com/photo-1513326738677-b964603b136d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80";
+                            } else if (placeName.includes('galle') || placeName.includes('coast')) {
+                              img.src = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80";
+                            } else if (placeName.includes('ella') || placeName.includes('nuwara') || placeName.includes('mountain')) {
+                              img.src = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80";
+                            } else if (placeName.includes('colombo')) {
+                              img.src = "https://images.unsplash.com/photo-1539650116574-75c0c6d73f6e?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80";
+                            } else {
+                              img.src = "https://images.unsplash.com/photo-1588666309990-d68f08e3d4a6?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80";
+                            }
+                          }}
+                          style={{ opacity: '0.8' }}
                         />
+                        {/* Optional: Add a subtle loading indicator */}
+                        <div className="absolute inset-0 bg-gray-200 animate-pulse" style={{
+                          zIndex: -1,
+                          background: 'var(--surface-alt)'
+                        }}></div>
                       </div>
                       <h4 className="font-bold text-xl mb-4" style={{color: 'var(--text-900)'}}>{place.name}</h4>
                       <div className="flex gap-2 mt-auto">
@@ -468,11 +512,22 @@ const Profile = () => {
                         <button
                           onClick={async () => {
                             try {
+                              // Optimistic update - remove from UI immediately
+                              const updatedPlaces = savedPlaces.filter(p => p.id !== place.id);
+                              setSavedPlaces(updatedPlaces);
+
+                              // Also adjust current page if needed
+                              const newTotalPages = Math.ceil(updatedPlaces.length / placesPerPage);
+                              if (currentPage > newTotalPages && newTotalPages > 0) {
+                                setCurrentPage(newTotalPages);
+                              }
+
+                              // Make API call in background
                               await authAPI.unsavePlace(place.name);
-                              // Refresh saved places
-                              await loadSavedPlaces();
                             } catch (error) {
                               console.error('Failed to remove saved place:', error);
+                              // On error, reload the saved places to restore correct state
+                              loadSavedPlaces(false);
                             }
                           }}
                           className="btn btn-secondary btn-md px-3"

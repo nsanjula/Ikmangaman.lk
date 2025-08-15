@@ -6,7 +6,6 @@ import React, {
   ReactNode,
 } from "react";
 import { authAPI, setGlobalTimeoutHandler } from "../lib/api";
-import { useNavigate } from "react-router-dom";
 
 interface AuthContextType {
   isAuthenticated: boolean;
