@@ -1,8 +1,7 @@
 from fastapi import FastAPI
 from backend.database.db import engine, Base
 import backend.models
-from backend.routers import user, auth, questionnaire, recommend, destination, hotels, weather, locations, chat, saved_places, search, \
-    itinerary
+from backend.routers import user, auth, questionnaire, recommend, destination, hotels, weather, locations, search, chat, saved_places, itinerary
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
