@@ -13,3 +13,6 @@ backend\__init__.py
 frontend\.env
 backend\utils\__init__.py
 builder.config.json
+
+__pycache__/
+*.pyc
