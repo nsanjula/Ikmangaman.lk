@@ -242,14 +242,17 @@ export const useApiWithLoading = () => {
       console.error('❌ API call failed for key:', loadingKey, error);
       if (timeoutId) clearTimeout(timeoutId);
 
-      // Check if it's an authentication error or timeout
+      // Check if it's an authentication error, timeout, or no results error
       if (error instanceof Error &&
           (error.message.includes('Authentication required') ||
            error.message.includes('Please log in again') ||
            error.message.includes('401') ||
            error.message.includes('timeout') ||
-           error.message.includes('Request timeout'))) {
-        console.log('🔐 Authentication/timeout error detected, stopping loading');
+           error.message.includes('Request timeout') ||
+           error.message.includes('404') ||
+           error.message.includes('No destinations found') ||
+           error.message.includes('No matching destinations'))) {
+        console.log('🔐 Auth/timeout/no-results error detected, stopping loading');
         forceStopLoading();
       }
 

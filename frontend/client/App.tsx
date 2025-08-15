@@ -26,6 +26,7 @@ import AboutUsPage from "./pages/AboutUsPage";
 import CompassLoaderShowcase from "./pages/CompassLoaderShowcase";
 import SearchResults from "./pages/SearchResults";
 import SearchDestinationDetail from "./pages/SearchDestinationDetail";
+import QuestionnaireMetricsPage from "./pages/QuestionnaireMetricsPage";
 const queryClient = new QueryClient();
 
 const App = () => {
@@ -58,6 +59,7 @@ const App = () => {
                   <Route path="/norecommendation" element={<NoRecommendation />} />
                   <Route path="/questionare" element={<Questionare />} />
                   <Route path="/questionnaire" element={<Questionare />} />
+                  <Route path="/questionnaire-metrics" element={<QuestionnaireMetricsPage />} />
                   <Route path="/recommendation" element={<Recommendation />} />
                   <Route path="/destination/:id" element={<DestinationDetail />} />
                   <Route path="/search" element={<SearchResults />} />

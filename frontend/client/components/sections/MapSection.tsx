@@ -1,11 +1,16 @@
 import React, { useMemo } from "react";
 import { FiMapPin, FiNavigation, FiCompass } from "react-icons/fi";
+import { useLocation } from "react-router-dom";
 import OptimizedRouteMapComponent from "../OptimizedRouteMapComponent";
 import EnhancedTouristAttractionsMapComponent from "../EnhancedTouristAttractionsMapComponent";
 import { useDestination } from "../../contexts/DestinationContext";
 
 const MapSection: React.FC = () => {
   const { destinationData, questionnaireData, loading, error } = useDestination();
+  const location = useLocation();
+
+  // Check if we're coming from search results
+  const isFromSearch = location.state?.fromSearch || location.pathname.includes('/search/destination/');
 
   // Memoize starting location calculation
   const startingLocation = useMemo(() => {
@@ -81,51 +86,51 @@ const MapSection: React.FC = () => {
 
   return (
     <div id="map-section" className="space-y-6 mb-6">
-      {/* Best Route Section */}
-      <div className="card p-6" style={{ background: 'var(--surface)' }}>
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-2">
-            <FiNavigation className="w-6 h-6" style={{ color: 'var(--primary-600)' }} />
-            <h2 className="text-2xl font-bold" style={{ color: 'var(--text-900)' }}>
-              Best Route
-            </h2>
+      {/* Best Route Section - Only show for non-search destinations */}
+      {!isFromSearch && (
+        <div className="card p-6" style={{ background: 'var(--surface)' }}>
+          <div className="mb-6">
+            <div className="flex items-center gap-3 mb-2">
+              <FiNavigation className="w-6 h-6" style={{ color: 'var(--primary-600)' }} />
+              <h2 className="text-2xl font-bold" style={{ color: 'var(--text-900)' }}>
+                Best Route
+              </h2>
+            </div>
+            <p className="text-sm" style={{ color: 'var(--text-600)' }}>
+              Optimized driving route from your starting location to {destinationData.destination_name}
+            </p>
           </div>
-          <p className="text-sm" style={{ color: 'var(--text-600)' }}>
-            Optimized driving route from your starting location to {destinationData.destination_name}
-          </p>
-        </div>
 
-        {/* Route Map Container */}
-        <div className="rounded-lg overflow-hidden">
-          <OptimizedRouteMapComponent
-            destination={destination}
-            startingLocation={startingLocation}
-            destinationName={destinationData.destination_name}
-            className="w-full"
-          />
-        </div>
+          {/* Route Map Container */}
+          <div className="rounded-lg overflow-hidden">
+            <OptimizedRouteMapComponent
+              destination={destination}
+              startingLocation={startingLocation}
+              destinationName={destinationData.destination_name}
+              className="w-full"
+            />
+          </div>
 
-        {/* Route Information */}
-        <div className="mt-4 p-4 rounded-lg border-l-4" style={{ 
-          background: 'var(--surface-alt)', 
-          borderLeftColor: 'var(--primary-600)' 
-        }}>
-          <div className="flex items-start gap-3">
-            <span className="text-xl">🛣️</span>
-            <div>
-              <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-900)' }}>
-                Navigation Information
-              </p>
-              <p className="text-sm" style={{ color: 'var(--text-600)' }}>
-                This interactive map shows the recommended driving route with real-time traffic data.
-                Click and drag to explore different routes and waypoints.
-              </p>
+          {/* Route Information */}
+          <div className="mt-4 p-4 rounded-lg border-l-4" style={{
+            background: 'var(--surface-alt)',
+            borderLeftColor: 'var(--primary-600)'
+          }}>
+            <div className="flex items-start gap-3">
+              <span className="text-xl">🛣️</span>
+              <div>
+                <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-900)' }}>
+                  Navigation Information
+                </p>
+                <p className="text-sm" style={{ color: 'var(--text-600)' }}>
+                  This interactive map shows the recommended driving route with real-time traffic data.
+                  Click and drag to explore different routes and waypoints.
+                </p>
+              </div>
             </div>
           </div>
         </div>
-
-
-      </div>
+      )}
 
       {/* Tourist Attractions Section */}
       <div className="card p-6" style={{ background: 'var(--surface)' }}>

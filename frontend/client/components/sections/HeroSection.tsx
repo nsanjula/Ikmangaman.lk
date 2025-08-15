@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { FiMapPin, FiClock, FiNavigation } from "react-icons/fi";
+import { FiMapPin, FiClock, FiNavigation, FiSettings } from "react-icons/fi";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useDestination } from "../../contexts/DestinationContext";
 import WeatherServiceNotice from "../WeatherServiceNotice";
 import BackendOfflineNotice from "../BackendOfflineNotice";
@@ -15,8 +16,13 @@ const HeroSection: React.FC = () => {
     error,
     retry,
   } = useDestination();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showServiceNotice, setShowServiceNotice] = useState(false);
+
+  // Check if we're coming from search results
+  const isFromSearch = location.state?.fromSearch || location.pathname.includes('/search/destination/');
 
   // Default fallback images
   const defaultImages = [
@@ -55,6 +61,17 @@ const HeroSection: React.FC = () => {
     if (element) {
       element.scrollIntoView({ behavior: "smooth" });
     }
+  };
+
+  const handleQuestionnaireMetrics = () => {
+    // Navigate to questionnaire with destination context and skip step 1
+    navigate('/questionnaire-metrics', {
+      state: {
+        destinationId: destinationData?.destination_id,
+        destinationName: destinationData?.destination_name,
+        skipInterests: true // This will be used to skip step 1
+      }
+    });
   };
 
   if (loading) {
@@ -231,6 +248,16 @@ const HeroSection: React.FC = () => {
                 <FiMapPin className="w-4 h-4" />
                 View Map
               </button>
+              {/* Show Questionnaire Metrics button only for search destinations */}
+              {isFromSearch && (
+                <button
+                  onClick={handleQuestionnaireMetrics}
+                  className="btn btn-secondary btn-md flex items-center gap-2"
+                >
+                  <FiSettings className="w-4 h-4" />
+                  Use Questionnaire Metrics
+                </button>
+              )}
             </div>
           </div>
 
