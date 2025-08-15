@@ -1208,6 +1208,40 @@ class AuthAPI {
       handleAPIError(error, 'assignDestinationToDay');
     }
   }
+
+  async getItineraryDestinationDetails(
+    itineraryId: number,
+    dayNumber: number,
+    destinationId: number
+  ): Promise<DestinationDetails> {
+    try {
+      const token = this.getToken();
+      if (!token) {
+        throw new Error("Authentication required");
+      }
+
+      const response = await fetch(`${API_BASE_URL}/itinerary/${itineraryId}/day/${dayNumber}/destination/${destinationId}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          this.removeToken();
+          throw new Error("Authentication required. Please log in again.");
+        }
+        const error: ApiError = await response.json();
+        throw new Error(error.detail || "Failed to get destination details");
+      }
+
+      return response.json();
+    } catch (error) {
+      handleAPIError(error, 'getItineraryDestinationDetails');
+    }
+  }
 }
 
 export const authAPI = new AuthAPI();

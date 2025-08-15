@@ -29,6 +29,7 @@ import SearchDestinationDetail from "./pages/SearchDestinationDetail";
 import QuestionnaireMetricsPage from "./pages/QuestionnaireMetricsPage";
 import SavedPlaceDestinationDetail from "./pages/SavedPlaceDestinationDetail";
 import CreateItinerary from "./pages/CreateItinerary";
+import ItineraryDestinationDetail from "./pages/ItineraryDestinationDetail";
 const queryClient = new QueryClient();
 
 const App = () => {
@@ -69,6 +70,7 @@ const App = () => {
                   <Route path="/questionnaire-metrics" element={<QuestionnaireMetricsPage />} />
                   <Route path="/recommendation" element={<Recommendation />} />
                   <Route path="/create-itinerary" element={<CreateItinerary />} />
+                  <Route path="/itinerary/:itineraryId/day/:dayNumber/destination/:destinationId" element={<ItineraryDestinationDetail />} />
                   <Route path="/destination/:id" element={<DestinationDetail />} />
                   <Route path="/search" element={<SearchResults />} />
                   <Route path="/search/destination/:id" element={<SearchDestinationDetail />} />

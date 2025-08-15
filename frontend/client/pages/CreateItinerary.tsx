@@ -4,6 +4,7 @@ import { Plus } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useApiWithLoading } from "../contexts/LoadingContext";
 import { authAPI } from "../lib/api";
+import DayInterestsQuestionnaire from "../components/DayInterestsQuestionnaire";
 
 // Types for the itinerary system
 interface ItineraryState {
@@ -76,6 +77,7 @@ const CreateItinerary: React.FC = () => {
   const [questionnaireSaved, setQuestionnaireSaved] = useState(false);
   const [currentDayRecommendations, setCurrentDayRecommendations] = useState<Destination[]>([]);
   const [showingRecommendationsForDay, setShowingRecommendationsForDay] = useState<number | null>(null);
+  const [showingInterestsForDay, setShowingInterestsForDay] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState<string>("distance");
 
   // Check if user is authenticated
@@ -91,6 +93,18 @@ const CreateItinerary: React.FC = () => {
     navigate("/questionnaire-metrics?mode=create-itinerary");
   };
 
+  // Check if user should be redirected to initial questionnaire
+  useEffect(() => {
+    if (isAuthenticated && !questionnaireSaved && itinerary.itinerary_id === null) {
+      // If no questionnaire data is saved, redirect to initial questionnaire
+      const savedData = sessionStorage.getItem('itinerary_questionnaire_data');
+      if (!savedData) {
+        handleInitialQuestionnaire();
+        return; // Don't continue execution
+      }
+    }
+  }, [isAuthenticated, questionnaireSaved, itinerary.itinerary_id]);
+
   // Handler for day-specific questionnaire (step 1 - interests)
   const handleDayQuestionnaire = (dayNumber: number) => {
     if (!itinerary.itinerary_id) {
@@ -98,10 +112,21 @@ const CreateItinerary: React.FC = () => {
       return;
     }
 
-    // Store current day for callback and navigate to interests selection
-    sessionStorage.setItem('itinerary_current_day', dayNumber.toString());
-    sessionStorage.setItem('itinerary_id', itinerary.itinerary_id.toString());
-    navigate(`/questionnaire-metrics?mode=day-interests&day=${dayNumber}`);
+    setShowingInterestsForDay(dayNumber);
+    setCurrentDayRecommendations([]);
+    setShowingRecommendationsForDay(null);
+  };
+
+  // Handler for interests questionnaire completion
+  const handleInterestsComplete = (recommendations: Destination[]) => {
+    setCurrentDayRecommendations(recommendations);
+    setShowingRecommendationsForDay(showingInterestsForDay);
+    setShowingInterestsForDay(null);
+  };
+
+  // Handler for interests questionnaire cancellation
+  const handleInterestsCancel = () => {
+    setShowingInterestsForDay(null);
   };
 
   // Load itinerary data from questionnaire completion
@@ -124,22 +149,6 @@ const CreateItinerary: React.FC = () => {
           sessionStorage.removeItem('itinerary_questionnaire_data');
         } catch (error) {
           console.error('Error parsing questionnaire data:', error);
-        }
-      }
-
-      // Check for day recommendations completion
-      const dayRecommendations = sessionStorage.getItem('day_recommendations');
-      const currentDay = sessionStorage.getItem('itinerary_current_day');
-      
-      if (dayRecommendations && currentDay) {
-        try {
-          const recommendations: Destination[] = JSON.parse(dayRecommendations);
-          setCurrentDayRecommendations(recommendations);
-          setShowingRecommendationsForDay(parseInt(currentDay));
-          sessionStorage.removeItem('day_recommendations');
-          sessionStorage.removeItem('itinerary_current_day');
-        } catch (error) {
-          console.error('Error parsing day recommendations:', error);
         }
       }
     };
@@ -363,66 +372,84 @@ const CreateItinerary: React.FC = () => {
           </div>
         )}
 
-        {/* Travel Plan Containers */}
-        <div className="mb-12">
-          <div className="flex gap-6 flex-wrap">
-            {/* Day containers */}
-            {[1, 2, 3, 4].map((dayNum) => {
-              const dayData = itinerary.days[dayNum];
-              const isSelected = dayData.destination_id !== null;
-              const nextDay = getNextAvailableDay();
-              const isClickable = !questionnaireSaved || dayNum === nextDay || isSelected;
-
-              return (
-                <div
-                  key={dayNum}
-                  className={`relative w-64 h-64 rounded-xl border-2 shadow-lg transition-all duration-300 ${
-                    isSelected 
-                      ? 'border-gray-300 bg-cover bg-center' 
-                      : 'border-gray-300 bg-gray-100 hover:border-cyan-400 hover:shadow-xl'
-                  } ${isClickable ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}
-                  style={isSelected && dayData.destination_image ? {
-                    backgroundImage: `url(http://localhost:8000${dayData.destination_image})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center'
-                  } : {}}
-                  onClick={() => {
-                    if (!isClickable || isLoading) return;
-                    
-                    if (!questionnaireSaved) {
-                      handleInitialQuestionnaire();
-                    } else if (!isSelected && dayNum === nextDay) {
-                      handleDayQuestionnaire(dayNum);
-                    }
-                  }}
-                >
-                  {/* Day overlay for selected destinations */}
-                  {isSelected && (
-                    <div className="absolute inset-0 bg-black bg-opacity-40 rounded-xl flex flex-col justify-end p-6">
-                      <div className="text-white">
-                        <div className="text-xl font-medium mb-1">Day {dayNum}</div>
-                        <div className="text-2xl font-bold">{dayData.destination_name}</div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Plus icon for empty containers */}
-                  {!isSelected && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Plus 
-                        size={48} 
-                        className={`${isClickable ? 'text-gray-400' : 'text-gray-300'} transition-colors duration-200`}
-                      />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+        {/* Day Interests Questionnaire Modal */}
+        {showingInterestsForDay && itinerary.itinerary_id && (
+          <div className="mb-12">
+            <DayInterestsQuestionnaire
+              dayNumber={showingInterestsForDay}
+              itineraryId={itinerary.itinerary_id}
+              onComplete={handleInterestsComplete}
+              onCancel={handleInterestsCancel}
+            />
           </div>
-        </div>
+        )}
+
+        {/* Travel Plan Containers */}
+        {!showingInterestsForDay && (
+          <div className="mb-12">
+            <div className="flex gap-6 flex-wrap">
+              {/* Day containers */}
+              {[1, 2, 3, 4].map((dayNum) => {
+                const dayData = itinerary.days[dayNum];
+                const isSelected = dayData.destination_id !== null;
+                const nextDay = getNextAvailableDay();
+                const isClickable = questionnaireSaved && (dayNum === nextDay || isSelected);
+                const shouldShow = questionnaireSaved && (dayNum === 1 || itinerary.days[dayNum - 1]?.destination_id !== null);
+
+                // Don't render containers that shouldn't be shown yet
+                if (!shouldShow) {
+                  return null;
+                }
+
+                return (
+                  <div
+                    key={dayNum}
+                    className={`relative w-64 h-64 rounded-xl border-2 shadow-lg transition-all duration-300 ${
+                      isSelected 
+                        ? 'border-gray-300 bg-cover bg-center' 
+                        : 'border-gray-300 bg-gray-100 hover:border-cyan-400 hover:shadow-xl'
+                    } ${isClickable ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}
+                    style={isSelected && dayData.destination_image ? {
+                      backgroundImage: `url(http://localhost:8000${dayData.destination_image})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center'
+                    } : {}}
+                    onClick={() => {
+                      if (!isClickable || isLoading) return;
+                      
+                      if (!isSelected && dayNum === nextDay) {
+                        handleDayQuestionnaire(dayNum);
+                      }
+                    }}
+                  >
+                    {/* Day overlay for selected destinations */}
+                    {isSelected && (
+                      <div className="absolute inset-0 bg-black bg-opacity-40 rounded-xl flex flex-col justify-end p-6">
+                        <div className="text-white">
+                          <div className="text-xl font-medium mb-1">Day {dayNum}</div>
+                          <div className="text-2xl font-bold">{dayData.destination_name}</div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Plus icon for empty containers */}
+                    {!isSelected && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Plus 
+                          size={48} 
+                          className={`${isClickable ? 'text-gray-400' : 'text-gray-300'} transition-colors duration-200`}
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Recommendations Section */}
-        {showingRecommendationsForDay && currentDayRecommendations.length > 0 && (
+        {!showingInterestsForDay && showingRecommendationsForDay && currentDayRecommendations.length > 0 && (
           <div className="bg-white rounded-xl p-8 shadow-lg">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-3xl font-bold text-gray-900">
@@ -501,17 +528,17 @@ const CreateItinerary: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-2">
                       <button
                         onClick={() => selectDestination(destination)}
                         disabled={isLoading}
-                        className="flex-1 bg-cyan-600 hover:bg-cyan-700 text-white py-2 px-4 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50"
+                        className="w-full bg-cyan-600 hover:bg-cyan-700 text-white py-2 px-4 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50"
                       >
                         Select
                       </button>
                       <button
-                        onClick={() => navigate(`/destination/${destination.destination_id}`)}
-                        className="bg-cyan-600 hover:bg-cyan-700 text-white py-2 px-4 rounded-lg font-medium transition-colors duration-200"
+                        onClick={() => navigate(`/itinerary/${itinerary.itinerary_id}/day/${showingRecommendationsForDay}/destination/${destination.destination_id}`)}
+                        className="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg font-medium transition-colors duration-200"
                       >
                         View Details
                       </button>
@@ -537,7 +564,7 @@ const CreateItinerary: React.FC = () => {
         )}
 
         {/* Initial state message */}
-        {!questionnaireSaved && (
+        {!showingInterestsForDay && !questionnaireSaved && (
           <div className="bg-cyan-50 border border-cyan-200 rounded-xl p-8 text-center">
             <div className="text-4xl mb-4">✈️</div>
             <h3 className="text-xl font-semibold text-cyan-900 mb-2">

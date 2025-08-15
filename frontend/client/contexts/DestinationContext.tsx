@@ -30,12 +30,18 @@ export const useDestination = () => {
 
 interface DestinationProviderProps {
   children: React.ReactNode;
-  destinationId: string | undefined;
+  destinationId: number;
+  itineraryId?: number;
+  dayNumber?: number;
+  useItineraryContext?: boolean;
 }
 
-export const DestinationProvider: React.FC<DestinationProviderProps> = ({ 
-  children, 
-  destinationId 
+export const DestinationProvider: React.FC<DestinationProviderProps> = ({
+  children,
+  destinationId,
+  itineraryId,
+  dayNumber,
+  useItineraryContext = false
 }) => {
   const [destinationData, setDestinationData] = useState<DestinationDetails | null>(null);
   const [questionnaireData, setQuestionnaireData] = useState<QuestionnaireData | null>(null);
@@ -48,6 +54,13 @@ export const DestinationProvider: React.FC<DestinationProviderProps> = ({
 
   const fetchAllData = useCallback(async () => {
     if (!destinationId || !isAuthenticated) {
+      setLoading(false);
+      return;
+    }
+
+    // For itinerary context, we need both itineraryId and dayNumber
+    if (useItineraryContext && (!itineraryId || !dayNumber)) {
+      setError("Missing itinerary information for context-aware destination details");
       setLoading(false);
       return;
     }
@@ -96,15 +109,21 @@ export const DestinationProvider: React.FC<DestinationProviderProps> = ({
 
       if (useTemporaryQuestionnaire) {
         // Only fetch destination details, use temporary questionnaire data
-        const results = await Promise.allSettled([
-          authAPI.getDestinationDetails(parseInt(destinationId))
-        ]);
+        const destinationPromise = useItineraryContext && itineraryId && dayNumber
+          ? authAPI.getItineraryDestinationDetails(itineraryId, dayNumber, destinationId)
+          : authAPI.getDestinationDetails(destinationId);
+
+        const results = await Promise.allSettled([destinationPromise]);
         destinationResult = results[0];
         questionnaireResult = { status: 'fulfilled' as const, value: temporaryQuestionnaireData };
       } else {
         // Fetch both destination and questionnaire data from API
+        const destinationPromise = useItineraryContext && itineraryId && dayNumber
+          ? authAPI.getItineraryDestinationDetails(itineraryId, dayNumber, destinationId)
+          : authAPI.getDestinationDetails(destinationId);
+
         const results = await Promise.allSettled([
-          authAPI.getDestinationDetails(parseInt(destinationId)),
+          destinationPromise,
           authAPI.getQuestionnaire().catch((err) => {
             console.warn("Questionnaire data failed, using fallback:", err);
             // Return fallback questionnaire data
@@ -185,7 +204,7 @@ export const DestinationProvider: React.FC<DestinationProviderProps> = ({
       // Always finish loading, even on error
       finishLoading('destination-data');
     }
-  }, [destinationId, isAuthenticated, retryCount, logout]);
+  }, [destinationId, isAuthenticated, retryCount, logout, useItineraryContext, itineraryId, dayNumber]);
 
   const retry = useCallback(() => {
     setRetryCount((prev) => prev + 1);

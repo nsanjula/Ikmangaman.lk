@@ -51,9 +51,26 @@ const DestinationDetail: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
 
+  if (!id) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Invalid URL</h1>
+          <p className="text-gray-600 mb-6">Missing destination ID.</p>
+          <button
+            onClick={() => window.history.back()}
+            className="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <GoogleMapsProvider>
-      <DestinationProvider destinationId={id}>
+      <DestinationProvider destinationId={parseInt(id)}>
         <DestinationDetailContent />
       </DestinationProvider>
     </GoogleMapsProvider>
