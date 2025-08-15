@@ -208,6 +208,53 @@ export interface BackendRecommendation {
 
 export type RecommendationsResponse = BackendRecommendation[];
 
+export interface SavedPlace {
+  id: number;
+  user_id: number;
+  name: string;
+  created_at: string;
+}
+
+export interface SearchByNameResponse {
+  results: {
+    destination_name: string;
+    destination_id: number;
+    latitude: number | null;
+    longitude: number | null;
+    description: string | null;
+    things_to_do: string[];
+    hotel_data: any;
+    guide_details: GuideDetails[];
+    "destination image": string;
+  }[];
+}
+
+// Itinerary-related interfaces
+export interface TripPlanQuestionnaire {
+  travel_month: string;
+  no_of_people: number;
+  start_location: string;
+}
+
+export interface TripPlanDayInterests {
+  nature: boolean;
+  adventure: boolean;
+  luxury: boolean;
+  culture: boolean;
+  relaxation: boolean;
+  wellness: boolean;
+  local_life: boolean;
+  wild_life: boolean;
+  food: boolean;
+  spirituality: boolean;
+  eco_tourism: boolean;
+}
+
+export interface DayAssignment {
+  destination_id: number;
+  estimated_budget: number;
+}
+
 class AuthAPI {
   private backendAvailable: boolean | null = null;
   private lastConnectivityCheck: number = 0;
@@ -882,6 +929,283 @@ class AuthAPI {
         );
       }
       throw error;
+    }
+  }
+
+  async getSavedPlaces(): Promise<SavedPlace[]> {
+    try {
+      const token = this.getToken();
+      if (!token) {
+        throw new Error("Authentication required");
+      }
+
+      const response = await fetch(`${API_BASE_URL}/saved_places/saved_places`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          this.removeToken();
+          throw new Error("Authentication required. Please log in again.");
+        }
+        const error: ApiError = await response.json();
+        throw new Error(error.detail || "Failed to fetch saved places");
+      }
+
+      return response.json();
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw new Error(
+          "Unable to connect to server. Please check your connection.",
+        );
+      }
+      throw error;
+    }
+  }
+
+  async savePlace(destinationName: string): Promise<{ message: string; place: SavedPlace }> {
+    try {
+      const token = this.getToken();
+      if (!token) {
+        throw new Error("Authentication required");
+      }
+
+      const response = await fetch(`${API_BASE_URL}/saved_places/saved_places?name=${encodeURIComponent(destinationName)}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          this.removeToken();
+          throw new Error("Authentication required. Please log in again.");
+        }
+        const error: ApiError = await response.json();
+        throw new Error(error.detail || "Failed to save place");
+      }
+
+      return response.json();
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw new Error(
+          "Unable to connect to server. Please check your connection.",
+        );
+      }
+      throw error;
+    }
+  }
+
+  async getSavedPlacesWithDetails(): Promise<{ saved_places: any[] }> {
+    try {
+      const token = this.getToken();
+      if (!token) {
+        throw new Error("Authentication required");
+      }
+
+      const response = await fetch(`${API_BASE_URL}/saved_places/saved_places_with_details`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          this.removeToken();
+          throw new Error("Authentication required. Please log in again.");
+        }
+        const error: ApiError = await response.json();
+        throw new Error(error.detail || "Failed to fetch saved places with details");
+      }
+
+      return response.json();
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw new Error(
+          "Unable to connect to server. Please check your connection.",
+        );
+      }
+      throw error;
+    }
+  }
+
+  async unsavePlace(destinationName: string): Promise<{ message: string }> {
+    try {
+      const token = this.getToken();
+      if (!token) {
+        throw new Error("Authentication required");
+      }
+
+      const response = await fetch(`${API_BASE_URL}/saved_places/saved_places?name=${encodeURIComponent(destinationName)}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          this.removeToken();
+          throw new Error("Authentication required. Please log in again.");
+        }
+        const error: ApiError = await response.json();
+        throw new Error(error.detail || "Failed to remove saved place");
+      }
+
+      return response.json();
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw new Error(
+          "Unable to connect to server. Please check your connection.",
+        );
+      }
+      throw error;
+    }
+  }
+
+  async searchByDestinationName(destinationName: string): Promise<SearchByNameResponse> {
+    try {
+      const token = this.getToken();
+      if (!token) {
+        throw new Error("Authentication required");
+      }
+
+      const response = await fetch(`${API_BASE_URL}/search/by-destination-name?destination_name=${encodeURIComponent(destinationName)}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          this.removeToken();
+          throw new Error("Authentication required. Please log in again.");
+        }
+        const error: ApiError = await response.json();
+        throw new Error(error.detail || "Search failed");
+      }
+
+      return response.json();
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw new Error(
+          "Unable to connect to server. Please check your connection.",
+        );
+      }
+      throw error;
+    }
+  }
+
+  // Itinerary API methods
+  async createItinerary(data: TripPlanQuestionnaire): Promise<{ itinerary_id: number }> {
+    try {
+      const token = this.getToken();
+      if (!token) {
+        throw new Error("Authentication required");
+      }
+
+      const response = await fetch(`${API_BASE_URL}/itinerary/`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          this.removeToken();
+          throw new Error("Authentication required. Please log in again.");
+        }
+        const error: ApiError = await response.json();
+        throw new Error(error.detail || "Failed to create itinerary");
+      }
+
+      return response.json();
+    } catch (error) {
+      handleAPIError(error, 'createItinerary');
+    }
+  }
+
+  async getDayRecommendations(
+    itineraryId: number,
+    dayNumber: number,
+    interests: TripPlanDayInterests
+  ): Promise<BackendRecommendation[]> {
+    try {
+      const token = this.getToken();
+      if (!token) {
+        throw new Error("Authentication required");
+      }
+
+      const response = await fetch(`${API_BASE_URL}/itinerary/${itineraryId}/day/${dayNumber}/recommendations`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(interests),
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          this.removeToken();
+          throw new Error("Authentication required. Please log in again.");
+        }
+        const error: ApiError = await response.json();
+        throw new Error(error.detail || "Failed to get day recommendations");
+      }
+
+      return response.json();
+    } catch (error) {
+      handleAPIError(error, 'getDayRecommendations');
+    }
+  }
+
+  async assignDestinationToDay(
+    itineraryId: number,
+    dayNumber: number,
+    assignment: DayAssignment
+  ): Promise<{ message: string; estimated_budget: number }> {
+    try {
+      const token = this.getToken();
+      if (!token) {
+        throw new Error("Authentication required");
+      }
+
+      const response = await fetch(`${API_BASE_URL}/itinerary/${itineraryId}/day/${dayNumber}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(assignment),
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          this.removeToken();
+          throw new Error("Authentication required. Please log in again.");
+        }
+        const error: ApiError = await response.json();
+        throw new Error(error.detail || "Failed to assign destination to day");
+      }
+
+      return response.json();
+    } catch (error) {
+      handleAPIError(error, 'assignDestinationToDay');
     }
   }
 }

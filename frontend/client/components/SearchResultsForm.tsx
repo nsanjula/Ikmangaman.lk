@@ -4,6 +4,7 @@ import { FiChevronDown, FiChevronUp, FiFilter } from "react-icons/fi";
 import { useAuth } from "../contexts/AuthContext";
 import { useApiWithLoading, useRouteLoading } from "../contexts/LoadingContext";
 import { authAPI } from "../lib/api";
+import BookmarkButton from "./BookmarkButton";
 
 interface SearchResultCard {
   id: number;
@@ -799,6 +800,12 @@ const SearchResultsForm = () => {
                               {card.name}
                             </div>
                           </div>
+                          {/* Bookmark Button */}
+                          <BookmarkButton
+                            destinationName={card.name}
+                            variant="card"
+                            size="sm"
+                          />
                         </div>
 
                         {/* Card Content - Modified based on search type */}

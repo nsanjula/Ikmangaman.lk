@@ -8,6 +8,7 @@ import {
 } from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import { useApiWithLoading, useRouteLoading } from "../contexts/LoadingContext";
+import BookmarkButton from "./BookmarkButton";
 
 interface RecommendationCard {
   id: number;
@@ -637,6 +638,15 @@ const RecommendationForm = () => {
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => {
+                      navigate("/create-itinerary");
+                    }}
+                    className="btn btn-primary btn-md flex items-center gap-2 whitespace-nowrap"
+                  >
+                    <span>🗺️</span>
+                    Create Itinerary
+                  </button>
+                  <button
+                    onClick={() => {
                       // Clear temporary questionnaire data when editing main questionnaire
                       sessionStorage.removeItem('tempQuestionnaireData');
                       clearRecommendationsCache(); // Clear recommendations cache too
@@ -706,6 +716,12 @@ const RecommendationForm = () => {
                               {card.name}
                             </div>
                           </div>
+                          {/* Bookmark Button */}
+                          <BookmarkButton
+                            destinationName={card.name}
+                            variant="card"
+                            size="sm"
+                          />
                           {/* Price Badge */}
                           <div className="absolute top-3 right-3 px-2 py-1 rounded text-white text-sm font-semibold" style={{ background: 'var(--primary-700)' }}>
                             LKR {card.price.toLocaleString()}

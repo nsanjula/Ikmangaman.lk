@@ -10,10 +10,22 @@ const QuestionnaireMetrics: React.FC = () => {
   const location = useLocation();
   const { isAuthenticated, logout } = useAuth();
   const { callWithLoading } = useApiWithLoading();
-  const [currentStep, setCurrentStep] = useState(1); // Start from step 1 (which is step 2 in the original flow)
-  const totalSteps = 2; // Only 2 steps: travel details and starting location
 
-  // Get destination data from navigation state
+  // Parse URL parameters to determine mode
+  const searchParams = new URLSearchParams(location.search);
+  const mode = searchParams.get('mode'); // 'create-itinerary', 'day-interests', or null (default)
+  const dayNumber = searchParams.get('day') ? parseInt(searchParams.get('day')!) : null;
+
+  // Determine flow configuration based on mode
+  const isItineraryMode = mode === 'create-itinerary';
+  const isDayInterestsMode = mode === 'day-interests';
+  const isDefaultMode = !mode;
+
+  // Set current step and total steps based on mode
+  const [currentStep, setCurrentStep] = useState(isDayInterestsMode ? 1 : 1);
+  const totalSteps = isDayInterestsMode ? 1 : 2; // Day interests only has 1 step, others have 2
+
+  // Get destination data from navigation state (for default mode)
   const destinationId = location.state?.destinationId;
   const destinationName = location.state?.destinationName;
 
@@ -30,6 +42,21 @@ const QuestionnaireMetrics: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasExistingQuestionnaire, setHasExistingQuestionnaire] = useState(false);
+
+  // Interests state for day-interests mode
+  const [interests, setInterests] = useState({
+    nature: false,
+    adventure: false,
+    luxury: false,
+    culture: false,
+    relaxation: false,
+    wellness: false,
+    local_life: false,
+    wild_life: false,
+    food: false,
+    spirituality: false,
+    eco_tourism: false,
+  });
 
   // Helper function to find the closest location name from coordinates
   const getLocationFromCoordinates = (
@@ -179,6 +206,69 @@ const QuestionnaireMetrics: React.FC = () => {
       return;
     }
 
+    // Handle day interests mode
+    if (isDayInterestsMode) {
+      const itineraryId = sessionStorage.getItem('itinerary_id');
+      if (!itineraryId || !dayNumber) {
+        setError("Missing itinerary information");
+        return;
+      }
+
+      try {
+        setIsSubmitting(true);
+        setError(null);
+
+        // Get day recommendations using the interests
+        const recommendations = await callWithLoading(
+          async () => {
+            return await authAPI.getDayRecommendations(
+              parseInt(itineraryId),
+              dayNumber,
+              interests
+            );
+          },
+          'day-recommendations',
+          'Getting recommendations for your day...'
+        );
+
+        // Store recommendations in session storage for the create itinerary page
+        sessionStorage.setItem('day_recommendations', JSON.stringify(recommendations));
+
+        // Navigate back to create itinerary page
+        navigate('/create-itinerary');
+        return;
+
+      } catch (error) {
+        console.error('Error getting day recommendations:', error);
+        if (error instanceof Error) {
+          setError(error.message);
+        }
+        return;
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+
+    // Handle create-itinerary mode
+    if (isItineraryMode) {
+      if (!startLocation) {
+        setError("Please select a starting location.");
+        return;
+      }
+
+      // Store itinerary questionnaire data for the create itinerary page
+      const itineraryData = {
+        travel_month: travelMonth,
+        no_of_people: groupSize,
+        start_location: startLocation
+      };
+
+      sessionStorage.setItem('itinerary_questionnaire_data', JSON.stringify(itineraryData));
+      navigate('/create-itinerary');
+      return;
+    }
+
+    // Handle default mode (destination-specific)
     if (!startLocation) {
       setError("Please select a starting location.");
       return;
@@ -303,6 +393,11 @@ const QuestionnaireMetrics: React.FC = () => {
   };
 
   const canProceed = () => {
+    if (isDayInterestsMode) {
+      // For day interests, at least one interest should be selected
+      return Object.values(interests).some(value => value);
+    }
+
     switch (currentStep) {
       case 1:
         return travelMonth && groupSize;
@@ -330,7 +425,8 @@ const QuestionnaireMetrics: React.FC = () => {
     );
   }
 
-  if (!destinationId || !destinationName) {
+  // Only require destination for default mode
+  if (isDefaultMode && (!destinationId || !destinationName)) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="bg-white p-8 rounded-lg text-center max-w-md shadow-lg">
@@ -353,45 +449,51 @@ const QuestionnaireMetrics: React.FC = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold mb-4" style={{ color: 'var(--text-900)' }}>
-            Complete Your Travel Details
+            {isDayInterestsMode ? `Day ${dayNumber} Preferences` :
+             isItineraryMode ? 'Create Your Travel Plan' :
+             'Complete Your Travel Details'}
           </h1>
           <p className="text-lg" style={{ color: 'var(--text-600)' }}>
-            Provide your travel preferences for {destinationName}
+            {isDayInterestsMode ? 'Select your interests to get personalized recommendations' :
+             isItineraryMode ? 'Set up your basic travel information' :
+             `Provide your travel preferences for ${destinationName}`}
           </p>
         </div>
 
-        {/* Step Indicator */}
-        <div className="flex justify-center mb-8">
-          <div className="flex flex-col items-center">
-            <div className="flex items-center space-x-4 mb-4">
-              {[1, 2].map((step) => (
-                <div key={step} className="flex items-center">
-                  <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold ${
-                      step === currentStep
-                        ? 'bg-cyan-600'
-                        : step < currentStep
-                        ? 'bg-cyan-500'
-                        : 'bg-gray-300'
-                    }`}
-                  >
-                    {step}
-                  </div>
-                  {step < 2 && (
+        {/* Step Indicator - Only show for multi-step flows */}
+        {!isDayInterestsMode && (
+          <div className="flex justify-center mb-8">
+            <div className="flex flex-col items-center">
+              <div className="flex items-center space-x-4 mb-4">
+                {[1, 2].map((step) => (
+                  <div key={step} className="flex items-center">
                     <div
-                      className={`w-16 h-1 mx-2 ${
-                        step < currentStep ? 'bg-cyan-500' : 'bg-gray-300'
+                      className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold ${
+                        step === currentStep
+                          ? 'bg-cyan-600'
+                          : step < currentStep
+                          ? 'bg-cyan-500'
+                          : 'bg-gray-300'
                       }`}
-                    />
-                  )}
-                </div>
-              ))}
+                    >
+                      {step}
+                    </div>
+                    {step < 2 && (
+                      <div
+                        className={`w-16 h-1 mx-2 ${
+                          step < currentStep ? 'bg-cyan-500' : 'bg-gray-300'
+                        }`}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+              <p className="text-sm text-gray-500">
+                Step {currentStep} of {totalSteps}
+              </p>
             </div>
-            <p className="text-sm text-gray-500">
-              Step {currentStep} of {totalSteps}
-            </p>
           </div>
-        </div>
+        )}
 
         {/* Error Message */}
         {error && (
@@ -402,10 +504,52 @@ const QuestionnaireMetrics: React.FC = () => {
 
         {/* Step Content */}
         <div className="max-w-4xl mx-auto">
-          {currentStep === 1 && (
+          {/* Day Interests Mode - Single Step */}
+          {isDayInterestsMode && (
             <div className="text-center">
               <h2 className="text-2xl font-bold mb-8" style={{ color: 'var(--text-900)' }}>
-                Travel Details
+                What interests you for Day {dayNumber}?
+              </h2>
+
+              <div className="max-w-3xl mx-auto">
+                <p className="text-lg mb-8" style={{ color: 'var(--text-600)' }}>
+                  Select your interests to get personalized destination recommendations
+                </p>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {Object.entries(interests).map(([key, value]) => (
+                    <label
+                      key={key}
+                      className="flex items-center gap-3 p-4 border rounded-lg cursor-pointer hover:bg-cyan-50 transition-colors"
+                      style={{
+                        borderColor: value ? '#06B6D4' : '#E2E8F0',
+                        backgroundColor: value ? '#F0F9FF' : 'transparent'
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={value}
+                        onChange={(e) => setInterests(prev => ({
+                          ...prev,
+                          [key]: e.target.checked
+                        }))}
+                        className="w-4 h-4 text-cyan-600 bg-gray-100 border-gray-300 rounded focus:ring-cyan-500"
+                      />
+                      <span className="text-sm font-medium capitalize" style={{ color: 'var(--text-900)' }}>
+                        {key.replace('_', ' ')}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Travel Details Step - Show for both create-itinerary and default modes */}
+          {!isDayInterestsMode && currentStep === 1 && (
+            <div className="text-center">
+              <h2 className="text-2xl font-bold mb-8" style={{ color: 'var(--text-900)' }}>
+                {isItineraryMode ? 'Travel Details' : 'Travel Details'}
               </h2>
               
               <div className="max-w-lg mx-auto space-y-8">
@@ -470,15 +614,18 @@ const QuestionnaireMetrics: React.FC = () => {
             </div>
           )}
 
-          {currentStep === 2 && (
+          {!isDayInterestsMode && currentStep === 2 && (
             <div className="text-center">
               <h2 className="text-2xl font-bold mb-8" style={{ color: 'var(--text-900)' }}>
                 Starting Location
               </h2>
-              
+
               <div className="max-w-lg mx-auto">
                 <label className="block text-lg font-semibold mb-4" style={{ color: 'var(--text-900)' }}>
-                  Where will you be starting your trip to {destinationName}?
+                  {isItineraryMode
+                    ? "Where will you be starting your trip?"
+                    : `Where will you be starting your trip to ${destinationName}?`
+                  }
                 </label>
                 <div className="w-full">
                   <SearchableDropdown
@@ -505,10 +652,16 @@ const QuestionnaireMetrics: React.FC = () => {
             </button>
           ) : (
             <button
-              onClick={() => navigate(-1)}
+              onClick={() => {
+                if (isDayInterestsMode || isItineraryMode) {
+                  navigate('/create-itinerary');
+                } else {
+                  navigate(-1);
+                }
+              }}
               className="flex items-center px-6 py-3 text-gray-600 border border-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              ← Back to Destination
+              {isDayInterestsMode || isItineraryMode ? '← Back to Itinerary' : '← Back to Destination'}
             </button>
           )}
 
@@ -529,10 +682,12 @@ const QuestionnaireMetrics: React.FC = () => {
               {isSubmitting ? (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                  Creating Plan...
+                  {isDayInterestsMode ? 'Getting Recommendations...' : 'Creating Plan...'}
                 </>
               ) : (
-                "Create Travel Plan →"
+                isDayInterestsMode ? 'Get Recommendations →' :
+                isItineraryMode ? 'Continue →' :
+                'Create Travel Plan →'
               )}
             </button>
           )}

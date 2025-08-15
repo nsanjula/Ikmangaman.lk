@@ -35,9 +35,10 @@ const Profile = () => {
   const [editMode, setEditMode] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [savedPlaces, setSavedPlaces] = useState<
-    Array<{ id: number; name: string; description: string; image: string }>
+    Array<{ id: number; name: string; image: string }>
   >([]);
   const [savedPlacesLoading, setSavedPlacesLoading] = useState(false);
   const [savedPlacesError, setSavedPlacesError] = useState<string | null>(null);
@@ -49,40 +50,37 @@ const Profile = () => {
     currentPage * placesPerPage,
   );
 
-  // Load saved places data using random destination IDs
+  // Optimized function to load saved places using batch API
   const loadSavedPlaces = async () => {
     try {
       setSavedPlacesLoading(true);
       setSavedPlacesError(null);
 
-      // Use 6 random destination IDs for saved places
-      const randomDestinationIds = [1, 2, 3, 4, 5, 6];
-      const savedPlacesData = [];
+      // Use the optimized batch API endpoint
+      const response = await authAPI.getSavedPlacesWithDetails();
 
-      for (const destinationId of randomDestinationIds) {
-        try {
-          const destinationData =
-            await authAPI.getDestinationDetails(destinationId);
-          savedPlacesData.push({
-            id: destinationData.destination_id,
-            name: destinationData.destination_name,
-            description: destinationData.description,
-            image: destinationData["destination image"]
-              ? `${API_BASE_URL}${destinationData["destination image"]}`
-              : "https://images.unsplash.com/photo-1588666309990-d68f08e3d4a6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-          });
-        } catch (error) {
-          console.warn(`Failed to load destination ${destinationId}:`, error);
-          // Continue with other destinations even if one fails
-        }
+      if (response.saved_places.length === 0) {
+        setSavedPlaces([]);
+        return [];
       }
 
+      // Transform the response to match the expected format
+      const savedPlacesData = response.saved_places.map(place => ({
+        id: place.destination_id || place.saved_place_id,
+        name: place.destination_name,
+        image: place.destination_image
+          ? `${API_BASE_URL}${place.destination_image}`
+          : "https://images.unsplash.com/photo-1588666309990-d68f08e3d4a6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+      }));
+
       setSavedPlaces(savedPlacesData);
+      return savedPlacesData;
     } catch (error) {
       console.error("Failed to load saved places:", error);
       setSavedPlacesError(
         error instanceof Error ? error.message : "Failed to load saved places",
       );
+      return [];
     } finally {
       setSavedPlacesLoading(false);
     }
@@ -90,52 +88,70 @@ const Profile = () => {
 
   // Load user profile data on component mount
   useEffect(() => {
-    const loadUserProfile = async () => {
+    const loadAllData = async () => {
       try {
-        // Start global loading for profile data
+        setIsLoading(true);
         startLoading('profile-data', 'Loading your profile...');
         setProgress(20);
         setError(null);
 
-        const profile = await authAPI.getUserProfile();
-        setProgress(60);
+        // Load profile and saved places in parallel for faster loading
+        const [profileResult, savedPlacesResult] = await Promise.allSettled([
+          authAPI.getUserProfile(),
+          loadSavedPlaces()
+        ]);
 
-        setOriginalData(profile);
-        setUserData({
-          firstName: profile.firstname,
-          lastName: profile.lastname || "",
-          birthday: profile.date_0f_birth, // Note: backend has typo in field name
-          username: profile.username,
-          password: "********",
-        });
+        setProgress(70);
 
-        setProgress(80);
-      } catch (error) {
-        console.error("Failed to load user profile:", error);
-        setError(
-          error instanceof Error ? error.message : "Failed to load profile",
-        );
-        if (
-          error instanceof Error &&
-          error.message.includes("Authentication required")
-        ) {
-          logout();
-          navigate("/login");
+        // Handle profile data
+        if (profileResult.status === 'fulfilled') {
+          const profile = profileResult.value;
+          setOriginalData(profile);
+          setUserData({
+            firstName: profile.firstname,
+            lastName: profile.lastname || "",
+            birthday: profile.date_0f_birth, // Note: backend has typo in field name
+            username: profile.username,
+            password: "********",
+          });
+        } else {
+          console.error("Failed to load user profile:", profileResult.reason);
+          setError(
+            profileResult.reason instanceof Error ? profileResult.reason.message : "Failed to load profile",
+          );
+          if (
+            profileResult.reason instanceof Error &&
+            profileResult.reason.message.includes("Authentication required")
+          ) {
+            logout();
+            navigate("/login");
+            return;
+          }
         }
+
+        // Saved places loading is handled in loadSavedPlaces function
+        if (savedPlacesResult.status === 'rejected') {
+          console.warn("Saved places loading failed, but continuing with profile:", savedPlacesResult.reason);
+        }
+
+        setProgress(100);
+
+        // Finish loading after all data is processed
+        setTimeout(() => {
+          finishLoading('profile-data');
+          setIsLoading(false);
+        }, 200);
+      } catch (error) {
+        console.error("Failed to load profile data:", error);
+        // Ensure loading is stopped on any error
+        finishLoading('profile-data');
+        setIsLoading(false);
       }
     };
 
-    const loadAllData = async () => {
-      await loadUserProfile();
-      setProgress(90);
-      await loadSavedPlaces();
-      setProgress(100);
-      // Finish loading after all data is loaded
-      setTimeout(() => finishLoading('profile-data'), 200);
-    };
-
     loadAllData();
-  }, [logout, navigate, startLoading, setProgress, finishLoading]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [logout, navigate]); // Removed loading functions from dependencies as they're stable context functions
 
   const handleChange = (field: string, value: string) => {
     setUserData({ ...userData, [field]: value });
@@ -223,7 +239,7 @@ const Profile = () => {
               onClick={() => setError(null)}
               className="text-white hover:text-red-200 text-xl font-bold"
             >
-              ×
+              ��
             </button>
           </div>
         )}
@@ -439,18 +455,32 @@ const Profile = () => {
                           }}
                         />
                       </div>
-                      <h4 className="font-bold text-xl mb-2" style={{color: 'var(--text-900)'}}>{place.name}</h4>
-                      <p className="mb-4 text-sm leading-relaxed flex-grow" style={{color: 'var(--text-600)'}}>
-                        {place.description}
-                      </p>
-                      <button
-                        onClick={() => {
-                          /* Dummy button - no action */
-                        }}
-                        className="btn btn-primary btn-md w-full mt-auto"
-                      >
-                        View Details
-                      </button>
+                      <h4 className="font-bold text-xl mb-4" style={{color: 'var(--text-900)'}}>{place.name}</h4>
+                      <div className="flex gap-2 mt-auto">
+                        <button
+                          onClick={() => {
+                            navigate(`/saved-destination/${place.id}`);
+                          }}
+                          className="btn btn-primary btn-md flex-1"
+                        >
+                          View Details
+                        </button>
+                        <button
+                          onClick={async () => {
+                            try {
+                              await authAPI.unsavePlace(place.name);
+                              // Refresh saved places
+                              await loadSavedPlaces();
+                            } catch (error) {
+                              console.error('Failed to remove saved place:', error);
+                            }
+                          }}
+                          className="btn btn-secondary btn-md px-3"
+                          title="Remove from saved places"
+                        >
+                          ✕
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>

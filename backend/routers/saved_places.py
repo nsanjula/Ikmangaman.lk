@@ -19,6 +19,15 @@ def savePlace(name : str, db : Session = Depends(get_db), token_user : User = De
     if not current_user:
         raise HTTPException(status_code=404, detail="User not found")
 
+    # Check if place is already saved
+    existing_saved_place = db.query(SavedPlace).filter(
+        SavedPlace.user_id == current_user.user_id,
+        SavedPlace.name == name
+    ).first()
+
+    if existing_saved_place:
+        return {"message": "Place already saved", "place": existing_saved_place}
+
     saved_places = db.query(SavedPlace).filter(SavedPlace.user_id == current_user.user_id).order_by(SavedPlace.created_at).all()
 
     if len(saved_places) >= 6:
@@ -46,3 +55,23 @@ def get_saved_places(db : Session = Depends(get_db), token_user : User = Depends
     saved_places = db.query(SavedPlace).filter(SavedPlace.user_id == current_user.user_id).order_by(SavedPlace.created_at.desc()).all()
 
     return saved_places
+
+@router.delete('/saved_places')
+def unsavePlace(name: str, db: Session = Depends(get_db), token_user: User = Depends(get_current_user)):
+    current_user = db.query(User).filter(User.username == token_user.username).first()
+    if not current_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Find the saved place to delete
+    saved_place = db.query(SavedPlace).filter(
+        SavedPlace.user_id == current_user.user_id,
+        SavedPlace.name == name
+    ).first()
+
+    if not saved_place:
+        raise HTTPException(status_code=404, detail="Saved place not found")
+
+    db.delete(saved_place)
+    db.commit()
+
+    return {"message": "Place removed successfully"}

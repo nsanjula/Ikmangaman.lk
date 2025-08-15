@@ -5,6 +5,7 @@ import { useDestination } from "../../contexts/DestinationContext";
 import WeatherServiceNotice from "../WeatherServiceNotice";
 import BackendOfflineNotice from "../BackendOfflineNotice";
 import QuickBackendFix from "../QuickBackendFix";
+import BookmarkButton from "../BookmarkButton";
 
 // API Base URL for image URL construction
 const API_BASE_URL = "http://localhost:8000";
@@ -248,6 +249,11 @@ const HeroSection: React.FC = () => {
                 <FiMapPin className="w-4 h-4" />
                 View Map
               </button>
+              <BookmarkButton
+                destinationName={destinationData.destination_name}
+                variant="page"
+                size="md"
+              />
               {/* Show Questionnaire Metrics button only for search destinations */}
               {isFromSearch && (
                 <button
