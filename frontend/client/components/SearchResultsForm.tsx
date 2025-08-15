@@ -134,17 +134,61 @@ const SearchResultsForm = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<string>("best_match");
+  const [restoredImageFile, setRestoredImageFile] = useState<File | null>(null);
 
   // Get search query and type from URL or location state
   const searchQuery = searchParams.get('q') || '';
-  const searchType = searchParams.get('type') || (location.state?.type || 'text');
+  // Determine search type with enhanced fallback logic
+  const getSearchType = () => {
+    // First try URL params
+    const urlType = searchParams.get('type');
+    if (urlType) return urlType;
+
+    // Then try location state
+    const stateType = location.state?.type;
+    if (stateType) return stateType;
+
+    // Finally check if we have cached image search data
+    const cachedImageData = sessionStorage.getItem('searchResults_image_latest');
+    if (cachedImageData) {
+      try {
+        const parsed = JSON.parse(cachedImageData);
+        if (parsed.searchType === 'image' && parsed.cards && parsed.cards.length > 0) {
+          return 'image';
+        }
+      } catch (e) {
+        // Ignore parsing errors
+      }
+    }
+
+    return 'text';
+  };
+
+  const searchType = getSearchType();
   const imageFile = location.state?.imageFile;
 
-  // Generate a unique key for this search session
-  const searchSessionKey = `search_${searchType}_${searchQuery || 'image'}_${Date.now()}`;
+  // Debug logging for image search context
+  useEffect(() => {
+    if (searchType === 'image') {
+      console.log('Image search context:', {
+        searchType,
+        hasImageFile: !!imageFile,
+        imageFileName: imageFile?.name,
+        locationState: location.state,
+        searchParams: Object.fromEntries(searchParams.entries())
+      });
+    }
+  }, [searchType, imageFile, location.state, searchParams]);
+
+  // Generate a unique key for this search session that includes image file info
+  const imageFileName = imageFile?.name || '';
+  const imageFileSize = imageFile?.size || 0;
+  const searchSessionKey = `search_${searchType}_${searchQuery || `image_${imageFileName}_${imageFileSize}`}_${Date.now()}`;
 
   // Try to restore search results from sessionStorage if available
   const [searchResultsCache, setSearchResultsCache] = useState<any>(null);
+  const [cacheRestored, setCacheRestored] = useState<boolean>(false);
+  const [actualSearchType, setActualSearchType] = useState<string>(searchType);
 
   // Helper function to determine area type from destination
   const getAreaType = (destinationId: number, destinationName?: string): string => {
@@ -257,6 +301,7 @@ const SearchResultsForm = () => {
 
       console.log(`Transformed ${transformedCards.length} search results`);
       setCards(transformedCards);
+      setActualSearchType(searchType); // Update actual search type
 
       if (transformedCards.length === 0) {
         setError("No matching destinations found for your search.");
@@ -289,46 +334,261 @@ const SearchResultsForm = () => {
     }
   };
 
+  // Immediate cache check for image searches on component mount
+  useEffect(() => {
+    if (searchType === 'image' && !cacheRestored) {
+      const immediateCache = sessionStorage.getItem('searchResults_image_latest');
+      if (immediateCache) {
+        try {
+          const parsed = JSON.parse(immediateCache);
+          if (parsed.cards && parsed.cards.length > 0) {
+            const hasMatchScores = parsed.cards.some(card =>
+              card.match_score !== undefined && card.match_score !== null
+            );
+            if (hasMatchScores) {
+              console.log('🚀 Immediate cache hit for image search with match scores');
+              setCards(parsed.cards);
+              setActualSearchType('image'); // Ensure we know this is an image search
+              setIsLoading(false);
+              setCacheRestored(true);
+              setError(null);
+              return;
+            }
+          }
+        } catch (e) {
+          console.log('Immediate cache parse failed:', e);
+        }
+      }
+    }
+  }, [searchType, cacheRestored]);
+
   // Try to restore cached results on component mount
   useEffect(() => {
-    const cacheKey = `searchResults_${searchType}_${searchQuery || 'image'}`;
-    const cachedData = sessionStorage.getItem(cacheKey);
+    let foundCache = false;
+    let cachedData = null;
+    let cacheKey = '';
+
+    // For image searches, always try to find the most recent image search cache
+    if (searchType === 'image') {
+      // First, try the generic latest cache key
+      const genericKey = 'searchResults_image_latest';
+      cachedData = sessionStorage.getItem(genericKey);
+
+      if (cachedData) {
+        try {
+          const parsed = JSON.parse(cachedData);
+          if (parsed.cards && parsed.cards.length > 0) {
+            // Validate that cached cards have match_score data for image searches
+            const hasMatchScores = parsed.cards.some(card =>
+              card.match_score !== undefined && card.match_score !== null
+            );
+            if (searchType === 'image' && !hasMatchScores) {
+              console.log('Image cache missing match scores, invalidating cache');
+              sessionStorage.removeItem(genericKey);
+              cachedData = null;
+            } else {
+              cacheKey = genericKey;
+              console.log('Found image search cache with latest key, match scores present:', hasMatchScores);
+            }
+          } else {
+            cachedData = null;
+          }
+        } catch (e) {
+          console.log('Corrupted cache data, removing:', e);
+          sessionStorage.removeItem(genericKey);
+          cachedData = null;
+        }
+      }
+
+      // If no generic cache found, look for any recent image search cache
+      if (!cachedData) {
+        let mostRecentKey = null;
+        let mostRecentTimestamp = 0;
+
+        for (let i = 0; i < sessionStorage.length; i++) {
+          const key = sessionStorage.key(i);
+          if (key && key.startsWith('searchResults_image_')) {
+            const testData = sessionStorage.getItem(key);
+            if (testData) {
+              try {
+                const parsed = JSON.parse(testData);
+                if (parsed.cards && parsed.cards.length > 0 &&
+                    parsed.timestamp && parsed.timestamp > mostRecentTimestamp) {
+                  mostRecentKey = key;
+                  mostRecentTimestamp = parsed.timestamp;
+                  cachedData = testData;
+                }
+              } catch (e) {
+                console.log('Removing corrupted cache:', key);
+                sessionStorage.removeItem(key);
+              }
+            }
+          }
+        }
+
+        if (mostRecentKey) {
+          cacheKey = mostRecentKey;
+          console.log('Found most recent image search cache:', mostRecentKey);
+        }
+      }
+    } else {
+      // For text searches, use specific cache key
+      cacheKey = `searchResults_${searchType}_${searchQuery}`;
+      cachedData = sessionStorage.getItem(cacheKey);
+    }
 
     if (cachedData) {
       try {
         const parsed = JSON.parse(cachedData);
+
+        // For image searches, ensure match_score data integrity
+        let restoredCards = parsed.cards;
+        if (searchType === 'image') {
+          restoredCards = parsed.cards.map(card => ({
+            ...card,
+            match_score: card.match_score !== undefined ? card.match_score : (card.score || 0),
+            score: card.score !== undefined ? card.score : (card.match_score || 0)
+          }));
+
+          console.log('Image search cache restoration - cards with match_score:',
+            restoredCards.filter(c => c.match_score !== undefined).length);
+        }
+
         setSearchResultsCache(parsed);
-        setCards(parsed.cards);
+        setCards(restoredCards);
+        setActualSearchType(parsed.searchType || searchType); // Use cached search type
         setIsLoading(false);
+        foundCache = true;
+        setCacheRestored(true);
+        setError(null);
+
+        console.log(`Restored ${searchType} search results from cache:`, cacheKey);
+        console.log('Cache validation - first card match_score:', restoredCards[0]?.match_score);
         return;
       } catch (e) {
-        // If cache is corrupted, proceed with normal search
-        sessionStorage.removeItem(cacheKey);
+        console.log('Cache parsing failed, removing corrupted cache:', e);
+        if (cacheKey) {
+          sessionStorage.removeItem(cacheKey);
+        }
       }
     }
 
-    // Perform search if no cache or cache is invalid
-    if (searchQuery || imageFile) {
-      performSearch();
-    } else {
-      setError("No search query provided");
-      setIsLoading(false);
+    // Only perform search if we didn't find cache and have search data
+    if (!foundCache) {
+      // If we have search parameters, perform search
+      if (searchQuery || imageFile) {
+        performSearch();
+      } else {
+        // If no search parameters, try to restore from back state
+        try {
+          const searchBackState = sessionStorage.getItem('searchBackState');
+          if (searchBackState) {
+            const parsedBackState = JSON.parse(searchBackState);
+            console.log('Attempting to restore from searchBackState:', parsedBackState);
+
+            // Try to find cache based on back state
+            let backStateCacheKey = '';
+            if (parsedBackState.searchType === 'image') {
+              backStateCacheKey = 'searchResults_image_latest';
+            } else {
+              backStateCacheKey = `searchResults_${parsedBackState.searchType}_${parsedBackState.searchQuery}`;
+            }
+
+            const backStateCache = sessionStorage.getItem(backStateCacheKey);
+            if (backStateCache) {
+              const parsed = JSON.parse(backStateCache);
+              setSearchResultsCache(parsed);
+              setCards(parsed.cards);
+              setIsLoading(false);
+              setError(null);
+              console.log('Restored search results from back state cache');
+              return;
+            }
+          }
+        } catch (e) {
+          console.log('Failed to restore from back state:', e);
+        }
+
+        // If still no cache found, show appropriate error
+        if (searchType === 'image' && !imageFile) {
+          setError("Image search data not available. Please try searching again.");
+        } else {
+          setError("No search query provided");
+        }
+        setIsLoading(false);
+      }
     }
   }, [searchQuery, imageFile, isAuthenticated]);
 
   // Save results to cache whenever cards are updated
   useEffect(() => {
     if (cards.length > 0) {
-      const cacheKey = `searchResults_${searchType}_${searchQuery || 'image'}`;
+      const timestamp = Date.now();
+
+      // For image searches, ensure match_score is preserved
+      const validatedCards = searchType === 'image'
+        ? cards.map(card => ({
+            ...card,
+            match_score: card.match_score !== undefined ? card.match_score : 0,
+            score: card.score !== undefined ? card.score : card.match_score || 0
+          }))
+        : cards;
+
       const cacheData = {
-        cards,
-        timestamp: Date.now(),
+        cards: validatedCards,
+        timestamp,
         searchType,
-        searchQuery
+        searchQuery,
+        imageFile: searchType === 'image' ? {
+          name: imageFileName,
+          size: imageFileSize,
+          type: imageFile?.type
+        } : null
       };
-      sessionStorage.setItem(cacheKey, JSON.stringify(cacheData));
+
+      if (searchType === 'image') {
+        // For image searches, always save with a consistent latest key
+        const latestKey = 'searchResults_image_latest';
+        sessionStorage.setItem(latestKey, JSON.stringify(cacheData));
+
+        // Also save with a timestamped key for backup
+        const timestampedKey = `searchResults_image_${timestamp}`;
+        sessionStorage.setItem(timestampedKey, JSON.stringify(cacheData));
+
+        console.log('Saved image search cache with keys:', latestKey, timestampedKey);
+        console.log('Cache save validation - first card match_score:', cards[0]?.match_score);
+        console.log('Cache save validation - cards with match_score:', cards.filter(c => c.match_score !== undefined).length);
+
+        // Clean up old image search caches (keep only the latest 3)
+        const imageKeys = [];
+        for (let i = 0; i < sessionStorage.length; i++) {
+          const key = sessionStorage.key(i);
+          if (key && key.startsWith('searchResults_image_') && key !== latestKey) {
+            imageKeys.push(key);
+          }
+        }
+
+        // Sort by timestamp (extract from key) and remove oldest
+        imageKeys.sort((a, b) => {
+          const aTimestamp = parseInt(a.split('_').pop() || '0');
+          const bTimestamp = parseInt(b.split('_').pop() || '0');
+          return bTimestamp - aTimestamp;
+        });
+
+        // Remove excess caches (keep latest 3)
+        if (imageKeys.length > 3) {
+          for (let i = 3; i < imageKeys.length; i++) {
+            sessionStorage.removeItem(imageKeys[i]);
+          }
+        }
+      } else {
+        // For text searches, use specific cache key
+        const cacheKey = `searchResults_${searchType}_${searchQuery}`;
+        sessionStorage.setItem(cacheKey, JSON.stringify(cacheData));
+        console.log('Saved text search cache with key:', cacheKey);
+      }
     }
-  }, [cards, searchType, searchQuery]);
+  }, [cards, searchType, searchQuery, imageFileName, imageFileSize, imageFile]);
 
   const toggleFilters = () => setShowFilters(!showFilters);
 
@@ -549,7 +809,7 @@ const SearchResultsForm = () => {
                           </h3>
 
                           {/* Description - Only show for image search with match quality */}
-                          {searchType === 'image' && (
+                          {actualSearchType === 'image' && card.match_score !== undefined && (
                             <p className="text-sm mb-3" style={{ color: 'var(--text-600)' }}>
                               {card.match_score >= 0.85 ? 'Good Match' :
                                card.match_score >= 0.70 ? 'Average Match' :
@@ -558,24 +818,24 @@ const SearchResultsForm = () => {
                           )}
 
                           {/* Match Score - Only show for image search */}
-                          {searchType === 'image' && (
+                          {actualSearchType === 'image' && card.match_score !== undefined && card.match_score !== null && (
                             <div className="mb-4">
                               <div className="flex items-center justify-between mb-1">
                                 <span className="text-xs font-medium" style={{ color: 'var(--text-600)' }}>
                                   Match Score
                                 </span>
                                 <span className="text-xs font-semibold" style={{ color: 'var(--text-900)' }}>
-                                  {Math.round(Math.min(card.match_score * 100, 100))}%
+                                  {Math.round(Math.min((card.match_score || 0) * 100, 100))}%
                                 </span>
                               </div>
                               <div className="progress-bar">
                                 <div
-                                  className={`progress-fill ${card.match_score >= 0.85 ? 'progress-green' :
-                                    card.match_score >= 0.70 ? 'progress-sky' :
+                                  className={`progress-fill ${(card.match_score || 0) >= 0.85 ? 'progress-green' :
+                                    (card.match_score || 0) >= 0.70 ? 'progress-sky' :
                                       'progress-amber'
                                     }`}
                                   style={{
-                                    width: `${Math.min(card.match_score * 100, 100)}%`,
+                                    width: `${Math.min((card.match_score || 0) * 100, 100)}%`,
                                   }}
                                 ></div>
                               </div>
@@ -587,6 +847,11 @@ const SearchResultsForm = () => {
                         <div className="p-4 pt-0">
                           <button
                             onClick={() => {
+                              // Clear temporary questionnaire data when navigating to a different destination
+                              // This ensures each destination starts fresh unless user explicitly uses "Use Questionnaire Metrics"
+                              sessionStorage.removeItem('tempQuestionnaireData');
+                              console.log('Cleared temporary questionnaire data - navigating to new destination');
+
                               // Store current search state for easy back navigation
                               const backState = {
                                 searchQuery,
@@ -621,7 +886,12 @@ const SearchResultsForm = () => {
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
                       <button
-                        onClick={() => navigate("/recommendation")}
+                        onClick={() => {
+                          // Clear temporary questionnaire data when returning to recommendations
+                          sessionStorage.removeItem('tempQuestionnaireData');
+                          console.log('Cleared temporary questionnaire data - navigating to recommendations');
+                          navigate("/recommendation");
+                        }}
                         className="bg-white hover:bg-gray-100 text-cyan-700 px-6 py-3 rounded transition-colors font-medium"
                       >
                         Browse Recommendations

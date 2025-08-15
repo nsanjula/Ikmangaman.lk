@@ -140,6 +140,7 @@ const RecommendationForm = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<string>("best_match");
+  const [hasCachedData, setHasCachedData] = useState(false);
 
   // Helper function to parse distance string to numeric value for sorting
   const parseDistance = (distanceStr: string): number => {
@@ -161,6 +162,65 @@ const RecommendationForm = () => {
     }
 
     return totalMinutes || 0;
+  };
+
+  // Cache management functions
+  const CACHE_KEY = 'recommendationData';
+  const CACHE_TIMESTAMP_KEY = 'recommendationDataTimestamp';
+  const CACHE_EXPIRY_HOURS = 1; // Cache expires after 1 hour
+
+  const saveRecommendationsToCache = (recommendationCards: RecommendationCard[]) => {
+    try {
+      const cacheData = {
+        cards: recommendationCards,
+        timestamp: Date.now(),
+        userToken: authAPI.getToken() // Store with token to ensure cache is user-specific
+      };
+      sessionStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
+      console.log('💾 Saved recommendation data to cache:', recommendationCards.length, 'items');
+    } catch (error) {
+      console.warn('Failed to save recommendations to cache:', error);
+    }
+  };
+
+  const loadRecommendationsFromCache = (): RecommendationCard[] | null => {
+    try {
+      const cached = sessionStorage.getItem(CACHE_KEY);
+      if (!cached) return null;
+
+      const cacheData = JSON.parse(cached);
+      const currentTime = Date.now();
+      const cacheAge = currentTime - cacheData.timestamp;
+      const maxCacheAge = CACHE_EXPIRY_HOURS * 60 * 60 * 1000;
+
+      // Check if cache is expired
+      if (cacheAge > maxCacheAge) {
+        console.log('🕒 Cache expired, removing old data');
+        clearRecommendationsCache();
+        return null;
+      }
+
+      // Check if cache belongs to current user
+      const currentToken = authAPI.getToken();
+      if (cacheData.userToken !== currentToken) {
+        console.log('👤 Cache belongs to different user, clearing');
+        clearRecommendationsCache();
+        return null;
+      }
+
+      console.log('✅ Restored recommendation data from cache:', cacheData.cards.length, 'items');
+      return cacheData.cards;
+    } catch (error) {
+      console.warn('Failed to load recommendations from cache:', error);
+      clearRecommendationsCache();
+      return null;
+    }
+  };
+
+  const clearRecommendationsCache = () => {
+    sessionStorage.removeItem(CACHE_KEY);
+    sessionStorage.removeItem(CACHE_TIMESTAMP_KEY);
+    console.log('🗑️ Cleared recommendations cache');
   };
 
   // Helper function to determine area type from destination (simplified for backend format)
@@ -216,7 +276,7 @@ const RecommendationForm = () => {
     return areaTypes[destinationId % areaTypes.length];
   };
 
-  const fetchRecommendations = async () => {
+  const fetchRecommendations = async (forceRefresh: boolean = false) => {
     try {
       setError(null);
 
@@ -225,6 +285,18 @@ const RecommendationForm = () => {
         setError("Please log in to view recommendations");
         setIsLoading(false);
         return;
+      }
+
+      // Try to load from cache first (unless force refresh)
+      if (!forceRefresh) {
+        const cachedData = loadRecommendationsFromCache();
+        if (cachedData && cachedData.length > 0) {
+          console.log("📂 Using cached recommendation data");
+          setCards(cachedData);
+          setHasCachedData(true);
+          setIsLoading(false);
+          return;
+        }
       }
 
       console.log("Fetching recommendations for authenticated user...");
@@ -293,6 +365,12 @@ const RecommendationForm = () => {
       console.log("Transformed cards:", transformedCards.length, "items");
       setCards(transformedCards);
 
+      // Save to cache for future use
+      if (transformedCards.length > 0) {
+        saveRecommendationsToCache(transformedCards);
+        setHasCachedData(false); // This is fresh data
+      }
+
       // If no recommendations after successful fetch, show helpful message
       if (transformedCards.length === 0) {
         console.log("No recommendations found after transformation");
@@ -330,9 +408,41 @@ const RecommendationForm = () => {
     }
   };
 
+  // Load cache on component mount, then fetch if needed
   useEffect(() => {
+    // First try to load from cache
+    if (isAuthenticated) {
+      const cachedData = loadRecommendationsFromCache();
+      if (cachedData && cachedData.length > 0) {
+        console.log("📂 Loaded cached data on mount");
+        setCards(cachedData);
+        setHasCachedData(true);
+        setIsLoading(false);
+        return;
+      }
+    }
+
+    // If no cache or not authenticated, fetch fresh data
     fetchRecommendations();
   }, [isAuthenticated]);
+
+  // Clear cache when questionnaire is updated or user logs out
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'tempQuestionnaireData' && event.newValue) {
+        // Questionnaire was updated, clear recommendations cache
+        console.log("🔄 Questionnaire updated, clearing recommendations cache");
+        clearRecommendationsCache();
+      }
+    };
+
+    // Listen for changes to temporary questionnaire data
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   const toggleFilters = () => setShowFilters(!showFilters);
 
@@ -526,7 +636,13 @@ const RecommendationForm = () => {
                 </div>
                 <div className="flex items-center gap-4">
                   <button
-                    onClick={() => navigate("/questionnaire")}
+                    onClick={() => {
+                      // Clear temporary questionnaire data when editing main questionnaire
+                      sessionStorage.removeItem('tempQuestionnaireData');
+                      clearRecommendationsCache(); // Clear recommendations cache too
+                      console.log('Cleared temporary questionnaire data and recommendations cache - navigating to main questionnaire');
+                      navigate("/questionnaire");
+                    }}
                     className="btn btn-secondary btn-md flex items-center gap-2 whitespace-nowrap border-2 hover:bg-opacity-10"
                     style={{
                       borderColor: 'var(--primary-600)',
@@ -661,7 +777,8 @@ const RecommendationForm = () => {
                       <button
                         onClick={() => {
                           setError(null);
-                          fetchRecommendations();
+                          clearRecommendationsCache(); // Clear cache before refreshing
+                          fetchRecommendations(true); // Force refresh from API
                         }}
                         className="bg-white hover:bg-gray-100 text-cyan-700 px-6 py-3 rounded transition-colors font-medium"
                         disabled={isLoading}
@@ -702,7 +819,13 @@ const RecommendationForm = () => {
                         Test API
                       </button>
                       <button
-                        onClick={() => navigate("/questionnaire")}
+                        onClick={() => {
+                          // Clear temporary questionnaire data when editing main questionnaire
+                          sessionStorage.removeItem('tempQuestionnaireData');
+                          clearRecommendationsCache(); // Clear recommendations cache too
+                          console.log('Cleared temporary questionnaire data and recommendations cache - navigating to main questionnaire');
+                          navigate("/questionnaire");
+                        }}
                         className="bg-cyan-700 hover:bg-cyan-800 text-white px-6 py-3 rounded transition-colors font-medium border-2 border-white"
                       >
                         Edit Questionnaire

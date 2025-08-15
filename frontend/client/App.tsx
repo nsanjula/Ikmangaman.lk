@@ -31,6 +31,11 @@ const queryClient = new QueryClient();
 
 const App = () => {
   useEffect(() => {
+    // Immediately scroll to top on app start to ensure loading animations are visible
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+
     // Minimal iframe cache prevention
     if (window.frameElement) {
       // Simple cache busting for iframe

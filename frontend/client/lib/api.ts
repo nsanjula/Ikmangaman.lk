@@ -1,8 +1,42 @@
 const API_BASE_URL = "http://localhost:8000"; // Backend FastAPI server
 
+// Helper function to check if response indicates database timeout
+const isDatabaseTimeout = (response: Response): boolean => {
+  return [502, 503, 504].includes(response.status);
+};
+
+// Global timeout handler - can be set by AuthContext
+let globalTimeoutHandler: ((error: Error) => void) | null = null;
+
+export const setGlobalTimeoutHandler = (handler: (error: Error) => void) => {
+  globalTimeoutHandler = handler;
+};
+
+// Helper function to handle database timeouts globally
+const handleDatabaseTimeout = (response: Response): void => {
+  if (isDatabaseTimeout(response) && globalTimeoutHandler) {
+    const error = new Error(`Database timeout occurred (${response.status}). Please try again.`);
+    globalTimeoutHandler(error);
+  }
+};
+
 // Helper function for consistent error handling
 const handleAPIError = (error: any, context: string): never => {
   console.error(`API call failed in ${context}:`, error);
+
+  // Check for database timeout indicators
+  if (error && typeof error.message === 'string') {
+    const message = error.message.toLowerCase();
+    if (message.includes('database timeout') ||
+        message.includes('connection timeout') ||
+        message.includes('query timeout') ||
+        message.includes('server timeout') ||
+        message.includes('database connection') ||
+        (error.status && [502, 503, 504].includes(error.status))) {
+      throw new Error(`Database timeout occurred. Please try again.`);
+    }
+  }
+
   if (error instanceof TypeError && error.message.includes("fetch")) {
     throw new Error(
       `Unable to connect to backend server at ${API_BASE_URL}. Please check if the backend is running and CORS is configured correctly.`,
@@ -231,6 +265,7 @@ class AuthAPI {
       });
 
       if (!response.ok) {
+        handleDatabaseTimeout(response);
         const error: ApiError = await response.json();
         throw new Error(error.detail || "Login failed");
       }
@@ -369,6 +404,7 @@ class AuthAPI {
       console.log("Recommendations response status:", response.status);
 
       if (!response.ok) {
+        handleDatabaseTimeout(response);
         if (response.status === 401) {
           // Clear invalid token
           this.removeToken();

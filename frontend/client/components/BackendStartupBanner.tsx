@@ -12,10 +12,12 @@ const BackendStartupBanner: React.FC = () => {
     "cd backend && python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000";
 
   const checkBackend = async () => {
+    // Create an AbortController for timeout
+    const controller = new AbortController();
+    let timeoutId: NodeJS.Timeout;
+
     try {
-      // Create an AbortController for timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      timeoutId = setTimeout(() => controller.abort(), 3000);
 
       const response = await fetch("http://localhost:8000/docs", {
         method: "HEAD",
@@ -33,6 +35,11 @@ const BackendStartupBanner: React.FC = () => {
         setShowBanner(true);
       }
     } catch (error: any) {
+      // Clear the timeout if it's still active
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+
       // Silently handle all connection errors including AbortError
       // This is expected when the backend is not running
       setBackendStatus("offline");

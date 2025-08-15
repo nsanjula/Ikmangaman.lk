@@ -192,6 +192,9 @@ const Profile = () => {
   };
 
   const handleLogout = () => {
+    // Clear temporary questionnaire data when logging out
+    sessionStorage.removeItem('tempQuestionnaireData');
+    console.log('Cleared temporary questionnaire data - logging out from profile');
     logout();
     navigate("/");
   };

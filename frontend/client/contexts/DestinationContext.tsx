@@ -74,32 +74,63 @@ export const DestinationProvider: React.FC<DestinationProviderProps> = ({
       // Set progress for concurrent API calls
       setProgress(30);
 
-      // Make both API calls in parallel for better performance
-      const [destinationResult, questionnaireResult] = await Promise.allSettled([
-        authAPI.getDestinationDetails(parseInt(destinationId)),
-        authAPI.getQuestionnaire().catch((err) => {
-          console.warn("Questionnaire data failed, using fallback:", err);
-          // Return fallback questionnaire data
-          return {
-            starting_location_latitudes: 6.9271, // Colombo fallback
-            starting_location_longitudes: 79.8612,
-            nature: true,
-            adventure: true,
-            luxury: false,
-            culture: true,
-            relaxation: false,
-            wellness: false,
-            local_life: true,
-            wild_life: false,
-            food: true,
-            spirituality: false,
-            eco_tourism: true,
-            travel_month: "December",
-            no_of_people: 2,
-            start_location: "Colombo"
-          };
-        })
-      ]);
+      // Check for temporary questionnaire data first
+      const tempQuestionnaireKey = 'tempQuestionnaireData';
+      const tempData = sessionStorage.getItem(tempQuestionnaireKey);
+      let useTemporaryQuestionnaire = false;
+      let temporaryQuestionnaireData = null;
+
+      if (tempData) {
+        try {
+          temporaryQuestionnaireData = JSON.parse(tempData);
+          useTemporaryQuestionnaire = true;
+          console.log('Using temporary questionnaire data for destination:', temporaryQuestionnaireData);
+        } catch (e) {
+          console.warn('Failed to parse temporary questionnaire data, removing:', e);
+          sessionStorage.removeItem(tempQuestionnaireKey);
+        }
+      }
+
+      // Make API calls - if we have temporary questionnaire data, only get destination details
+      let destinationResult, questionnaireResult;
+
+      if (useTemporaryQuestionnaire) {
+        // Only fetch destination details, use temporary questionnaire data
+        const results = await Promise.allSettled([
+          authAPI.getDestinationDetails(parseInt(destinationId))
+        ]);
+        destinationResult = results[0];
+        questionnaireResult = { status: 'fulfilled' as const, value: temporaryQuestionnaireData };
+      } else {
+        // Fetch both destination and questionnaire data from API
+        const results = await Promise.allSettled([
+          authAPI.getDestinationDetails(parseInt(destinationId)),
+          authAPI.getQuestionnaire().catch((err) => {
+            console.warn("Questionnaire data failed, using fallback:", err);
+            // Return fallback questionnaire data
+            return {
+              starting_location_latitudes: 6.9271, // Colombo fallback
+              starting_location_longitudes: 79.8612,
+              nature: true,
+              adventure: true,
+              luxury: false,
+              culture: true,
+              relaxation: false,
+              wellness: false,
+              local_life: true,
+              wild_life: false,
+              food: true,
+              spirituality: false,
+              eco_tourism: true,
+              travel_month: "December",
+              no_of_people: 2,
+              start_location: "Colombo"
+            };
+          })
+        ]);
+        destinationResult = results[0];
+        questionnaireResult = results[1];
+      }
 
       setProgress(70);
 

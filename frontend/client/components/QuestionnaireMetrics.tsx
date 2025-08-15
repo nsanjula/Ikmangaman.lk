@@ -108,6 +108,35 @@ const QuestionnaireMetrics: React.FC = () => {
     if (availableLocations.length > 0) {
       const loadExistingQuestionnaireData = async () => {
         try {
+          // First, try to load temporary questionnaire data if available
+          const tempQuestionnaireKey = 'tempQuestionnaireData';
+          const tempData = sessionStorage.getItem(tempQuestionnaireKey);
+
+          if (tempData) {
+            try {
+              const parsedTempData = JSON.parse(tempData);
+              console.log('Loading from temporary questionnaire data:', parsedTempData);
+
+              setHasExistingQuestionnaire(true);
+
+              // Pre-fill fields with temporary data
+              if (parsedTempData.travel_month) {
+                setTravelMonth(parsedTempData.travel_month);
+              }
+              if (parsedTempData.no_of_people) {
+                setGroupSize(parsedTempData.no_of_people);
+              }
+              if (parsedTempData.start_location) {
+                setStartLocation(parsedTempData.start_location);
+              }
+              return;
+            } catch (e) {
+              console.log('Failed to parse temporary questionnaire data, falling back to database');
+              sessionStorage.removeItem(tempQuestionnaireKey);
+            }
+          }
+
+          // Fall back to database questionnaire data
           const existingData = await authAPI.getQuestionnaire();
           setHasExistingQuestionnaire(true);
 
@@ -222,18 +251,20 @@ const QuestionnaireMetrics: React.FC = () => {
         start_location: startLocation,
       };
 
-      await callWithLoading(
-        () => authAPI.submitQuestionnaire(questionnaireData),
-        'questionnaire-submit',
-        'Creating your personalized travel plan...'
-      );
+      // Store temporary questionnaire data in sessionStorage instead of submitting to database
+      // This allows for temporary changes when exploring search destinations
+      const tempQuestionnaireKey = 'tempQuestionnaireData';
+      sessionStorage.setItem(tempQuestionnaireKey, JSON.stringify(questionnaireData));
 
-      // Navigate directly to the destination detail page with questionnaire context
+      console.log('Stored temporary questionnaire data:', questionnaireData);
+
+      // Navigate directly to the destination detail page with temporary questionnaire context
       navigate(`/destination/${destinationId}`, {
         state: {
           fromQuestionnaire: true,
           questionnaireCompleted: true,
-          destinationName: destinationName
+          destinationName: destinationName,
+          isTemporaryQuestionnaire: true // Flag to indicate this is temporary
         }
       });
     } catch (error) {
