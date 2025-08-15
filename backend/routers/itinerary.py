@@ -188,6 +188,7 @@ def export_itinerary(
     ).first()
 
     # Build days data
+    BASE_URL = "http://127.0.0.1:8000"  # In production, replace with actual domain
     days_data = []
     for day_num in range(1, 5):
         dest_id = getattr(itinerary, f"day{day_num}_dest_id")
@@ -201,7 +202,7 @@ def export_itinerary(
                 "longitude": dest.longitude,
                 "description": dest.description,
                 "things_to_do": dest.things_to_do,
-                "thumbnail": f"/destination-image/{dest.destination_id}",
+                "thumbnail": f"{BASE_URL}/destination-image/{dest.destination_id}",
                 "budget": budget
             })
 
@@ -218,6 +219,8 @@ def export_itinerary(
     html_content = render_itinerary_html(
         travel_month=itinerary.travel_month,
         no_of_people=itinerary.no_of_people,
+        start_location=itinerary.start_location, 
+        accessed_user=accessed_user.firstname,
         route_map_url=route_map_url,
         total_budget=sum([d["budget"] for d in days_data if d["budget"]]),
         days=days_data

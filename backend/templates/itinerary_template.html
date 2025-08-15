@@ -1,112 +1,123 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
-    <title>Trip Plan - {{ travel_month }}</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-        .cover {
-            text-align: center;
-            padding: 30px;
-        }
-        .cover h1 {
-            font-size: 32px;
-            margin-bottom: 5px;
-        }
-        .cover h2 {
-            font-size: 20px;
-            color: #555;
-            margin-top: 0;
-        }
-        .map {
-            margin-top: 20px;
-        }
-        .summary {
-            margin-top: 15px;
-            font-size: 18px;
-        }
-        .day-section {
-            page-break-before: always;
-            padding: 20px;
-        }
-        .day-section h2 {
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
-        .day-info {
-            display: flex;
-            align-items: flex-start;
-        }
-        .day-info img {
-            max-width: 300px;
-            height: auto;
-            border-radius: 6px;
-            margin-right: 20px;
-        }
-        .day-details {
-            font-size: 16px;
-        }
-        .day-details p {
-            margin: 6px 0;
-        }
-        .footer {
-            margin-top: 30px;
-            font-size: 14px;
-            text-align: center;
-            color: #777;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <title>{{ accessed_user }}'s Trip Plan - {{ travel_month }}</title>
+
+  <!-- Font (close to Aptos Narrow). If offline, it falls back gracefully. -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    @page { size: A4; margin: 16mm; }
+    :root{
+      --teal-900:#134e4a; --teal-800:#0f766e; --teal-700:#0d9488;
+      --teal-600:#14b8a6; --teal-200:#d1faf5; --border:#cde7e7; --ink:#1f2937;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background:#f4fafa; color:var(--ink);
+      font: 14px/1.5 "Roboto Condensed","Arial Narrow",Arial,sans-serif;
+    }
+
+    /* Cover */
+    .cover {
+      text-align:center; color:#fff; padding:42px 20px;
+      background:linear-gradient(135deg, var(--teal-800), var(--teal-600));
+    }
+    .cover h1 { margin:0 0 8px; font-size:36px; font-weight:700; }
+    .cover h2 { margin:0; font-size:18px; font-weight:400; opacity:.95; }
+    .summary {
+      display:inline-block; margin-top:14px; padding:10px 16px; border-radius:10px;
+      background:rgba(255,255,255,.12); font-size:16px;
+    }
+
+    /* Days container */
+    .itinerary-container { padding: 18px 10px 6px; }
+
+    /* Day card: GRID (paginates better than flex) and compact height */
+    .day-section {
+      display:grid; grid-template-columns: 220px 1fr; gap:16px;
+      background:#fff; border:1px solid var(--border); border-radius:10px;
+      padding:12px; margin:0 10px 12px; box-shadow:0 2px 6px rgba(0,128,128,.08);
+      break-inside: avoid; page-break-inside: avoid; /* keep each card intact */
+    }
+
+    /* Left column kept compact */
+    .day-left { text-align:center; }
+    .thumb {
+      width:100%; height:140px; object-fit:cover; border-radius:8px; border:1px solid var(--border);
+      page-break-inside: avoid;
+    }
+    .budget {
+      margin-top:8px; font-weight:700; color:var(--teal-900); font-size:14px;
+      background:#e9fbf8; border:1px solid var(--border); border-radius:999px; padding:6px 10px; display:inline-block;
+    }
+
+    /* Right column */
+    .day-right { padding-right:6px; }
+    .day-title {
+      font-size:18px; font-weight:800; color:var(--teal-900);
+      border-bottom:2px solid var(--border); padding-bottom:6px; margin:0 0 8px;
+    }
+    .desc { margin:0 0 8px; }
+    .todo-title { font-weight:700; margin:6px 0 4px; }
+    .todo { margin:0; padding-left:18px; }
+    .todo li { margin:2px 0; }
+
+    /* Map at the end */
+    .map-page { page-break-before: always; text-align:center; padding: 10px; }
+    .map-page h2 { color:var(--teal-900); margin:0 0 10px; font-size:20px; }
+    .map {
+      width:100%; max-width:720px; border-radius:10px; border:1px solid var(--border);
+      box-shadow:0 2px 6px rgba(0,128,128,.08);
+    }
+
+    /* Footer */
+    .footer { text-align:center; color:#64748b; font-size:12px; margin-top:14px; }
+  </style>
 </head>
 <body>
 
-    <!-- Cover Page -->
-    <div class="cover">
-        <h1>Your Trip Plan</h1>
-        <h2>{{ travel_month }} • {{ no_of_people }} people</h2>
-        <div class="map">
-            <img src="{{ route_map_url }}" alt="Route Map">
-        </div>
-        <div class="summary">
-            <strong>Total Estimated Budget:</strong> Rs. {{ "{:,.0f}".format(total_budget) }}
-        </div>
+  <!-- Cover -->
+  <div class="cover">
+    <h1>{{ accessed_user }}'s Trip Plan</h1>
+    <h2>{{ travel_month }} • {{ no_of_people }} people</h2>
+    <div class="summary">
+      Starting from: <b>{{ start_location }}</b> &nbsp;•&nbsp;
+      Total Estimated Budget: <b>Rs. {{ "{:,.0f}".format(total_budget) }}</b>
     </div>
+  </div>
 
-    <!-- Day-by-Day Breakdown -->
+  <!-- Days (compact cards; multiple can fit per page) -->
+  <div class="itinerary-container">
     {% for day in days %}
-    <div class="day-section">
-        <h2>Day {{ day.day }} — {{ day.name }}</h2>
-        <div class="day-info">
-            <img src="{{ day.thumbnail }}" alt="{{ day.name }}">
-            <div class="day-details">
-                <p><strong>Estimated Budget:</strong> Rs. {{ "{:,.0f}".format(day.budget) }}</p>
-                {% if day.distance and day.travel_time %}
-                    <p><strong>Distance:</strong> {{ day.distance }}</p>
-                    <p><strong>Travel Time:</strong> {{ day.travel_time }}</p>
-                {% endif %}
-            </div>
+      <section class="day-section">
+        <div class="day-left">
+          <img class="thumb" src="{{ day.thumbnail }}" alt="{{ day.name }}">
+          <div class="budget">Estimated Budget: Rs. {{ "{:,.0f}".format(day.budget or 0) }}</div>
         </div>
-    </div>
+        <div class="day-right">
+          <h3 class="day-title">Day {{ day.day }} — {{ day.name }}</h3>
+          {% if day.description %}<p class="desc">{{ day.description }}</p>{% endif %}
+          {% if day.things_to_do %}
+            <div class="todo-title">Things to do:</div>
+            <ul class="todo">
+              {% for thing in day.things_to_do.split('/') %}
+                {% if thing.strip() %}<li>{{ thing.strip() }}</li>{% endif %}
+              {% endfor %}
+            </ul>
+          {% endif %}
+        </div>
+      </section>
     {% endfor %}
+  </div>
 
-    <div class="footer">
-        Generated by Ikmangaman.lk — Personalized AI-powered travel planning
-    </div>
+  <!-- Route map on the last page -->
+  <div class="map-page">
+    <h2>Trip Route Map</h2>
+    <img class="map" src="{{ route_map_url }}" alt="Route Map">
+    <div class="footer">Generated by Ikmangaman.lk — Personalized AI-powered travel planning</div>
+  </div>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
