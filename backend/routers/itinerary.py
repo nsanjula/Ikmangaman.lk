@@ -6,10 +6,13 @@ from weasyprint import HTML
 
 from backend.database.db import get_db
 from backend.models import Itinerary, LocationCoordinates, Destination, User
+from backend.routers.hotels import get_hotel
+from backend.routers.weather import get_forecast
 from backend.schemas import user
 from backend.schemas.questionnaire import TripPlanQuestionnaire, TripPlanDayInterests, DayAssignment
 from backend.services.aimodel1 import predict_traveler_type
-from backend.services.budget import calculate_the_budget
+from backend.services.budget import calculate_the_budget, cost_for_bicycle, cost_for_car, cost_for_p_bus, \
+    cost_for_transit
 from backend.services.distance import get_distance_and_duration_for_recommendations
 from backend.services.itinerary_path import generate_route_map_url
 from backend.services.pdf_generator import render_itinerary_html
@@ -18,6 +21,7 @@ from backend.utils import month_mapper
 from backend.utils.age_calc import calculate_age
 from backend.utils.auth_token import get_current_user
 from backend.utils.month_mapper import get_month_int
+from backend.services.distance import get_distance_and_duration_for_one_location
 
 router = APIRouter(
     tags=["itinerary"],
@@ -237,3 +241,94 @@ def export_itinerary(
             "Content-Disposition": f"attachment; filename=itinerary_{itinerary_id}.pdf"
         }
     )
+
+@router.get("/{itinerary_id}/day/{day_number}/destination/{destination_id}")
+async def get_destination(
+        itinerary_id: int,
+        day_number: int,
+        destination_id: int,
+        db: Session = Depends(get_db),
+        current_user: user.User = Depends(get_current_user)
+):
+    # fetch itinerary
+    itinerary_obj = db.query(Itinerary).filter(Itinerary.id == itinerary_id).first()
+    if not itinerary_obj:
+        raise HTTPException(status_code=404, detail="Itinerary not found")
+
+    # fetching the destination object
+    destination_obj = db.query(Destination).filter(Destination.destination_id == destination_id).first()
+    if not destination_obj:
+        raise HTTPException(status_code=404, detail="Destination not found")
+
+    # Determine origin
+    if day_number == 1:
+        # Get start_location coords from your location table
+        start_location_obj = db.query(LocationCoordinates).filter(
+            LocationCoordinates.location_name == itinerary_obj.start_location
+        ).first()
+        if not start_location_obj:
+            raise HTTPException(status_code=400, detail="Invalid start location")
+        origin_lat = start_location_obj.latitudes
+        origin_lng = start_location_obj.longitudes
+    else:
+        prev_dest_id = getattr(itinerary_obj, f"day{day_number - 1}_dest_id")
+        if not prev_dest_id:
+            raise HTTPException(status_code=400, detail="Previous day has no destination")
+        prev_dest = db.query(Destination).filter(Destination.destination_id == prev_dest_id).first()
+        origin_lat = prev_dest.latitude
+        origin_lng = prev_dest.longitude
+
+    trip_distance_and_duration = get_distance_and_duration_for_one_location(
+        origin_lat,
+        origin_lng,
+        destination_obj.latitude,
+        destination_obj.longitude
+    )
+
+    distance = trip_distance_and_duration["distance_text"].split()[0]
+    distance_f = float(distance)
+    duration = trip_distance_and_duration["duration_text"]
+    # Try to get weather data, fallback to None if it fails
+    try:
+        weather_data = await get_forecast(destination_obj.name)
+    except Exception as e:
+        print(f"Weather API failed for {destination_obj.name}: {e}")
+        weather_data = None
+
+    # Try to get hotel data, fallback to None if it fails
+    try:
+        hotel_data = await get_hotel(destination_obj.name)
+    except Exception as e:
+        print(f"Hotel API failed for {destination_obj.name}: {e}")
+        hotel_data = None
+
+    response = {
+        "destination_name": destination_obj.name,
+        "destination_id": destination_obj.destination_id,
+        "latitude": destination_obj.latitude,
+        "longitude": destination_obj.longitude,
+        "description": destination_obj.description,
+        "things_to_do": destination_obj.things_to_do.split("/"),
+        "distance": distance,
+        "duration": duration,
+        "weather_data": weather_data,
+        "hotel_data": hotel_data,
+        "cost_for_bicycle": round(cost_for_bicycle(distance_f, itinerary_obj.no_of_people)),
+        "cost_for_car": round(cost_for_car(distance_f, itinerary_obj.no_of_people)),
+        "cost_for_private bus": round(cost_for_p_bus(distance_f, itinerary_obj.no_of_people)),
+        "cost_for_transit": round(cost_for_transit(distance_f, itinerary_obj.no_of_people, db)),
+        "guide_details": [
+            {
+                "guide_id": guide.guide_id,
+                "name": guide.name,
+                "gender": guide.gender,
+                "contact_no": guide.contact_no,
+                "photo_url": f"/guides/photo/{guide.guide_id}"
+            }
+            for guide in destination_obj.guides
+        ],
+        "destination_image": f"/destination-image/{destination_obj.destination_id}"
+    }
+
+    return response
+
