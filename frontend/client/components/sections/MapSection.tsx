@@ -1,78 +1,72 @@
-import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import { authAPI, DestinationDetails } from "../../lib/api";
-import RouteMapComponent from "../RouteMapComponent";
-import TouristAttractionsMapComponent from "../TouristAttractionsMapComponent";
+import React, { useMemo } from "react";
+import { FiMapPin, FiNavigation, FiCompass } from "react-icons/fi";
+import { useLocation } from "react-router-dom";
+import OptimizedRouteMapComponent from "../OptimizedRouteMapComponent";
+import EnhancedTouristAttractionsMapComponent from "../EnhancedTouristAttractionsMapComponent";
+import { useDestination } from "../../contexts/DestinationContext";
 
 const MapSection: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const [destinationData, setDestinationData] =
-    useState<DestinationDetails | null>(null);
-  const [startingLocation, setStartingLocation] = useState<{
-    lat: number;
-    lng: number;
-  } | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { destinationData, questionnaireData, loading, error } = useDestination();
+  const location = useLocation();
 
-  useEffect(() => {
-    const fetchDestinationData = async () => {
-      if (!id) return;
+  // Check if we're coming from search results
+  const isFromSearch = location.state?.fromSearch || location.pathname.includes('/search/destination/');
 
-      try {
-        setLoading(true);
-        setError(null);
+  // Check if we're in saved places basic view (before questionnaire metrics)
+  const isInSavedPlacesBasicView = useMemo(() => {
+    if (!location.pathname.includes('/saved-destination/')) return false;
+    if (location.state?.fromQuestionnaireMetrics) return false;
 
-        const data = await authAPI.getDestinationDetails(parseInt(id));
-        setDestinationData(data);
+    // Check if temp questionnaire is currently in progress
+    if (sessionStorage.getItem('tempQuestionnaireCompleted')) return false;
 
-        // Get user's starting location from questionnaire
-        try {
-          const questionnaireData = await authAPI.getQuestionnaire();
-          if (
-            questionnaireData.starting_location_latitudes &&
-            questionnaireData.starting_location_longitudes
-          ) {
-            setStartingLocation({
-              lat: questionnaireData.starting_location_latitudes,
-              lng: questionnaireData.starting_location_longitudes,
-            });
-          } else {
-            // Fallback to Colombo if no questionnaire coordinates
-            setStartingLocation({ lat: 6.9271, lng: 79.8612 });
-          }
-        } catch (questionnaireError) {
-          console.warn(
-            "Failed to fetch questionnaire data, using Colombo as default:",
-            questionnaireError,
-          );
-          // Fallback to Colombo if questionnaire fetch fails
-          setStartingLocation({ lat: 6.9271, lng: 79.8612 });
-        }
-      } catch (error) {
-        console.error("Failed to fetch destination data:", error);
-        setError(
-          error instanceof Error
-            ? error.message
-            : "Failed to load destination data",
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
+    // Check if this specific destination has completed questionnaire before
+    const destinationId = destinationData?.destination_id;
+    if (destinationId) {
+      const destinationQuestionnaireStatus = sessionStorage.getItem(`tempQuestionnaire_${destinationId}`);
+      return destinationQuestionnaireStatus !== 'completed';
+    }
 
-    fetchDestinationData();
-  }, [id]);
+    return true; // Default to basic view if no destination ID yet
+  }, [location.pathname, location.state?.fromQuestionnaireMetrics, destinationData?.destination_id]);
+
+  // Memoize starting location calculation
+  const startingLocation = useMemo(() => {
+    console.log('MapSection questionnaire data:', questionnaireData);
+    if (questionnaireData?.starting_location_latitudes && questionnaireData?.starting_location_longitudes) {
+      console.log('Using questionnaire starting location:', {
+        lat: questionnaireData.starting_location_latitudes,
+        lng: questionnaireData.starting_location_longitudes
+      });
+      return {
+        lat: questionnaireData.starting_location_latitudes,
+        lng: questionnaireData.starting_location_longitudes,
+      };
+    }
+    // Fallback to Colombo
+    console.log('Falling back to Colombo coordinates');
+    return { lat: 6.9271, lng: 79.8612 };
+  }, [questionnaireData]);
 
   if (loading) {
     return (
-      <div className="mb-10">
-        <h2 className="text-xl font-semibold mb-4">Best Route</h2>
-        <div className="w-full h-96 bg-gray-200 rounded-lg flex items-center justify-center">
-          <div className="text-gray-500">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-500 mx-auto mb-2"></div>
-            Loading map data...
+      <div className="space-y-6 mb-6">
+        {/* Best Route Loading - Only show for non-search destinations and not in saved places basic view */}
+        {!isFromSearch && !isInSavedPlacesBasicView && (
+          <div className="card p-6 animate-pulse" style={{ background: 'var(--surface)' }}>
+            <div className="h-6 bg-gray-200 rounded mb-4 w-48"></div>
+            <div className="h-4 bg-gray-200 rounded mb-4 w-full"></div>
+            <div className="w-full h-96 bg-gray-200 rounded-lg mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
           </div>
+        )}
+
+        {/* Tourist Attractions Map Loading */}
+        <div className="card p-6 animate-pulse" style={{ background: 'var(--surface)' }}>
+          <div className="h-6 bg-gray-200 rounded mb-4 w-56"></div>
+          <div className="h-4 bg-gray-200 rounded mb-4 w-full"></div>
+          <div className="w-full h-96 bg-gray-200 rounded-lg mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
         </div>
       </div>
     );
@@ -80,24 +74,34 @@ const MapSection: React.FC = () => {
 
   if (error) {
     return (
-      <div className="mb-10">
-        <h2 className="text-xl font-semibold mb-4">Best Route</h2>
-        <div className="w-full h-64 bg-red-50 border border-red-200 rounded-lg flex items-center justify-center">
-          <div className="text-red-600 text-center">
-            <p className="font-medium">Failed to load map</p>
-            <p className="text-sm mt-1">{error}</p>
-          </div>
-        </div>
+      <div className="card p-6 mb-6 border-l-4" style={{ 
+        background: 'var(--surface)', 
+        borderLeftColor: '#EF4444' 
+      }}>
+        <h2 className="text-2xl font-bold mb-4" style={{ color: '#DC2626' }}>
+          Maps & Navigation
+        </h2>
+        <p style={{ color: '#DC2626' }}>
+          Failed to load map data: {error}
+        </p>
       </div>
     );
   }
 
-  if (!destinationData || !startingLocation) {
+  if (!destinationData) {
     return (
-      <div className="mb-10">
-        <h2 className="text-xl font-semibold mb-4">Best Route</h2>
-        <div className="w-full h-64 bg-gray-100 border border-gray-200 rounded-lg flex items-center justify-center">
-          <div className="text-gray-500">No destination data available</div>
+      <div className="card p-6 mb-6" style={{ background: 'var(--surface)' }}>
+        <h2 className="text-2xl font-bold mb-4" style={{ color: 'var(--text-900)' }}>
+          Maps & Navigation
+        </h2>
+        <div className="text-center py-8">
+          <div className="text-6xl mb-4">🗺️</div>
+          <p className="font-medium mb-2" style={{ color: 'var(--text-900)' }}>
+            No destination data available
+          </p>
+          <p className="text-sm" style={{ color: 'var(--text-600)' }}>
+            Please ensure destination information is loaded
+          </p>
         </div>
       </div>
     );
@@ -109,15 +113,25 @@ const MapSection: React.FC = () => {
   };
 
   return (
-    <div className="mb-10 space-y-8">
-      {/* Best Route Section */}
-      <div>
-        <h2 className="text-xl font-semibold mb-4">Best Route</h2>
+    <div id="map-section" className="space-y-6 mb-6">
+      {/* Best Route Section - Only show for non-search destinations and not in saved places basic view */}
+      {!isFromSearch && !isInSavedPlacesBasicView && (
+        <div className="card p-6" style={{ background: 'var(--surface)' }}>
+          <div className="mb-6">
+            <div className="flex items-center gap-3 mb-2">
+              <FiNavigation className="w-6 h-6" style={{ color: 'var(--primary-600)' }} />
+              <h2 className="text-2xl font-bold" style={{ color: 'var(--text-900)' }}>
+                Best Route
+              </h2>
+            </div>
+            <p className="text-sm" style={{ color: 'var(--text-600)' }}>
+              Optimized driving route from your starting location to {destinationData.destination_name}
+            </p>
+          </div>
 
-        <div className="bg-gradient-to-br from-cyan-50 to-blue-50 dark:from-cyan-900/20 dark:to-blue-900/20 rounded-xl p-6 border border-cyan-200 dark:border-cyan-700">
-          {/* Route Map */}
+          {/* Route Map Container */}
           <div className="rounded-lg overflow-hidden">
-            <RouteMapComponent
+            <OptimizedRouteMapComponent
               destination={destination}
               startingLocation={startingLocation}
               destinationName={destinationData.destination_name}
@@ -125,29 +139,66 @@ const MapSection: React.FC = () => {
             />
           </div>
 
-          <div className="mt-4 bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              🛣️ This map shows the optimized driving route from your starting
-              location to{" "}
-              <span className="font-medium">
-                {destinationData.destination_name}
-              </span>
-              .
+          {/* Route Information */}
+          <div className="mt-4 p-4 rounded-lg border-l-4" style={{
+            background: 'var(--surface-alt)',
+            borderLeftColor: 'var(--primary-600)'
+          }}>
+            <div className="flex items-start gap-3">
+              <span className="text-xl">🛣️</span>
+              <div>
+                <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-900)' }}>
+                  Navigation Information
+                </p>
+                <p className="text-sm" style={{ color: 'var(--text-600)' }}>
+                  This interactive map shows the recommended driving route with real-time traffic data.
+                  Click and drag to explore different routes and waypoints.
+                </p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Tourist Attractions Section */}
-      <div>
-        <h2 className="text-xl font-semibold mb-4">Tourist Attractions</h2>
+      <div className="card p-6" style={{ background: 'var(--surface)' }}>
+        <div className="mb-6">
+          <div className="flex items-center gap-3 mb-2">
+            <FiCompass className="w-6 h-6" style={{ color: 'var(--primary-600)' }} />
+            <h2 className="text-2xl font-bold" style={{ color: 'var(--text-900)' }}>
+              Tourist Attractions Map
+            </h2>
+          </div>
+          <p className="text-sm" style={{ color: 'var(--text-600)' }}>
+            Filter and explore parks, museums, attractions, hotels, and restaurants around {destinationData.destination_name}
+          </p>
+        </div>
 
-        {/* Tourist Attractions Map */}
-        <TouristAttractionsMapComponent
+        {/* Tourist Attractions Map Container */}
+        <EnhancedTouristAttractionsMapComponent
           destination={destination}
           destinationName={destinationData.destination_name}
           className="w-full"
         />
+
+        {/* Attractions Information */}
+        <div className="mt-4 p-4 rounded-lg border-l-4" style={{ 
+          background: 'var(--surface-alt)', 
+          borderLeftColor: '#22C55E' 
+        }}>
+          <div className="flex items-start gap-3">
+            <span className="text-xl">📍</span>
+            <div>
+              <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-900)' }}>
+                Interactive Attractions Map
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-600)' }}>
+                Use the category filters to find specific types of places: parks, museums, attractions, hotels, and restaurants.
+                Toggle place names visibility and click markers for detailed information.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

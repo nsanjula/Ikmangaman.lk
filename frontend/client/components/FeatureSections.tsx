@@ -3,7 +3,7 @@ export default function FeatureSections() {
     <div className="space-y-0">
       {/* Personalized Travel Recommendations */}
       <section className="bg-cyan-600 py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container iframe-container">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="text-white">
               <h2 className="text-4xl lg:text-5xl font-bold mb-6">
@@ -81,7 +81,7 @@ export default function FeatureSections() {
 
       {/* Cost-Effective Planning */}
       <section className="bg-cyan-700 py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container iframe-container">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="relative order-2 lg:order-1">
               <div className="bg-white rounded-2xl shadow-2xl p-8 transform -rotate-3">
@@ -175,7 +175,7 @@ export default function FeatureSections() {
 
       {/* Easy to use Interface */}
       <section className="bg-blue-light-800 py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container iframe-container">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="text-white">
               <h2 className="text-4xl lg:text-5xl font-bold mb-6">
@@ -241,7 +241,7 @@ export default function FeatureSections() {
                     <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
                     <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                     <div className="ml-4 text-sm text-gray-600">
-                      Ikmangamn.lk
+                      Ikmangaman.lk
                     </div>
                   </div>
                 </div>

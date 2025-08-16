@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
 import {
   FiSun,
   FiCloud,
@@ -10,7 +9,7 @@ import {
   FiThermometer,
   FiEye,
 } from "react-icons/fi";
-import { useDestinationData } from "../../hooks/useDestinationData";
+import { useDestination } from "../../contexts/DestinationContext";
 
 interface WeatherData {
   date: string;
@@ -22,8 +21,7 @@ interface WeatherData {
 }
 
 const WeatherCard: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const { data: destinationData, loading, error } = useDestinationData(id);
+  const { destinationData, loading, error } = useDestination();
   const [weatherData, setWeatherData] = useState<WeatherData[]>([]);
 
   useEffect(() => {
@@ -67,6 +65,22 @@ const WeatherCard: React.FC = () => {
     }
   };
 
+  const getWeatherColor = (condition?: string) => {
+    if (!condition) return { bg: "#FEF3C7", text: "#92400E" };
+
+    const lowercaseCondition = condition.toLowerCase();
+
+    if (lowercaseCondition.includes("rain") || lowercaseCondition.includes("shower")) {
+      return { bg: "#DBEAFE", text: "#1E40AF" };
+    } else if (lowercaseCondition.includes("cloud") || lowercaseCondition.includes("overcast")) {
+      return { bg: "#F3F4F6", text: "#374151" };
+    } else if (lowercaseCondition.includes("clear") || lowercaseCondition.includes("sunny")) {
+      return { bg: "#FEF3C7", text: "#92400E" };
+    } else {
+      return { bg: "#E0F2FE", text: "#0C4A6E" };
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return {
@@ -80,17 +94,17 @@ const WeatherCard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="mb-10">
-        <h2 className="text-xl font-semibold mb-4">Weather Forecast</h2>
+      <div className="card p-6 mb-6 animate-pulse" style={{ background: 'var(--surface)' }}>
+        <div className="h-6 bg-gray-200 rounded mb-4 w-56"></div>
+        <div className="h-4 bg-gray-200 rounded mb-6 w-full"></div>
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="bg-cyan-600 p-4 rounded-lg shadow">
-              <div className="animate-pulse">
-                <div className="h-4 bg-cyan-500 rounded w-full mb-2"></div>
-                <div className="w-8 h-8 bg-cyan-500 rounded mx-auto mb-2"></div>
-                <div className="h-6 bg-cyan-500 rounded w-3/4 mx-auto mb-1"></div>
-                <div className="h-4 bg-cyan-500 rounded w-full"></div>
-              </div>
+            <div key={i} className="card p-4" style={{ background: 'var(--surface)' }}>
+              <div className="h-4 bg-gray-200 rounded mb-3"></div>
+              <div className="w-8 h-8 bg-gray-200 rounded mx-auto mb-3"></div>
+              <div className="h-6 bg-gray-200 rounded mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded"></div>
             </div>
           ))}
         </div>
@@ -100,28 +114,47 @@ const WeatherCard: React.FC = () => {
 
   if (error) {
     return (
-      <div className="mb-10">
-        <h2 className="text-xl font-semibold mb-4">Weather Forecast</h2>
-        <div className="bg-red-100 border border-red-300 p-6 rounded-lg">
-          <p className="text-red-700 font-medium">
-            Failed to load weather data
-          </p>
-          <p className="text-red-600 text-sm mt-1">{error}</p>
-        </div>
+      <div className="card p-6 mb-6 border-l-4" style={{ 
+        background: 'var(--surface)', 
+        borderLeftColor: '#EF4444' 
+      }}>
+        <h2 className="text-2xl font-bold mb-4" style={{ color: '#DC2626' }}>
+          Weather Forecast
+        </h2>
+        <p style={{ color: '#DC2626' }}>
+          Failed to load weather data: {error}
+        </p>
       </div>
     );
   }
 
   if (!weatherData || weatherData.length === 0) {
     return (
-      <div className="mb-10">
-        <h2 className="text-xl font-semibold mb-4">Weather Forecast</h2>
-        <div className="bg-yellow-100 border border-yellow-300 p-6 rounded-lg">
-          <p className="text-yellow-700 font-medium">
-            Weather data not available
+      <div className="card p-6 mb-6" style={{ background: 'var(--surface)' }}>
+        <div className="mb-6">
+          <div className="flex items-center gap-3 mb-2">
+            <FiSun className="w-6 h-6" style={{ color: 'var(--primary-600)' }} />
+            <h2 className="text-2xl font-bold" style={{ color: 'var(--text-900)' }}>
+              Weather Forecast
+            </h2>
+          </div>
+          <p className="text-sm" style={{ color: 'var(--text-600)' }}>
+            Plan your visit to {destinationData?.destination_name} with detailed weather information
           </p>
-          <p className="text-yellow-600 text-sm mt-1">
-            Weather service may be temporarily unavailable
+        </div>
+        <div className="text-center py-12">
+          <div className="mb-6">
+            <div className="w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center" style={{
+              background: 'var(--surface-alt)'
+            }}>
+              <FiSun className="w-10 h-10" style={{ color: 'var(--primary-600)' }} />
+            </div>
+          </div>
+          <p className="text-lg font-semibold mb-3 text-center" style={{ color: 'var(--text-900)' }}>
+            Weather Information Unavailable
+          </p>
+          <p className="text-sm max-w-md mx-auto leading-relaxed" style={{ color: 'var(--text-600)' }}>
+            We're currently unable to fetch weather data for this destination. Please check back later for detailed weather forecasts to help plan your trip.
           </p>
         </div>
       </div>
@@ -129,49 +162,81 @@ const WeatherCard: React.FC = () => {
   }
 
   return (
-    <div className="mb-10">
-      <h2 className="text-xl font-semibold mb-4">5-Day Weather Forecast</h2>
+    <div className="card p-6 mb-6" style={{ background: 'var(--surface)' }}>
+      <div className="mb-6">
+        <div className="flex items-center gap-3 mb-2">
+          <FiSun className="w-6 h-6" style={{ color: 'var(--primary-600)' }} />
+          <h2 className="text-2xl font-bold" style={{ color: 'var(--text-900)' }}>
+            5-Day Weather Forecast
+          </h2>
+        </div>
+        <p className="text-sm" style={{ color: 'var(--text-600)' }}>
+          Plan your visit to {destinationData?.destination_name} with detailed weather information
+        </p>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
         {weatherData.slice(0, 5).map((day, index) => {
           const dateInfo = formatDate(day.date);
+          const weatherColor = getWeatherColor(day.weather);
+          
           return (
             <div
               key={day.date}
-              className="p-4 rounded-lg shadow-lg text-white bg-gradient-to-br from-cyan-500 to-cyan-600"
+              className="card p-4 text-center"
+              style={{
+                background: 'linear-gradient(135deg, #E6FFFA 0%, #B2F5EA 100%)',
+                borderColor: '#81E6D9'
+              }}
             >
-              {/* Date */}
-              <div className="text-center mb-3">
-                <p className="text-sm font-medium">
+              {/* Date Header */}
+              <div className="mb-4">
+                <p className="text-sm font-bold" style={{ color: 'var(--text-900)' }}>
                   {index === 0 ? "Today" : dateInfo.day}
                 </p>
-                <p className="text-xs text-cyan-100">{dateInfo.date}</p>
+                <p className="text-xs" style={{ color: 'var(--text-600)' }}>
+                  {dateInfo.date}
+                </p>
               </div>
 
               {/* Weather Icon */}
-              <div className="flex justify-center mb-3">
-                {getWeatherIcon(day.weather, "w-8 h-8")}
+              <div className="flex justify-center mb-4">
+                {getWeatherIcon(day.weather, "w-10 h-10")}
               </div>
 
               {/* Temperature */}
-              <div className="text-center mb-3">
-                <p className="text-xl font-bold">{day.temperature}</p>
+              <div className="mb-3">
+                <p className="text-2xl font-bold" style={{ color: 'var(--text-900)' }}>
+                  {day.temperature}
+                </p>
               </div>
 
               {/* Weather Description */}
-              <p className="text-xs text-center text-cyan-100 mb-2 capitalize">
-                {day.weather}
-              </p>
+              <div className="mb-4">
+                <span 
+                  className="px-2 py-1 rounded-full text-xs font-medium capitalize"
+                  style={{
+                    backgroundColor: weatherColor.bg,
+                    color: weatherColor.text
+                  }}
+                >
+                  {day.weather}
+                </span>
+              </div>
 
               {/* Weather Details */}
-              <div className="text-xs space-y-1">
-                <div className="flex items-center justify-center gap-1">
-                  <FiDroplet className="w-3 h-3 text-cyan-200" />
-                  <span className="text-cyan-100">{day.humidity}</span>
+              <div className="space-y-2 text-xs">
+                <div className="flex items-center justify-center gap-2">
+                  <FiDroplet className="w-3 h-3" style={{ color: 'var(--primary-600)' }} />
+                  <span style={{ color: 'var(--text-600)' }}>
+                    {day.humidity}
+                  </span>
                 </div>
-                <div className="flex items-center justify-center gap-1">
-                  <FiEye className="w-3 h-3 text-cyan-200" />
-                  <span className="text-cyan-100">{day.visibility}</span>
+                <div className="flex items-center justify-center gap-2">
+                  <FiEye className="w-3 h-3" style={{ color: 'var(--primary-600)' }} />
+                  <span style={{ color: 'var(--text-600)' }}>
+                    {day.visibility}
+                  </span>
                 </div>
               </div>
             </div>
@@ -179,13 +244,48 @@ const WeatherCard: React.FC = () => {
         })}
       </div>
 
-      {/* Additional Info */}
-      <div className="mt-4 text-sm text-gray-200 dark:text-gray-200">
-        <p>
-          🌤️ Weather forecast shows the next 5 days to help you plan your visit
-          to {destinationData?.destination_name}.
-        </p>
+      {/* Weather Tips */}
+      <div className="p-4 rounded-lg border-l-4" style={{ 
+        background: 'var(--surface-alt)', 
+        borderLeftColor: '#F59E0B' 
+      }}>
+        <div className="flex items-start gap-3">
+          <span className="text-xl">🌤️</span>
+          <div>
+            <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-900)' }}>
+              Weather Planning Tips
+            </p>
+            <p className="text-sm" style={{ color: 'var(--text-600)' }}>
+              Check the weather forecast to pack appropriate clothing and plan your outdoor activities. 
+              Weather conditions can change rapidly in mountainous areas.
+            </p>
+          </div>
+        </div>
       </div>
+
+      {/* Current Conditions Summary */}
+      {weatherData.length > 0 && (
+        <div className="mt-4 p-4 rounded-lg" style={{ background: 'var(--surface-alt)' }}>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium" style={{ color: 'var(--text-900)' }}>
+                Today's Conditions
+              </p>
+              <p className="text-xs" style={{ color: 'var(--text-600)' }}>
+                Perfect for your {destinationData?.destination_name} adventure
+              </p>
+            </div>
+            <div className="text-right">
+              <div className="flex items-center gap-2">
+                {getWeatherIcon(weatherData[0]?.weather, "w-6 h-6")}
+                <span className="font-bold" style={{ color: 'var(--text-900)' }}>
+                  {weatherData[0]?.temperature}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

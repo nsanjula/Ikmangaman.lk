@@ -12,14 +12,36 @@ const BackendStartupBanner: React.FC = () => {
     "cd backend && python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000";
 
   const checkBackend = async () => {
+    // Create an AbortController for timeout
+    const controller = new AbortController();
+    let timeoutId: NodeJS.Timeout;
+
     try {
+      timeoutId = setTimeout(() => controller.abort(), 3000);
+
       const response = await fetch("http://localhost:8000/docs", {
         method: "HEAD",
-        signal: AbortSignal.timeout(3000),
+        signal: controller.signal,
+        mode: 'cors'
       });
-      setBackendStatus("online");
-      setShowBanner(false);
-    } catch (error) {
+
+      clearTimeout(timeoutId);
+
+      if (response.ok) {
+        setBackendStatus("online");
+        setShowBanner(false);
+      } else {
+        setBackendStatus("offline");
+        setShowBanner(true);
+      }
+    } catch (error: any) {
+      // Clear the timeout if it's still active
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+
+      // Silently handle all connection errors including AbortError
+      // This is expected when the backend is not running
       setBackendStatus("offline");
       setShowBanner(true);
     }
@@ -44,11 +66,24 @@ const BackendStartupBanner: React.FC = () => {
   };
 
   useEffect(() => {
-    checkBackend();
-    // Check every 5 seconds
-    const interval = setInterval(checkBackend, 5000);
-    return () => clearInterval(interval);
-  }, []);
+    // Add small delay to avoid immediate fetch on page load
+    const initialTimeout = setTimeout(() => {
+      checkBackend();
+    }, 1000);
+
+    // Check backend status periodically
+    const interval = setInterval(() => {
+      // Only check if currently offline to reduce unnecessary requests
+      if (backendStatus === "offline" || backendStatus === "checking") {
+        checkBackend();
+      }
+    }, 30000); // Check every 30 seconds when offline
+
+    return () => {
+      clearTimeout(initialTimeout);
+      clearInterval(interval);
+    };
+  }, [backendStatus]);
 
   if (!showBanner || backendStatus === "online") {
     return null;

@@ -1,119 +1,514 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   /**
-   * Tailwind CSS theme
-   * tailwind.config.ts expects the following color variables to be expressed as HSL values.
-   * A different format will require also updating the theme in tailwind.config.ts.
-  */
+   * Design System Tokens
+   */
   :root {
-    --background: 200 59% 19%; /* Cyan-900: #164E63 */
-    --foreground: 0 0% 100%; /* White */
-
-    --card: 200 59% 19%; /* Cyan-900: #164E63 */
-    --card-foreground: 0 0% 100%; /* White */
-
-    --popover: 200 59% 19%; /* Cyan-900: #164E63 */
-    --popover-foreground: 0 0% 100%; /* White */
-
-    --primary: 188 86% 53%; /* Cyan-500: #06B6D4 */
+    /* Colors */
+    --bg: #F7FAFC;
+    --surface: #FFFFFF;
+    --surface-alt: #F1F5F9;
+    --primary-700: #0C7C84;
+    --primary-600: #1196A0;
+    --primary-100: #E6F6F7;
+    --accent: #FF7A59;
+    --text-900: #0F172A;
+    --text-600: #475569;
+    --border: #E2E8F0;
+    
+    /* Layout */
+    --radius: 16px;
+    --container-max: 1280px;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.10);
+    --focus-ring: #94D9E0;
+    
+    /* Typography */
+    --font-heading: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+    
+    /* Spacing Scale (8pt system) */
+    --space-1: 8px;
+    --space-2: 12px;
+    --space-3: 16px;
+    --space-4: 24px;
+    --space-5: 32px;
+    --space-6: 48px;
+    --space-7: 64px;
+    --space-8: 88px;
+    
+    /* Legacy theme variables for compatibility */
+    --background: 244 50% 98%; /* F7FAFC */
+    --foreground: 222 84% 5%; /* 0F172A */
+    --card: 0 0% 100%; /* FFFFFF */
+    --card-foreground: 222 84% 5%; /* 0F172A */
+    --popover: 0 0% 100%; /* FFFFFF */
+    --popover-foreground: 222 84% 5%; /* 0F172A */
+    --primary: 185 84% 34%; /* 1196A0 */
     --primary-foreground: 0 0% 100%; /* White */
-
-    --secondary: 188 79% 28%; /* Cyan-700: #0E7490 */
-    --secondary-foreground: 0 0% 100%; /* White */
-
-    --muted: 214 32% 91%; /* Blue-Gray-200: #E2E8F0 */
-    --muted-foreground: 215 16% 47%; /* Blue-Gray-400: #94A3B8 */
-
-    --accent: 188 85% 40%; /* Cyan-600: #0891B2 */
+    --secondary: 210 40% 98%; /* F1F5F9 */
+    --secondary-foreground: 215 25% 27%; /* 475569 */
+    --muted: 210 40% 98%; /* F1F5F9 */
+    --muted-foreground: 215 25% 27%; /* 475569 */
+    --accent: 14 100% 67%; /* FF7A59 */
     --accent-foreground: 0 0% 100%; /* White */
-
     --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%; /* White */
-
-    --border: 214 32% 91%; /* Blue-Gray-200: #E2E8F0 */
-    --input: 214 32% 91%; /* Blue-Gray-200: #E2E8F0 */
-    --ring: 188 86% 53%; /* Cyan-500: #06B6D4 */
-
-    --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 32% 91%; /* E2E8F0 */
+    --input: 214 32% 91%; /* E2E8F0 */
+    --ring: 185 84% 34%; /* 1196A0 */
+    --radius: 16px;
   }
 
-  .dark {
-    --background: 190 100% 6%; /* #071B23 darker background for dark sections */
-    --foreground: 0 0% 100%; /* White */
-
-    --card: 190 100% 6%; /* #071B23 */
-    --card-foreground: 0 0% 100%; /* White */
-
-    --popover: 190 100% 6%; /* #071B23 */
-    --popover-foreground: 0 0% 100%; /* White */
-
-    --primary: 188 86% 53%; /* Cyan-500: #06B6D4 */
-    --primary-foreground: 0 0% 100%; /* White */
-
-    --secondary: 188 79% 28%; /* Cyan-700: #0E7490 */
-    --secondary-foreground: 0 0% 100%; /* White */
-
-    --muted: 188 79% 28%; /* Cyan-700: #0E7490 */
-    --muted-foreground: 214 32% 91%; /* Blue-Gray-200: #E2E8F0 */
-
-    --accent: 188 85% 40%; /* Cyan-600: #0891B2 */
-    --accent-foreground: 0 0% 100%; /* White */
-
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 0 0% 100%; /* White */
-
-    --border: 188 79% 28%; /* Cyan-700: #0E7490 */
-    --input: 188 79% 28%; /* Cyan-700: #0E7490 */
-    --ring: 188 86% 53%; /* Cyan-500: #06B6D4 */
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-}
-
-@layer base {
+  /* Base Styles */
   * {
-    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  html, body {
+    width: 100%;
+    min-height: 100%;
+    overflow-x: hidden;
+    background: var(--bg);
+    color: var(--text-900);
+    font-family: var(--font-body);
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Fix for iframe environments */
+  html {
+    height: auto !important;
   }
 
   body {
-    @apply bg-background text-foreground;
+    position: relative;
+    min-height: 100vh;
+  }
+
+  /* Force repaint only for interactive elements in iframe environments */
+  .iframe-safe .card,
+  .iframe-safe button,
+  .iframe-safe a {
+    backface-visibility: hidden;
+  }
+
+  /* Typography Scale */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--text-900);
+    margin: 0;
+  }
+
+  h1 {
+    font-size: 48px;
+    line-height: 56px;
+    font-weight: 700;
+  }
+
+  h2 {
+    font-size: 32px;
+    line-height: 40px;
+    font-weight: 600;
+  }
+
+  h3 {
+    font-size: 24px;
+    line-height: 32px;
+    font-weight: 600;
+  }
+
+  p {
+    font-size: 16px;
+    line-height: 26px;
+    max-width: 65ch;
+    margin: 0;
+    color: var(--text-600);
+  }
+
+  small {
+    font-size: 14px;
+    line-height: 22px;
+  }
+
+  /* Focus styles for accessibility */
+  *:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  /* Images */
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+}
+
+@layer utilities {
+  /* Iframe environment fixes */
+  .iframe-safe {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    min-height: 100vh;
+  }
+
+  /* Prevent layout shifts */
+  .stable-layout {
+    contain: layout;
+  }
+
+  /* Fix sticky positioning in iframe */
+  .iframe-header {
+    position: relative !important;
+    top: auto !important;
+  }
+
+  /* Ensure proper container behavior in iframe */
+  .iframe-container {
+    max-width: 100% !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    margin: 0 auto;
+    box-sizing: border-box;
+  }
+
+  /* Fix hero section height in iframe */
+  .iframe-hero {
+    min-height: 80vh !important;
+    height: auto !important;
+  }
+
+  /* Simplified card hover for iframe */
+  .iframe-safe .card {
+    transition: box-shadow 0.2s ease;
+  }
+
+  .iframe-safe .card:hover {
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* Minimal iframe fixes */
+  .iframe-safe {
+    overflow-x: hidden;
   }
 }
 
 @layer components {
-  /* Custom range slider styling for grey thumb and track */
+  /* Container */
+  .container {
+    max-width: var(--container-max);
+    margin: 0 auto;
+    padding: 0 var(--space-4);
+    width: 100%;
+    position: relative;
+    box-sizing: border-box;
+  }
+
+  /* Ensure containers don't break in iframe */
+  .container * {
+    box-sizing: border-box;
+  }
+
+  /* Enhanced iframe container behavior */
+  .iframe-container {
+    max-width: 100% !important;
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    font-weight: 500;
+    transition: all 150ms ease;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    font-family: var(--font-body);
+  }
+
+  .btn:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  /* Button Sizes */
+  .btn-lg {
+    height: 48px;
+    padding: 0 var(--space-4);
+    font-size: 16px;
+  }
+
+  .btn-md {
+    height: 40px;
+    padding: 0 var(--space-3);
+    font-size: 14px;
+  }
+
+  .btn-sm {
+    height: 32px;
+    padding: 0 var(--space-2);
+    font-size: 14px;
+  }
+
+  /* Button Variants */
+  .btn-primary {
+    background: var(--primary-600);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: var(--primary-700);
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--text-900);
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover {
+    background: var(--surface-alt);
+  }
+
+  .btn-tertiary {
+    background: transparent;
+    color: var(--primary-600);
+    text-decoration: underline;
+  }
+
+  .btn-tertiary:hover {
+    color: var(--primary-700);
+  }
+
+  /* Sections */
+  .section {
+    padding: var(--space-7) 0;
+  }
+
+  .section-lg {
+    padding: var(--space-8) 0;
+  }
+
+  /* Chips */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--space-2) var(--space-3);
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 500;
+    background: var(--surface-alt);
+    color: var(--text-600);
+    transition: all 150ms ease;
+  }
+
+  .chip-selected {
+    background: var(--primary-100);
+    color: var(--primary-700);
+  }
+
+  /* Progress bars */
+  .progress-bar {
+    height: 6px;
+    border-radius: 8px;
+    background: var(--surface-alt);
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 8px;
+    transition: width 200ms ease;
+  }
+
+  .progress-amber {
+    background: #FDBA74;
+  }
+
+  .progress-sky {
+    background: #38BDF8;
+  }
+
+  .progress-green {
+    background: #22C55E;
+  }
+
+  /* Utilities */
+  .text-gradient {
+    background: linear-gradient(135deg, var(--primary-600), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .surface-blur {
+    backdrop-filter: blur(12px);
+    background: rgba(255, 255, 255, 0.9);
+  }
+
+  /* Dark gradient overlay */
+  .gradient-overlay {
+    background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.5) 100%);
+  }
+
+  /* Loading states */
+  .skeleton {
+    background: linear-gradient(90deg, var(--surface-alt) 25%, transparent 50%, var(--surface-alt) 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+  }
+
+  @keyframes loading {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+
+  /* Chat animation */
+  @keyframes bounce {
+    0%, 60%, 100% {
+      animation-timing-function: cubic-bezier(0.215, 0.610, 0.355, 1.000);
+      transform: translate3d(0,0,0);
+    }
+    40% {
+      animation-timing-function: cubic-bezier(0.755, 0.050, 0.855, 0.060);
+      transform: translate3d(0, -6px, 0);
+    }
+    80% {
+      animation-timing-function: cubic-bezier(0.755, 0.050, 0.855, 0.060);
+      transform: translate3d(0, -3px, 0);
+    }
+  }
+
+  .animate-bounce {
+    animation: bounce 1.4s infinite;
+  }
+
+  /* Chatbot floating button - ensure it's always fixed to viewport */
+  .chatbot-floating-button {
+    position: fixed !important;
+    z-index: 9999 !important;
+    pointer-events: auto !important;
+  }
+
+  .chatbot-popup {
+    position: fixed !important;
+    z-index: 9999 !important;
+    pointer-events: auto !important;
+  }
+
+  /* Ensure no parent containers affect the floating button */
+  .chatbot-floating-button,
+  .chatbot-popup {
+    top: auto !important;
+    left: auto !important;
+    transform: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .container {
+      padding: 0 var(--space-3);
+      max-width: 100%;
+    }
+
+    .iframe-container {
+      padding-left: 12px !important;
+      padding-right: 12px !important;
+    }
+
+    h1 {
+      font-size: 36px;
+      line-height: 44px;
+    }
+
+    h2 {
+      font-size: 28px;
+      line-height: 36px;
+    }
+
+    .section {
+      padding: var(--space-6) 0;
+    }
+
+    .section-lg {
+      padding: var(--space-7) 0;
+    }
+
+    /* Better iframe button spacing */
+    .btn-lg {
+      padding: 0 var(--space-3);
+      font-size: 15px;
+    }
+  }
+
+  /* Additional iframe-specific fixes */
+  @media (max-width: 480px) {
+    .container, .iframe-container {
+      padding: 0 12px !important;
+      margin: 0 auto;
+      max-width: 100%;
+    }
+
+    .iframe-hero {
+      min-height: 70vh !important;
+    }
+
+    /* Improve mobile button layout */
+    .btn {
+      width: 100%;
+    }
+
+    /* Better mobile text sizing */
+    h1 {
+      font-size: 28px !important;
+      line-height: 36px !important;
+    }
+
+    h2 {
+      font-size: 24px !important;
+      line-height: 32px !important;
+    }
+  }
+
+  /* Legacy slider styles */
   .slider {
     appearance: none;
     height: 6px;
-    border-radius: 3px;
-    background: #e5e7eb;
+    border-radius: 8px;
+    background: var(--surface-alt);
     outline: none;
-    background-image: linear-gradient(#6b7280, #6b7280);
+    background-image: linear-gradient(var(--primary-600), var(--primary-600));
     background-size: var(--thumb-position, 0%) 100%;
     background-repeat: no-repeat;
   }
@@ -123,32 +518,20 @@
     height: 16px;
     width: 16px;
     border-radius: 50%;
-    background: #6b7280;
+    background: var(--primary-600);
     cursor: pointer;
-    border: 2px solid #ffffff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 2px solid white;
+    box-shadow: var(--shadow);
   }
 
   .slider::-moz-range-thumb {
     height: 16px;
     width: 16px;
     border-radius: 50%;
-    background: #6b7280;
+    background: var(--primary-600);
     cursor: pointer;
-    border: 2px solid #ffffff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 2px solid white;
+    box-shadow: var(--shadow);
     border: none;
-  }
-
-  .slider::-moz-range-track {
-    height: 6px;
-    background: #e5e7eb;
-    border-radius: 3px;
-  }
-
-  .slider::-moz-range-progress {
-    height: 6px;
-    background: #6b7280;
-    border-radius: 3px;
   }
 }

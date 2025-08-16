@@ -7,17 +7,30 @@ const BackendStatus = () => {
 
   useEffect(() => {
     const checkConnection = async () => {
-      setIsChecking(true);
-      const connected = await testConnection();
-      setIsConnected(connected);
-      setIsChecking(false);
+      try {
+        setIsChecking(true);
+        const connected = await testConnection();
+        setIsConnected(connected);
+      } catch (error) {
+        // Silently handle errors
+        setIsConnected(false);
+      } finally {
+        setIsChecking(false);
+      }
     };
 
-    checkConnection();
-    // Check every 30 seconds
-    const interval = setInterval(checkConnection, 30000);
+    // Add small delay to avoid immediate fetch on page load
+    const initialTimeout = setTimeout(() => {
+      checkConnection();
+    }, 3000);
 
-    return () => clearInterval(interval);
+    // Check less frequently (every 60 seconds) to reduce spam
+    const interval = setInterval(checkConnection, 60000);
+
+    return () => {
+      clearTimeout(initialTimeout);
+      clearInterval(interval);
+    };
   }, []);
 
   if (isChecking) {

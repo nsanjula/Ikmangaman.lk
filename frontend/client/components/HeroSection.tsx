@@ -1,9 +1,10 @@
-import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+
 export default function HeroSection() {
   const navigate = useNavigate();
+
   return (
-    <section className="relative h-screen bg-cover bg-center bg-no-repeat">
+    <section className="relative iframe-hero overflow-hidden min-h-screen h-screen">
       {/* Background Image */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -12,30 +13,41 @@ export default function HeroSection() {
         }}
       />
 
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-black bg-opacity-40" />
+      {/* Dark Gradient Overlay */}
+      <div className="absolute inset-0 gradient-overlay" />
 
       {/* Content */}
-      <div className="relative z-10 flex items-center justify-center h-full">
-        <div className="text-center text-white max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
+      <div className="relative z-10 flex items-center justify-center min-h-screen">
+        <div className="container iframe-container text-center text-white py-20">
+          <h1 className="mb-6 text-white">
             Discover Sri Lanka
             <br />
-            <span className="text-cyan-300">Your Way</span>
+            <span className="text-gradient">Your Way</span>
           </h1>
 
-          <p className="text-xl md:text-2xl mb-8 text-gray-200 max-w-2xl mx-auto">
+          <p className="text-xl mb-8 text-white/90 max-w-2xl mx-auto">
             Experience the pearl of the Indian Ocean with personalized travel
             recommendations and cost-effective planning
           </p>
 
-          <Button
-            onClick={() => navigate("/register")}
-            size="lg"
-            className="bg-cyan-500 hover:bg-cyan-600 text-white px-8 py-4 text-lg font-semibold rounded-lg shadow-lg"
-          >
-            Start for free
-          </Button>
+          {/* Dual CTA Approach */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <button
+              onClick={() => navigate("/register")}
+              className="btn btn-primary btn-lg"
+            >
+              Start planning
+            </button>
+            <button
+              onClick={() => {
+                const element = document.getElementById('features');
+                element?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="btn btn-secondary btn-lg text-white border-white/30 hover:bg-white/10"
+            >
+              See how it works
+            </button>
+          </div>
         </div>
       </div>
 

@@ -108,14 +108,61 @@ async def get_destination_from_temp_questionnaire(
         db: Session = Depends(get_db),
         current_user: user.User = Depends(get_current_user)
 ):
+    print(f"Temp questionnaire request: {request}")
+    print(f"Looking for start location: '{request.start_location}'")
+
     start_location_obj = db.query(location_coordinates.LocationCoordinates).filter(location_coordinates.LocationCoordinates.location_name == request.start_location).first()
+
+    if not start_location_obj:
+        print(f"Start location '{request.start_location}' not found in database")
+        # List available locations for debugging
+        available_locations = db.query(location_coordinates.LocationCoordinates).all()
+        available_names = [loc.location_name for loc in available_locations]
+        print(f"Available locations: {available_names}")
+
+        # Fallback coordinates for common Sri Lankan cities
+        fallback_coordinates = {
+            "Colombo": {"lat": 6.9271, "lng": 79.8612},
+            "Kandy": {"lat": 7.2906, "lng": 80.6337},
+            "Galle": {"lat": 6.0535, "lng": 80.2210},
+            "Jaffna": {"lat": 9.6615, "lng": 80.0255},
+            "Trincomalee": {"lat": 8.5874, "lng": 81.2152},
+            "Anuradhapura": {"lat": 8.3114, "lng": 80.4037},
+            "Pollonaruwa": {"lat": 7.9403, "lng": 81.0188},
+            "Nuwara Eliya": {"lat": 6.9497, "lng": 80.7891},
+            "Ella": {"lat": 6.8667, "lng": 81.0667},
+            "Matara": {"lat": 5.9485, "lng": 80.5353},
+            "Negombo": {"lat": 7.2084, "lng": 79.8380},
+            "Batticaloa": {"lat": 7.7102, "lng": 81.6924},
+            "Badulla": {"lat": 6.9934, "lng": 81.0550},
+            "Kurunegala": {"lat": 7.4818, "lng": 80.3609},
+            "Ratnapura": {"lat": 6.6828, "lng": 80.4037},
+            "Hambantota": {"lat": 6.1241, "lng": 81.1185},
+            "Puttalam": {"lat": 8.0362, "lng": 79.8283},
+            "Vavniya": {"lat": 8.7514, "lng": 80.4971},
+            "Kalutara": {"lat": 6.5854, "lng": 79.9607},
+            "Ampara": {"lat": 7.2981, "lng": 81.6821},
+        }
+
+        if request.start_location in fallback_coordinates:
+            coords = fallback_coordinates[request.start_location]
+            print(f"Using fallback coordinates for {request.start_location}: {coords}")
+            start_lat = coords["lat"]
+            start_lng = coords["lng"]
+        else:
+            raise HTTPException(status_code=404, detail=f"Start location '{request.start_location}' not found. Available locations: {available_names}")
+    else:
+        print(f"Found start location: {start_location_obj.location_name} at ({start_location_obj.latitudes}, {start_location_obj.longitudes})")
+        start_lat = start_location_obj.latitudes
+        start_lng = start_location_obj.longitudes
+
     destination_obj = db.query(Destination).filter(Destination.destination_id == request.destination_id).first()
     if not destination_obj:
         raise HTTPException(status_code=404, detail=f"Destination with ID {request.destination_id} not found")
 
     trip_distance_and_duration = get_distance_and_duration_for_one_location(
-        start_location_obj.latitudes,
-        start_location_obj.longitudes,
+        start_lat,
+        start_lng,
         destination_obj.latitude,
         destination_obj.longitude
     )
@@ -167,4 +214,3 @@ async def get_destination_from_temp_questionnaire(
     }
 
     return response
-

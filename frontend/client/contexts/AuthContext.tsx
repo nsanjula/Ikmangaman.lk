@@ -5,7 +5,7 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import { authAPI } from "../lib/api";
+import { authAPI, setGlobalTimeoutHandler } from "../lib/api";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -13,6 +13,9 @@ interface AuthContextType {
   login: (token: string) => void;
   logout: () => void;
   loading: boolean;
+  handleAuthError: (error: Error) => void;
+  isTimeout: boolean;
+  clearTimeout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -32,6 +35,7 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isTimeout, setIsTimeout] = useState(false);
 
   useEffect(() => {
     // Check for existing token on app initialization
@@ -42,14 +46,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     );
 
     if (existingToken) {
-      // For now, trust the token exists and set it without validation
-      // Token validation will happen when making actual API calls
-      console.log("Token found, setting authenticated state");
-      setToken(existingToken);
+      // Validate token by making a test API call
+      console.log("Token found, validating...");
+
+      // Make a simple authenticated API call to validate token
+      fetch('http://localhost:8000/users/me', {
+        headers: {
+          'Authorization': `Bearer ${existingToken}`,
+          'Content-Type': 'application/json',
+        },
+      })
+      .then(response => {
+        if (response.ok) {
+          console.log("Token is valid, setting authenticated state");
+          setToken(existingToken);
+        } else {
+          console.log("Token is invalid, removing and staying logged out");
+          authAPI.removeToken();
+          setToken(null);
+        }
+      })
+      .catch(error => {
+        console.log("Token validation failed, removing token:", error.message);
+        authAPI.removeToken();
+        setToken(null);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
     } else {
       console.log("No token found, user not authenticated");
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   const login = (newToken: string) => {
@@ -60,7 +88,70 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = () => {
     authAPI.removeToken();
     setToken(null);
+    setIsTimeout(false);
   };
+
+  const handleAuthError = (error: Error) => {
+    console.log('🔐 Authentication error detected:', error.message);
+
+    // Check if it's a timeout error (including database timeouts)
+    const isTimeoutError = error.message.includes('timeout') ||
+                          error.message.includes('Request timeout') ||
+                          error.message.includes('network timeout') ||
+                          error.message.includes('database timeout') ||
+                          error.message.includes('connection timeout') ||
+                          error.message.includes('server timeout') ||
+                          error.message.includes('query timeout') ||
+                          error.message.includes('Database connection') ||
+                          error.message.includes('503') ||
+                          error.message.includes('502') ||
+                          error.message.includes('504');
+
+    // Check if it's an authentication-related error
+    if (error.message.includes('Authentication required') ||
+        error.message.includes('Please log in again') ||
+        error.message.includes('401') ||
+        error.message.includes('Authentication failed') ||
+        isTimeoutError) {
+
+      console.log('🚨 Auto-logout due to authentication error');
+
+      // Set timeout flag if this was a timeout error
+      if (isTimeoutError) {
+        setIsTimeout(true);
+      }
+
+      logout();
+
+      // Use React navigation instead of window.location to avoid loading issues
+      setTimeout(() => {
+        if (window.location.pathname !== '/login') {
+          console.log('🔄 Redirecting to login page due to auth error');
+          // Check if we're in a React Router context
+          try {
+            // Try to use React Router navigation first
+            const currentPath = window.location.pathname;
+            window.history.pushState(null, '', '/login');
+
+            // Dispatch a popstate event to trigger React Router navigation
+            window.dispatchEvent(new PopStateEvent('popstate'));
+          } catch (e) {
+            // Fallback to window.location as last resort
+            window.location.href = '/login';
+          }
+        }
+      }, 500); // Reduced delay for better UX
+    }
+  };
+
+  const clearTimeout = () => {
+    setIsTimeout(false);
+  };
+
+  // Set up global timeout handler
+  useEffect(() => {
+    setGlobalTimeoutHandler(handleAuthError);
+  }, []);
 
   const isAuthenticated = !!token;
 
@@ -70,6 +161,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     logout,
     loading,
+    handleAuthError,
+    isTimeout,
+    clearTimeout,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
