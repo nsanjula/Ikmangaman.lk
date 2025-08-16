@@ -229,6 +229,14 @@ export interface SearchByNameResponse {
   }[];
 }
 
+// Temp questionnaire interface for backend API
+export interface TempQuestionnaire {
+  destination_id: number;
+  travel_month: string;
+  no_of_people: number;
+  start_location: string;
+}
+
 // Itinerary-related interfaces
 export interface TripPlanQuestionnaire {
   travel_month: string;
@@ -450,7 +458,7 @@ class AuthAPI {
     try {
       const token = this.getToken();
       console.log(
-        "🔑 Getting recommendations - token:",
+        "��� Getting recommendations - token:",
         token ? "exists" : "missing",
       );
 
@@ -687,13 +695,14 @@ class AuthAPI {
       });
 
       if (!response.ok) {
+        handleDatabaseTimeout(response);
         if (response.status === 401) {
           // Clear invalid token
           this.removeToken();
           throw new Error("Authentication required. Please log in again.");
         }
-        const error: ApiError = await response.json();
-        throw new Error(error.detail || "Failed to fetch questionnaire");
+        const errorText = await response.text();
+        throw new Error(`Failed to fetch questionnaire: ${errorText}`);
       }
 
       return response.json();
@@ -899,6 +908,90 @@ class AuthAPI {
     }
   }
 
+  async getDestinationWithTempQuestionnaire(
+    tempQuestionnaireData: TempQuestionnaire,
+  ): Promise<DestinationDetails> {
+    console.log(`🔍 Getting destination details with temp questionnaire for ID: ${tempQuestionnaireData.destination_id}`);
+    console.log('Temp questionnaire data:', tempQuestionnaireData);
+
+    try {
+      const token = this.getToken();
+      console.log("🔑 Token status:", token ? "exists" : "missing");
+
+      if (!token) {
+        throw new Error(
+          "Authentication required. Please log in to access destination details.",
+        );
+      }
+
+      console.log("Making request to:", `${API_BASE_URL}/temp-questionnaire/${tempQuestionnaireData.destination_id}`);
+      console.log("Request body data:", {
+        destination_id: tempQuestionnaireData.destination_id,
+        travel_month: tempQuestionnaireData.travel_month,
+        no_of_people: tempQuestionnaireData.no_of_people,
+        start_location: tempQuestionnaireData.start_location,
+      });
+
+      const response = await fetch(`${API_BASE_URL}/temp-questionnaire/${tempQuestionnaireData.destination_id}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          destination_id: tempQuestionnaireData.destination_id,
+          travel_month: tempQuestionnaireData.travel_month,
+          no_of_people: tempQuestionnaireData.no_of_people,
+          start_location: tempQuestionnaireData.start_location,
+        }),
+      });
+
+      console.log("Temp questionnaire destination response status:", response.status);
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          console.log(
+            "🔐 Authentication failed - token may be expired or invalid",
+          );
+          // Clear the invalid token
+          this.removeToken();
+
+          // Get the detailed error from backend
+          let errorDetail = "Authentication failed";
+          try {
+            const errorText = await response.text();
+            const errorData = JSON.parse(errorText);
+            errorDetail = errorData.detail || errorDetail;
+          } catch (e) {
+            // If we can't parse the error, use default message
+          }
+
+          throw new Error(
+            `Authentication failed: ${errorDetail}. Please log in again.`,
+          );
+        }
+        const errorText = await response.text();
+        throw new Error(`API error: ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log("✅ Successfully fetched destination details with temp questionnaire from API");
+      return data;
+    } catch (error) {
+      console.error("❌ Failed to fetch destination details with temp questionnaire:", error);
+
+      // Check if this is a network connectivity error (backend not running)
+      if (error instanceof TypeError && error.message === "Failed to fetch") {
+        console.log("🔧 Backend appears to be offline");
+        throw new Error(
+          "Backend server is not running. Please start the backend server at http://localhost:8000 and try again.",
+        );
+      }
+
+      throw error;
+    }
+  }
+
   async searchByText(query: string): Promise<any> {
     try {
       const token = this.getToken();
@@ -915,12 +1008,13 @@ class AuthAPI {
       });
 
       if (!response.ok) {
+        handleDatabaseTimeout(response);
         if (response.status === 401) {
           this.removeToken();
           throw new Error("Authentication required. Please log in again.");
         }
-        const error: ApiError = await response.json();
-        throw new Error(error.detail || "Search failed");
+        const errorText = await response.text();
+        throw new Error(`Search failed: ${errorText}`);
       }
 
       return response.json();
@@ -953,12 +1047,13 @@ class AuthAPI {
       });
 
       if (!response.ok) {
+        handleDatabaseTimeout(response);
         if (response.status === 401) {
           this.removeToken();
           throw new Error("Authentication required. Please log in again.");
         }
-        const error: ApiError = await response.json();
-        throw new Error(error.detail || "Image search failed");
+        const errorText = await response.text();
+        throw new Error(`Image search failed: ${errorText}`);
       }
 
       return response.json();
@@ -988,6 +1083,7 @@ class AuthAPI {
       });
 
       if (!response.ok) {
+        handleDatabaseTimeout(response);
         if (response.status === 401) {
           this.removeToken();
           throw new Error("Authentication required. Please log in again.");
@@ -1029,6 +1125,7 @@ class AuthAPI {
       });
 
       if (!response.ok) {
+        handleDatabaseTimeout(response);
         if (response.status === 401) {
           this.removeToken();
           throw new Error("Authentication required. Please log in again.");
@@ -1083,6 +1180,7 @@ class AuthAPI {
       });
 
       if (!response.ok) {
+        handleDatabaseTimeout(response);
         if (response.status === 401) {
           this.removeToken();
           throw new Error("Authentication required. Please log in again.");
@@ -1224,34 +1322,34 @@ class AuthAPI {
   private getStaticDestinationId(placeName: string): number | null {
     const name = placeName.toLowerCase().trim();
     const mapping: { [key: string]: number } = {
-      'kandy': 1,
-      'galle': 2,
-      'ella': 3,
-      'nuwara eliya': 4,
-      'colombo': 5,
-      'sigiriya': 6,
-      'anuradhapura': 7,
-      'polonnaruwa': 8,
-      'dambulla': 9,
-      'bentota': 10,
-      'mirissa': 11,
-      'unawatuna': 12,
-      'hikkaduwa': 13,
-      'yala': 14,
-      'udawalawe': 15,
-      'arugam bay': 16,
-      'trincomalee': 17,
-      'jaffna': 18,
-      'badulla': 19,
-      'ratnapura': 20,
-      'negombo': 21,
-      'matara': 22,
-      'hambantota': 23,
-      'batticaloa': 24,
-      'kurunegala': 25,
-      'kegalle': 26,
-      'kalutara': 27,
-      'gampaha': 28
+      'ella': 1,
+      'kandy': 2,
+      'mirissa': 3,
+      'sigiriya': 4,
+      'nuwara eliya': 5,
+      'anuradhapura': 6,
+      'galle': 7,
+      'trincomalee': 8,
+      'polonnaruwa': 9,
+      'jaffna': 10,
+      'arugam bay': 11,
+      'haputale': 12,
+      'negombo': 13,
+      'matale': 14,
+      'kalpitiya': 15,
+      'kitulgala': 16,
+      'dambulla': 17,
+      'bentota': 18,
+      'udawalawe': 19,
+      'colombo': 20,
+      'yala': 21,
+      'badulla': 22,
+      'mannar': 23,
+      'ratnapura': 24,
+      'puttalam': 25,
+      'hambantota': 26,
+      'pasikuda': 27,
+      'katharagama': 28
     };
 
     return mapping[name] || null;
@@ -1292,6 +1390,7 @@ class AuthAPI {
       });
 
       if (!response.ok) {
+        handleDatabaseTimeout(response);
         if (response.status === 401) {
           this.removeToken();
           throw new Error("Authentication required. Please log in again.");
@@ -1336,12 +1435,13 @@ class AuthAPI {
       });
 
       if (!response.ok) {
+        handleDatabaseTimeout(response);
         if (response.status === 401) {
           this.removeToken();
           throw new Error("Authentication required. Please log in again.");
         }
-        const error: ApiError = await response.json();
-        throw new Error(error.detail || "Search failed");
+        const errorText = await response.text();
+        throw new Error(`Search failed: ${errorText}`);
       }
 
       return response.json();
@@ -1373,12 +1473,13 @@ class AuthAPI {
       });
 
       if (!response.ok) {
+        handleDatabaseTimeout(response);
         if (response.status === 401) {
           this.removeToken();
           throw new Error("Authentication required. Please log in again.");
         }
-        const error: ApiError = await response.json();
-        throw new Error(error.detail || "Failed to create itinerary");
+        const errorText = await response.text();
+        throw new Error(`Failed to create itinerary: ${errorText}`);
       }
 
       return response.json();
@@ -1408,12 +1509,13 @@ class AuthAPI {
       });
 
       if (!response.ok) {
+        handleDatabaseTimeout(response);
         if (response.status === 401) {
           this.removeToken();
           throw new Error("Authentication required. Please log in again.");
         }
-        const error: ApiError = await response.json();
-        throw new Error(error.detail || "Failed to get day recommendations");
+        const errorText = await response.text();
+        throw new Error(`Failed to get day recommendations: ${errorText}`);
       }
 
       return response.json();
@@ -1443,12 +1545,13 @@ class AuthAPI {
       });
 
       if (!response.ok) {
+        handleDatabaseTimeout(response);
         if (response.status === 401) {
           this.removeToken();
           throw new Error("Authentication required. Please log in again.");
         }
-        const error: ApiError = await response.json();
-        throw new Error(error.detail || "Failed to assign destination to day");
+        const errorText = await response.text();
+        throw new Error(`Failed to assign destination to day: ${errorText}`);
       }
 
       return response.json();
@@ -1477,12 +1580,13 @@ class AuthAPI {
       });
 
       if (!response.ok) {
+        handleDatabaseTimeout(response);
         if (response.status === 401) {
           this.removeToken();
           throw new Error("Authentication required. Please log in again.");
         }
-        const error: ApiError = await response.json();
-        throw new Error(error.detail || "Failed to get destination details");
+        const errorText = await response.text();
+        throw new Error(`Failed to get destination details: ${errorText}`);
       }
 
       return response.json();

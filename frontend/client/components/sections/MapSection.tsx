@@ -12,33 +12,48 @@ const MapSection: React.FC = () => {
   // Check if we're coming from search results
   const isFromSearch = location.state?.fromSearch || location.pathname.includes('/search/destination/');
 
+  // Check if we're in saved places basic view (before questionnaire metrics)
+  const isInSavedPlacesBasicView = location.pathname.includes('/saved-destination/') &&
+    !sessionStorage.getItem('tempQuestionnaireCompleted') &&
+    !location.state?.fromQuestionnaireMetrics;
+
   // Memoize starting location calculation
   const startingLocation = useMemo(() => {
+    console.log('MapSection questionnaire data:', questionnaireData);
     if (questionnaireData?.starting_location_latitudes && questionnaireData?.starting_location_longitudes) {
+      console.log('Using questionnaire starting location:', {
+        lat: questionnaireData.starting_location_latitudes,
+        lng: questionnaireData.starting_location_longitudes
+      });
       return {
         lat: questionnaireData.starting_location_latitudes,
         lng: questionnaireData.starting_location_longitudes,
       };
     }
     // Fallback to Colombo
+    console.log('Falling back to Colombo coordinates');
     return { lat: 6.9271, lng: 79.8612 };
   }, [questionnaireData]);
 
   if (loading) {
     return (
       <div className="space-y-6 mb-6">
-        {/* Route Map Loading */}
+        {/* Best Route Loading - Only show for non-search destinations and not in saved places basic view */}
+        {!isFromSearch && !isInSavedPlacesBasicView && (
+          <div className="card p-6 animate-pulse" style={{ background: 'var(--surface)' }}>
+            <div className="h-6 bg-gray-200 rounded mb-4 w-48"></div>
+            <div className="h-4 bg-gray-200 rounded mb-4 w-full"></div>
+            <div className="w-full h-96 bg-gray-200 rounded-lg mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+          </div>
+        )}
+
+        {/* Tourist Attractions Map Loading */}
         <div className="card p-6 animate-pulse" style={{ background: 'var(--surface)' }}>
-          <div className="h-6 bg-gray-200 rounded mb-4 w-48"></div>
+          <div className="h-6 bg-gray-200 rounded mb-4 w-56"></div>
           <div className="h-4 bg-gray-200 rounded mb-4 w-full"></div>
           <div className="w-full h-96 bg-gray-200 rounded-lg mb-4"></div>
           <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-        </div>
-
-        {/* Attractions Map Loading */}
-        <div className="card p-6 animate-pulse" style={{ background: 'var(--surface)' }}>
-          <div className="h-6 bg-gray-200 rounded mb-4 w-56"></div>
-          <div className="w-full h-96 bg-gray-200 rounded-lg"></div>
         </div>
       </div>
     );
@@ -86,8 +101,8 @@ const MapSection: React.FC = () => {
 
   return (
     <div id="map-section" className="space-y-6 mb-6">
-      {/* Best Route Section - Only show for non-search destinations */}
-      {!isFromSearch && (
+      {/* Best Route Section - Only show for non-search destinations and not in saved places basic view */}
+      {!isFromSearch && !isInSavedPlacesBasicView && (
         <div className="card p-6" style={{ background: 'var(--surface)' }}>
           <div className="mb-6">
             <div className="flex items-center gap-3 mb-2">

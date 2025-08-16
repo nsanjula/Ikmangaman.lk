@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { authAPI, QuestionnaireRequest } from "../lib/api";
+import { authAPI, QuestionnaireRequest, TempQuestionnaire } from "../lib/api";
 import { useApiWithLoading } from "../contexts/LoadingContext";
 import SearchableDropdown from "./ui/searchable-dropdown";
 
@@ -28,6 +28,7 @@ const QuestionnaireMetrics: React.FC = () => {
   // Get destination data from navigation state (for default mode)
   const destinationId = location.state?.destinationId;
   const destinationName = location.state?.destinationName;
+  const isSavedPlace = location.state?.isSavedPlace || false;
 
   const months = [
     "January", "February", "March", "April", "May", "June",
@@ -334,29 +335,69 @@ const QuestionnaireMetrics: React.FC = () => {
         };
       }
 
-      const questionnaireData: QuestionnaireRequest = {
-        ...existingInterests,
+      // Prepare temp questionnaire data for backend API
+      const tempQuestionnaireData: TempQuestionnaire = {
+        destination_id: destinationId,
         travel_month: travelMonth,
         no_of_people: groupSize,
         start_location: startLocation,
       };
 
-      // Store temporary questionnaire data in sessionStorage instead of submitting to database
-      // This allows for temporary changes when exploring search destinations
-      const tempQuestionnaireKey = 'tempQuestionnaireData';
-      sessionStorage.setItem(tempQuestionnaireKey, JSON.stringify(questionnaireData));
+      console.log('Submitting temp questionnaire data to backend:', tempQuestionnaireData);
+      console.log('Start location selected:', startLocation);
+      console.log('Available locations:', availableLocations);
 
-      console.log('Stored temporary questionnaire data:', questionnaireData);
+      // Store the temp questionnaire parameters for the DestinationContext to use
+      const tempQuestionnaireParams = {
+        travel_month: travelMonth,
+        no_of_people: groupSize,
+        start_location: startLocation,
+      };
+      sessionStorage.setItem('tempQuestionnaireParams', JSON.stringify(tempQuestionnaireParams));
 
-      // Navigate directly to the destination detail page with temporary questionnaire context
-      navigate(`/destination/${destinationId}`, {
-        state: {
-          fromQuestionnaire: true,
-          questionnaireCompleted: true,
-          destinationName: destinationName,
-          isTemporaryQuestionnaire: true // Flag to indicate this is temporary
-        }
-      });
+      // Call the temp questionnaire API to get destination data with personalized metrics
+      const destinationWithTempData = await callWithLoading(
+        async () => {
+          return await authAPI.getDestinationWithTempQuestionnaire(tempQuestionnaireData);
+        },
+        'temp-questionnaire',
+        'Getting personalized destination details...'
+      );
+
+      console.log('Received temp questionnaire destination data:', destinationWithTempData);
+
+      // Store temp questionnaire completion flag and data for DestinationContext
+      if (isSavedPlace) {
+        sessionStorage.setItem('tempQuestionnaireCompleted', 'true');
+        sessionStorage.setItem('tempQuestionnaireDestinationData', JSON.stringify(destinationWithTempData));
+        // Navigate back to saved place destination page which will now show full details
+        navigate(`/saved-destination/${destinationId}`);
+      } else {
+        // For search results, store both the API result and the questionnaire data for compatibility
+        sessionStorage.setItem('tempQuestionnaireDestinationData', JSON.stringify(destinationWithTempData));
+
+        const questionnaireData: QuestionnaireRequest = {
+          ...existingInterests,
+          travel_month: travelMonth,
+          no_of_people: groupSize,
+          start_location: startLocation,
+        };
+
+        const tempQuestionnaireKey = 'tempQuestionnaireData';
+        sessionStorage.setItem(tempQuestionnaireKey, JSON.stringify(questionnaireData));
+
+        console.log('Stored temporary questionnaire data for search results:', questionnaireData);
+
+        // Navigate to destination detail page
+        navigate(`/destination/${destinationId}`, {
+          state: {
+            fromQuestionnaire: true,
+            questionnaireCompleted: true,
+            destinationName: destinationName,
+            isTemporaryQuestionnaire: true
+          }
+        });
+      }
     } catch (error) {
       console.error("Failed to submit questionnaire:", error);
       setError(
@@ -661,7 +702,7 @@ const QuestionnaireMetrics: React.FC = () => {
               }}
               className="flex items-center px-6 py-3 text-gray-600 border border-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              {isDayInterestsMode || isItineraryMode ? '← Back to Itinerary' : '← Back to Destination'}
+              {isDayInterestsMode || isItineraryMode ? '��� Back to Itinerary' : '← Back to Destination'}
             </button>
           )}
 

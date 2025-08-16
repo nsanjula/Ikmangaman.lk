@@ -1,17 +1,34 @@
-import { useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import HeroSection from "../components/sections/HeroSection";
+import BudgetSection from "../components/sections/BudgetSection";
 import MapSection from "../components/sections/MapSection";
 import PlacesToVisit from "../components/sections/PlacesToVist";
+import WeatherCard from "../components/sections/WeatherCard";
 import HotelsNearby from "../components/sections/HotelsNearby";
 import LocalGuides from "../components/sections/LocalGuides";
 import { DestinationProvider, useDestination } from "../contexts/DestinationContext";
 import { GoogleMapsProvider } from "../contexts/GoogleMapsContext";
+import { FiSettings } from "react-icons/fi";
 
 const SavedPlaceDestinationDetailContent: React.FC = () => {
   const { destinationData } = useDestination();
+  const navigate = useNavigate();
+
+  // State to track if we're showing the full destination page (with questionnaire metrics) or the basic view
+  const [showFullDestination, setShowFullDestination] = useState(false);
+
+  // Check if we're coming from questionnaire metrics (temp questionnaire completed)
+  useEffect(() => {
+    const tempQuestionnaireCompleted = sessionStorage.getItem('tempQuestionnaireCompleted');
+    if (tempQuestionnaireCompleted === 'true') {
+      setShowFullDestination(true);
+      // Clear the flag
+      sessionStorage.removeItem('tempQuestionnaireCompleted');
+    }
+  }, []);
 
   useEffect(() => {
     if (destinationData?.destination_name) {
@@ -21,20 +38,69 @@ const SavedPlaceDestinationDetailContent: React.FC = () => {
     }
   }, [destinationData]);
 
+  const handleQuestionnaireMetrics = () => {
+    // Navigate to questionnaire with destination context and skip step 1 (interests)
+    navigate('/questionnaire-metrics', {
+      state: {
+        destinationId: destinationData?.destination_id,
+        destinationName: destinationData?.destination_name,
+        skipInterests: true, // This will skip step 1 (interests)
+        isSavedPlace: true // Flag to indicate this is from saved places
+      }
+    });
+  };
+
+  if (!showFullDestination) {
+    // Show basic view with "Use Questionnaire Metrics" button
+    return (
+      <div className="min-h-screen">
+        <Header />
+        <div className="container mx-auto px-4 py-6">
+          <HeroSection />
+
+          {/* Use Questionnaire Metrics Section */}
+          <div className="card p-6 mb-6 text-center" style={{ background: 'var(--surface)' }}>
+            <h2 className="text-2xl font-bold mb-4" style={{ color: 'var(--text-900)' }}>
+              Get Personalized Travel Details
+            </h2>
+            <p className="text-lg mb-6" style={{ color: 'var(--text-600)' }}>
+              Complete a quick questionnaire to get budget breakdown, best route, and 5-day weather forecast for {destinationData?.destination_name}.
+            </p>
+            <button
+              onClick={handleQuestionnaireMetrics}
+              className="btn btn-primary btn-lg flex items-center gap-2 mx-auto"
+            >
+              <FiSettings className="w-5 h-5" />
+              Use Questionnaire Metrics
+            </button>
+          </div>
+
+          <div id="map-section">
+            <MapSection />
+          </div>
+          <PlacesToVisit />
+          <HotelsNearby />
+          <LocalGuides />
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Show full destination page with all sections
   return (
     <div className="min-h-screen">
       <Header />
       <div className="container mx-auto px-4 py-6">
         <HeroSection />
-        {/* Removed BudgetSection for saved places */}
+        <BudgetSection />
         <div id="map-section">
           <MapSection />
         </div>
         <PlacesToVisit />
-        {/* Removed WeatherCard for saved places */}
+        <WeatherCard />
         <HotelsNearby />
         <LocalGuides />
-        {/* Note: Best Route section is not included for saved places */}
       </div>
       <Footer />
     </div>
