@@ -25,7 +25,8 @@ def create_user(request: user.User, db: Session = Depends(get_db)):
         lastname= request.lastname,
         date_0f_birth= request.date_of_birth,
         username= request.username,
-        password= hashed_password
+        password= hashed_password,
+        email= request.email
     )
     db.add(new_user)
     db.commit()
@@ -53,6 +54,8 @@ def update_user_profile(request: user.UserUpdate, db: Session = Depends(get_db),
         db_user.date_0f_birth = request.date_of_birth
     if request.password:
         db_user.password = hash_password(request.password)
+    if request.email:
+        db_user.email = request.email
 
     db.commit()
     db.refresh(db_user)
