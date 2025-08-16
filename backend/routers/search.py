@@ -108,6 +108,15 @@ async def search_by_image(
             print(f"Hotel API failed for {d.name}: {e}")
             hotel_data = None
 
+        filters = []
+        if d.hill_country == 1:
+            filters.append("hill_country")
+        if d.coastal == 1:
+            filters.append("coastal")
+        if d.dry_zone == 1:
+            filters.append("dry_zone")
+        if d.urban == 1:
+            filters.append("urban")
 
         guide_details = [
             {
@@ -130,7 +139,8 @@ async def search_by_image(
             "hotel_data": hotel_data,
             "guide_details": guide_details,
             "destination image": f"/destination-image/{d.destination_id}",
-            "visual_match_score": round(score, 4)
+            "visual_match_score": round(score, 4),
+            "filters": filters
         })
 
     return {"results": results}
@@ -158,6 +168,16 @@ async def search_by_name(
             print(f"Hotel API failed for {d.name}: {e}")
             hotel_data = None
 
+        filters = []
+        if d.hill_country == 1:
+            filters.append("hill_country")
+        if d.coastal == 1:
+            filters.append("coastal")
+        if d.dry_zone == 1:
+            filters.append("dry_zone")
+        if d.urban == 1:
+            filters.append("urban")
+
         # Guide details
         guide_details = [
             {
@@ -179,7 +199,8 @@ async def search_by_name(
             "things_to_do": d.things_to_do.split("/") if getattr(d, "things_to_do", None) else [],
             "hotel_data": hotel_data,
             "guide_details": guide_details,
-            "destination image": f"/destination-image/{d.destination_id}"
+            "destination image": f"/destination-image/{d.destination_id}",
+            "filters": filters
         })
 
     return {"results": results}
