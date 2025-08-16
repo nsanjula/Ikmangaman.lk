@@ -8,6 +8,7 @@ class User(BaseModel):
     lastname : Optional[str] = None
     date_of_birth: date
     username: str
+    email: str
     password: str
 
 class UserUpdate(BaseModel):
@@ -15,3 +16,4 @@ class UserUpdate(BaseModel):
     lastname: Optional[str] = None
     date_of_birth: Optional[date] = None
     password: Optional[str] = None
+    email: Optional[str] = None

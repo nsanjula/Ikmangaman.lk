@@ -13,6 +13,7 @@ class User(Base):
     date_0f_birth = Column(Date)
     username = Column(String, unique= True, nullable=False)
     password = Column(String)
+    email = Column(String, index=True, nullable=True)
 
     latest_questionnaire = relationship("LatestQuestionnaire", back_populates="user")
     saved_places = relationship("SavedPlace", back_populates="user")
