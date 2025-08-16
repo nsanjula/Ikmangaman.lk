@@ -11,7 +11,8 @@ interface SearchResultCard {
   name: string;
   description: string;
   score: number;
-  type: string;
+  type: string; // Primary area type for display
+  areaTypes?: string[]; // All area types from backend for filtering (optional)
   things_to_do: string;
   thumbnail_img: string;
   match_score: number;
@@ -191,50 +192,16 @@ const SearchResultsForm = () => {
   const [cacheRestored, setCacheRestored] = useState<boolean>(false);
   const [actualSearchType, setActualSearchType] = useState<string>(searchType);
 
-  // Helper function to determine area type from destination
-  const getAreaType = (destinationId: number, destinationName?: string): string => {
-    const areaTypes = ["hill_country", "coastal", "dry_zone", "urban"];
+  // Helper function to get area types from backend filter data
+  const getAreaTypes = (filters: string[]): string[] => {
+    // Return the filters from backend directly, or fallback to empty array
+    return filters || [];
+  };
 
-    if (destinationName) {
-      const name = destinationName.toLowerCase();
-      if (
-        name.includes("galle") ||
-        name.includes("colombo") ||
-        name.includes("negombo") ||
-        name.includes("matara") ||
-        name.includes("trincomalee") ||
-        name.includes("batticaloa")
-      ) {
-        return "coastal";
-      }
-      if (
-        name.includes("kandy") ||
-        name.includes("nuwara") ||
-        name.includes("ella") ||
-        name.includes("hatton") ||
-        name.includes("badulla")
-      ) {
-        return "hill_country";
-      }
-      if (
-        name.includes("anuradhapura") ||
-        name.includes("polonnaruwa") ||
-        name.includes("sigiriya") ||
-        name.includes("dambulla") ||
-        name.includes("vavuniya")
-      ) {
-        return "dry_zone";
-      }
-      if (
-        name.includes("colombo") ||
-        name.includes("dehiwala") ||
-        name.includes("moratuwa")
-      ) {
-        return "urban";
-      }
-    }
-
-    return areaTypes[destinationId % areaTypes.length];
+  // Helper function to get primary area type for card display (use first filter)
+  const getPrimaryAreaType = (filters: string[]): string => {
+    // Use the first filter as primary, or fallback to "coastal" for display
+    return filters && filters.length > 0 ? filters[0] : "coastal";
   };
 
   const performSearch = async () => {
@@ -288,12 +255,14 @@ const SearchResultsForm = () => {
       const transformedCards: SearchResultCard[] = searchResults.results
         .filter((item: any) => item && item.destination_id && item.destination_name)
         .map((item: any) => {
+          const areaTypes = getAreaTypes(item.filters);
           return {
             id: item.destination_id,
             name: item.destination_name || "Unknown Destination",
             description: item.description || "Explore this amazing destination",
             score: item.visual_match_score || 0,
-            type: getAreaType(item.destination_id, item.destination_name),
+            type: getPrimaryAreaType(areaTypes), // Use primary area for card type
+            areaTypes: areaTypes, // Store all area types for filtering
             things_to_do: Array.isArray(item.things_to_do) ? item.things_to_do.join(", ") : "",
             thumbnail_img: item["destination image"] || "",
             match_score: item.visual_match_score || 0,
@@ -620,9 +589,18 @@ const SearchResultsForm = () => {
     }
   };
 
-  // Filter cards based on selected filters
+  // Filter cards based on selected filters - use backend filter data
   const filteredCards = cards
-    .filter((card) => selectedAreas.includes(card.type))
+    .filter((card) => {
+      // Check if any of the card's area types match selected areas
+      // If no areaTypes available, fallback to using the card's type property
+      if (card.areaTypes && card.areaTypes.length > 0) {
+        return card.areaTypes.some(areaType => selectedAreas.includes(areaType));
+      } else {
+        // Fallback to using the primary type if no areaTypes available
+        return selectedAreas.includes(card.type);
+      }
+    })
     .sort(getSortFunction(sortBy));
 
   // Redirect to login if not authenticated

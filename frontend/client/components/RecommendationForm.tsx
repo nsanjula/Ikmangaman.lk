@@ -16,7 +16,8 @@ interface RecommendationCard {
   description: string;
   price: number;
   score: number;
-  type: string;
+  type: string; // Primary area type for display
+  areaTypes?: string[]; // All area types from backend for filtering (optional)
   things_to_do: string;
   thumbnail_img: string;
   distance: string;
@@ -224,57 +225,16 @@ const RecommendationForm = () => {
     console.log('🗑️ Cleared recommendations cache');
   };
 
-  // Helper function to determine area type from destination (simplified for backend format)
-  const getAreaType = (
-    destinationId: number,
-    destinationName?: string,
-  ): string => {
-    // Since backend doesn't provide area type info, we'll assign based on destination ID
-    // to ensure variety in recommendations rather than all being "coastal"
-    const areaTypes = ["hill_country", "coastal", "dry_zone", "urban"];
+  // Helper function to get area types from backend filter data
+  const getAreaTypes = (filters: string[]): string[] => {
+    // Return the filters from backend directly, or fallback to empty array
+    return filters || [];
+  };
 
-    // Use destination name if available for more accurate classification
-    if (destinationName) {
-      const name = destinationName.toLowerCase();
-      if (
-        name.includes("galle") ||
-        name.includes("colombo") ||
-        name.includes("negombo") ||
-        name.includes("matara") ||
-        name.includes("trincomalee") ||
-        name.includes("batticaloa")
-      ) {
-        return "coastal";
-      }
-      if (
-        name.includes("kandy") ||
-        name.includes("nuwara") ||
-        name.includes("ella") ||
-        name.includes("hatton") ||
-        name.includes("badulla")
-      ) {
-        return "hill_country";
-      }
-      if (
-        name.includes("anuradhapura") ||
-        name.includes("polonnaruwa") ||
-        name.includes("sigiriya") ||
-        name.includes("dambulla") ||
-        name.includes("vavuniya")
-      ) {
-        return "dry_zone";
-      }
-      if (
-        name.includes("colombo") ||
-        name.includes("dehiwala") ||
-        name.includes("moratuwa")
-      ) {
-        return "urban";
-      }
-    }
-
-    // Fallback: distribute evenly across area types based on ID
-    return areaTypes[destinationId % areaTypes.length];
+  // Helper function to get primary area type for card display (use first filter)
+  const getPrimaryAreaType = (filters: string[]): string => {
+    // Use the first filter as primary, or fallback to "coastal" for display
+    return filters && filters.length > 0 ? filters[0] : "coastal";
   };
 
   const fetchRecommendations = async (forceRefresh: boolean = false) => {
@@ -347,13 +307,15 @@ const RecommendationForm = () => {
           return isValid;
         })
         .map((item: BackendRecommendation) => {
+          const areaTypes = getAreaTypes(item.filters);
           return {
             id: item.destination_id,
             name: item.name || "Unknown Destination",
             description: `${item.rating_label} match (${item.distance}, ${item.travel_time})`,
             price: Math.round(item.estimated_budget || 0),
             score: item.match_score || 0,
-            type: getAreaType(item.destination_id, item.name),
+            type: getPrimaryAreaType(areaTypes), // Use primary area for card type
+            areaTypes: areaTypes, // Store all area types for filtering
             things_to_do: "", // Not provided by backend currently
             thumbnail_img: item.thumbnail_img || "",
             distance: item.distance || "N/A",
@@ -480,9 +442,18 @@ const RecommendationForm = () => {
     }
   };
 
-  // Filter cards based on selected filters
+  // Filter cards based on selected filters - use backend filter data
   const filteredCards = cards
-    .filter((card) => selectedAreas.includes(card.type))
+    .filter((card) => {
+      // Check if any of the card's area types match selected areas
+      // If no areaTypes available, fallback to using the card's type property
+      if (card.areaTypes && card.areaTypes.length > 0) {
+        return card.areaTypes.some(areaType => selectedAreas.includes(areaType));
+      } else {
+        // Fallback to using the primary type if no areaTypes available
+        return selectedAreas.includes(card.type);
+      }
+    })
     .filter((card) => card.price <= budget)
     .sort(getSortFunction(sortBy));
 

@@ -207,6 +207,7 @@ export interface BackendRecommendation {
   distance: string;
   travel_time: string;
   thumbnail_img: string;
+  filters: string[]; // Backend filter data: ["hill_country", "coastal", "dry_zone", "urban"]
 }
 
 export type RecommendationsResponse = BackendRecommendation[];
@@ -229,6 +230,23 @@ export interface SearchByNameResponse {
     hotel_data: any;
     guide_details: GuideDetails[];
     "destination image": string;
+    filters?: string[]; // Backend filter data when available
+  }[];
+}
+
+export interface ImageSearchResponse {
+  results: {
+    destination_name: string;
+    destination_id: number;
+    latitude: number | null;
+    longitude: number | null;
+    description: string | null;
+    things_to_do: string[];
+    hotel_data: any;
+    guide_details: GuideDetails[];
+    "destination image": string;
+    visual_match_score: number;
+    filters?: string[]; // Backend filter data when available
   }[];
 }
 
@@ -450,6 +468,7 @@ class AuthAPI {
         distance: "165 km",
         travel_time: "3.5 hours",
         thumbnail_img: "/destination-image/1",
+        filters: ["dry_zone"],
       },
       {
         destination_id: 2,
@@ -460,6 +479,7 @@ class AuthAPI {
         distance: "120 km",
         travel_time: "2.5 hours",
         thumbnail_img: "/destination-image/2",
+        filters: ["hill_country"],
       },
       {
         destination_id: 3,
@@ -470,6 +490,7 @@ class AuthAPI {
         distance: "115 km",
         travel_time: "2 hours",
         thumbnail_img: "/destination-image/3",
+        filters: ["coastal"],
       },
     ];
   }
@@ -1112,7 +1133,7 @@ class AuthAPI {
     }
   }
 
-  async searchByImage(imageFile: File): Promise<any> {
+  async searchByImage(imageFile: File): Promise<ImageSearchResponse> {
     try {
       const token = this.getToken();
       if (!token) {
