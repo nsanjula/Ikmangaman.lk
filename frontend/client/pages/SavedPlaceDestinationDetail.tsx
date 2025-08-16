@@ -23,12 +23,22 @@ const SavedPlaceDestinationDetailContent: React.FC = () => {
   // Check if we're coming from questionnaire metrics (temp questionnaire completed)
   useEffect(() => {
     const tempQuestionnaireCompleted = sessionStorage.getItem('tempQuestionnaireCompleted');
-    if (tempQuestionnaireCompleted === 'true') {
+    const destinationId = destinationData?.destination_id;
+
+    if (tempQuestionnaireCompleted === 'true' && destinationId) {
       setShowFullDestination(true);
-      // Clear the flag
+      // Store the completion for this specific destination
+      sessionStorage.setItem(`tempQuestionnaire_${destinationId}`, 'completed');
+      // Clear the general flag
       sessionStorage.removeItem('tempQuestionnaireCompleted');
+    } else if (destinationId) {
+      // Check if this destination has had its questionnaire completed before
+      const destinationQuestionnaireStatus = sessionStorage.getItem(`tempQuestionnaire_${destinationId}`);
+      if (destinationQuestionnaireStatus === 'completed') {
+        setShowFullDestination(true);
+      }
     }
-  }, []);
+  }, [destinationData?.destination_id]);
 
   useEffect(() => {
     if (destinationData?.destination_name) {

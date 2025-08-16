@@ -30,6 +30,7 @@ const RegisterForm = () => {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
+    email: "",
     birthday: "",
     username: "",
     password: "",
@@ -84,6 +85,13 @@ const RegisterForm = () => {
       newErrors.firstName = "First name is required";
     if (!formData.lastName.trim()) newErrors.lastName = "Last name is required";
 
+    // Email validation
+    if (!formData.email.trim()) {
+      newErrors.email = "Email address is required";
+    } else if (!formData.email.includes('@')) {
+      newErrors.email = "Invalid email address";
+    }
+
     // Basic date validation
     if (!formData.birthday.trim()) {
       newErrors.birthday = "Birthday is required";
@@ -119,6 +127,7 @@ const RegisterForm = () => {
       const registerData: RegisterRequest = {
         firstname: formData.firstName,
         lastname: formData.lastName || undefined,
+        email: formData.email,
         date_of_birth: authAPI.formatDateForAPI(formData.birthday),
         username: formData.username,
         password: formData.password,
@@ -249,6 +258,30 @@ const RegisterForm = () => {
                       <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>
                     )}
                   </div>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block mb-2 font-medium" style={{ color: 'var(--text-900)' }}>
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="Ex: nisal@example.com"
+                    className="w-full p-3 rounded-lg border transition-colors duration-150"
+                    style={{
+                      background: 'var(--surface)',
+                      borderColor: errors.email ? '#EF4444' : 'var(--border)',
+                      color: 'var(--text-900)',
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = errors.email ? '#EF4444' : 'var(--primary-600)'}
+                    onBlur={(e) => e.target.style.borderColor = errors.email ? '#EF4444' : 'var(--border)'}
+                  />
+                  {errors.email && (
+                    <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                  )}
                 </div>
 
                 <div className="mb-4">

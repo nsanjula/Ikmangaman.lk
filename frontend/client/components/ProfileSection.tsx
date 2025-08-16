@@ -27,6 +27,7 @@ const Profile = () => {
   const [userData, setUserData] = useState({
     firstName: "",
     lastName: "",
+    email: "",
     birthday: "",
     username: "",
     password: "",
@@ -106,6 +107,7 @@ const Profile = () => {
           setUserData({
             firstName: profile.firstname,
             lastName: profile.lastname || "",
+            email: profile.email || "",
             birthday: profile.date_0f_birth, // Note: backend has typo in field name
             username: profile.username,
             password: "********",
@@ -169,6 +171,9 @@ const Profile = () => {
       if (userData.lastName !== (originalData.lastname || "")) {
         updateData.lastname = userData.lastName;
       }
+      if (userData.email !== (originalData.email || "")) {
+        updateData.email = userData.email;
+      }
       if (userData.birthday !== originalData.date_0f_birth) {
         updateData.date_of_birth = userData.birthday;
       }
@@ -186,6 +191,7 @@ const Profile = () => {
         setUserData({
           firstName: updatedProfile.firstname,
           lastName: updatedProfile.lastname || "",
+          email: updatedProfile.email || "",
           birthday: updatedProfile.date_0f_birth,
           username: updatedProfile.username,
           password: "********",
@@ -276,6 +282,12 @@ const Profile = () => {
               label: "Last Name",
               field: "lastName",
               placeholder: "Ex: Sanjula",
+            },
+            {
+              label: "Email Address",
+              field: "email",
+              placeholder: "Ex: nisal@example.com",
+              type: "email",
             },
             {
               label: "Birthday",

@@ -13,9 +13,22 @@ const MapSection: React.FC = () => {
   const isFromSearch = location.state?.fromSearch || location.pathname.includes('/search/destination/');
 
   // Check if we're in saved places basic view (before questionnaire metrics)
-  const isInSavedPlacesBasicView = location.pathname.includes('/saved-destination/') &&
-    !sessionStorage.getItem('tempQuestionnaireCompleted') &&
-    !location.state?.fromQuestionnaireMetrics;
+  const isInSavedPlacesBasicView = useMemo(() => {
+    if (!location.pathname.includes('/saved-destination/')) return false;
+    if (location.state?.fromQuestionnaireMetrics) return false;
+
+    // Check if temp questionnaire is currently in progress
+    if (sessionStorage.getItem('tempQuestionnaireCompleted')) return false;
+
+    // Check if this specific destination has completed questionnaire before
+    const destinationId = destinationData?.destination_id;
+    if (destinationId) {
+      const destinationQuestionnaireStatus = sessionStorage.getItem(`tempQuestionnaire_${destinationId}`);
+      return destinationQuestionnaireStatus !== 'completed';
+    }
+
+    return true; // Default to basic view if no destination ID yet
+  }, [location.pathname, location.state?.fromQuestionnaireMetrics, destinationData?.destination_id]);
 
   // Memoize starting location calculation
   const startingLocation = useMemo(() => {

@@ -14,6 +14,8 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import NoRecommendation from "./pages/NoRecommendation";
 import Questionare from "./pages/Questionare";
 import Recommendation from "./pages/Recommendation";
@@ -64,6 +66,8 @@ const App = () => {
                   <Route path="/" element={<Index />} />
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                  <Route path="/reset-password" element={<ResetPasswordPage />} />
                   <Route path="/norecommendation" element={<NoRecommendation />} />
                   <Route path="/questionare" element={<Questionare />} />
                   <Route path="/questionnaire" element={<Questionare />} />

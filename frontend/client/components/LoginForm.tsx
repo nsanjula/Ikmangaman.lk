@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { authAPI, LoginRequest } from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import BackendStatus from "./BackendStatus";
+import ForgotPasswordForm from "./ForgotPasswordForm";
 
 const EyeIcon = ({ isVisible }: { isVisible: boolean }) => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
@@ -29,6 +30,7 @@ const LoginForm = () => {
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { login, isTimeout, clearTimeout } = useAuth();
@@ -91,6 +93,11 @@ const LoginForm = () => {
       setIsLoading(false);
     }
   };
+
+  // Show forgot password form if requested
+  if (showForgotPassword) {
+    return <ForgotPasswordForm onBack={() => setShowForgotPassword(false)} />;
+  }
 
   return (
     <>
@@ -235,9 +242,13 @@ const LoginForm = () => {
                 </div>
 
                 <div className="text-center text-sm">
-                  <a href="/forgot-password" className="btn btn-tertiary text-sm">
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotPassword(true)}
+                    className="btn btn-tertiary text-sm"
+                  >
                     Forgot password?
-                  </a>
+                  </button>
                   <span className="mx-2" style={{ color: 'var(--text-600)' }}>•</span>
                   <a href="/register" className="btn btn-tertiary text-sm">
                     Create an account

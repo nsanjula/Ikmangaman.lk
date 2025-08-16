@@ -105,6 +105,7 @@ export interface LoginRequest {
 export interface RegisterRequest {
   firstname: string;
   lastname?: string;
+  email: string;
   date_of_birth: string; // Format: YYYY-MM-DD
   username: string;
   password: string;
@@ -122,6 +123,7 @@ export interface ApiError {
 export interface UserProfile {
   firstname: string;
   lastname: string | null;
+  email: string;
   date_0f_birth: string; // Note: backend has typo in field name
   username: string;
 }
@@ -129,6 +131,7 @@ export interface UserProfile {
 export interface UserUpdateRequest {
   firstname?: string;
   lastname?: string;
+  email?: string;
   date_of_birth?: string; // Format: YYYY-MM-DD
   password?: string;
 }
@@ -269,6 +272,23 @@ export interface ChatRequest {
 
 export interface ChatResponse {
   "reply: ": string;
+}
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ForgotPasswordResponse {
+  message: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  new_password: string;
+}
+
+export interface ResetPasswordResponse {
+  message: string;
 }
 
 class AuthAPI {
@@ -834,6 +854,70 @@ class AuthAPI {
         description: "Weather data unavailable",
         error: true,
       };
+    }
+  }
+
+  async forgotPassword(email: string): Promise<ForgotPasswordResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!response.ok) {
+        let errorMessage = "Failed to send reset email";
+        try {
+          const error: ApiError = await response.json();
+          errorMessage = error.detail || errorMessage;
+        } catch (jsonError) {
+          console.warn("Failed to parse forgot password error response:", jsonError);
+        }
+        throw new Error(errorMessage);
+      }
+
+      return await response.json();
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw new Error(
+          "Unable to connect to server. Please check your connection.",
+        );
+      }
+      throw error;
+    }
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<ResetPasswordResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ token, new_password: newPassword }),
+      });
+
+      if (!response.ok) {
+        let errorMessage = "Failed to reset password";
+        try {
+          const error: ApiError = await response.json();
+          errorMessage = error.detail || errorMessage;
+        } catch (jsonError) {
+          console.warn("Failed to parse reset password error response:", jsonError);
+        }
+        throw new Error(errorMessage);
+      }
+
+      return await response.json();
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw new Error(
+          "Unable to connect to server. Please check your connection.",
+        );
+      }
+      throw error;
     }
   }
 
