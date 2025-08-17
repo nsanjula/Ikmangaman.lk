@@ -1,6 +1,5 @@
 # railway.toml (TOML, not JSON)
 
-# Optional: keep the schema as a quoted key (or just comment it out)
 "$schema" = "https://railway.com/railway.schema.json"
 
 [build]
