@@ -3,6 +3,7 @@ __pycache__
 .idea
 .log
 .env
+.xml
 .config/
 node_modules/
 .cursor
@@ -12,3 +13,6 @@ backend\__init__.py
 frontend\.env
 backend\utils\__init__.py
 builder.config.json
+
+__pycache__/
+*.pyc

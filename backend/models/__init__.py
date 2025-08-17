@@ -7,3 +7,6 @@ from backend.models.latest_questionnaire import LatestQuestionnaire
 from backend.models.location_coordinates import LocationCoordinates
 from backend.models.destination_imgs import DestinationImages
 from backend.models.transitfare import Transitfare
+from backend.models.itinerary import Itinerary
+from backend.models.saved_places import SavedPlace
+from backend.models.password_reset import PasswordResetToken

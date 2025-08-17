@@ -63,12 +63,28 @@ def get_recommendations(db: Session = Depends(get_db), current_user: user.User =
     response = []
     for i, (destination, score) in enumerate(top_destinations_with_scores):
         rating_label = "Very Good" if score >= 0.8 else "Good" if score >= 0.6 else "Average"
+
+        filters = []
+        if destination.hill_country == 1:
+            filters.append("hill_country")
+        if destination.coastal == 1:
+            filters.append("coastal")
+        if destination.dry_zone == 1:
+            filters.append("dry_zone")
+        if destination.urban == 1:
+            filters.append("urban")
+
         response.append({
             "destination_id": destination.destination_id,
             "name": destination.name,
             "match_score": round(score, 2),
             "rating_label": rating_label,
-            "estimated_budget": calculate_the_budget(destination.avg_cost, distance_results[i]["distance"], latest_questionnaire_of_accessed_user.no_of_people),
+            "estimated_budget": calculate_the_budget(
+                destination.avg_cost,
+                distance_results[i]["distance"],
+                latest_questionnaire_of_accessed_user.no_of_people
+            ),
+            "filters": filters,
             "distance": distance_results[i]["distance"],
             "travel_time": distance_results[i]["travel_time"],
             "thumbnail_img": f"/destination-image/{destination.destination_id}"

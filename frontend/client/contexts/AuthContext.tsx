@@ -5,8 +5,7 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import { authAPI } from "../lib/api";
-import { useNavigate } from "react-router-dom";
+import { authAPI, setGlobalTimeoutHandler } from "../lib/api";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -47,14 +46,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     );
 
     if (existingToken) {
-      // For now, trust the token exists and set it without validation
-      // Token validation will happen when making actual API calls
-      console.log("Token found, setting authenticated state");
-      setToken(existingToken);
+      // Validate token by making a test API call
+      console.log("Token found, validating...");
+
+      // Make a simple authenticated API call to validate token
+      fetch('http://localhost:8000/users/me', {
+        headers: {
+          'Authorization': `Bearer ${existingToken}`,
+          'Content-Type': 'application/json',
+        },
+      })
+      .then(response => {
+        if (response.ok) {
+          console.log("Token is valid, setting authenticated state");
+          setToken(existingToken);
+        } else {
+          console.log("Token is invalid, removing and staying logged out");
+          authAPI.removeToken();
+          setToken(null);
+        }
+      })
+      .catch(error => {
+        console.log("Token validation failed, removing token:", error.message);
+        authAPI.removeToken();
+        setToken(null);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
     } else {
       console.log("No token found, user not authenticated");
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   const login = (newToken: string) => {
@@ -71,10 +94,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const handleAuthError = (error: Error) => {
     console.log('🔐 Authentication error detected:', error.message);
 
-    // Check if it's a timeout error
+    // Check if it's a timeout error (including database timeouts)
     const isTimeoutError = error.message.includes('timeout') ||
                           error.message.includes('Request timeout') ||
-                          error.message.includes('network timeout');
+                          error.message.includes('network timeout') ||
+                          error.message.includes('database timeout') ||
+                          error.message.includes('connection timeout') ||
+                          error.message.includes('server timeout') ||
+                          error.message.includes('query timeout') ||
+                          error.message.includes('Database connection') ||
+                          error.message.includes('503') ||
+                          error.message.includes('502') ||
+                          error.message.includes('504');
 
     // Check if it's an authentication-related error
     if (error.message.includes('Authentication required') ||
@@ -116,6 +147,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const clearTimeout = () => {
     setIsTimeout(false);
   };
+
+  // Set up global timeout handler
+  useEffect(() => {
+    setGlobalTimeoutHandler(handleAuthError);
+  }, []);
 
   const isAuthenticated = !!token;
 

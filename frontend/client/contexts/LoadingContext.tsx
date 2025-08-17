@@ -61,6 +61,16 @@ export const LoadingProvider: React.FC<LoadingProviderProps> = ({ children }) =>
 
   const startLoading = useCallback((key: string, message?: string) => {
     console.log('🚀 startLoading called with key:', key, 'message:', message);
+
+    // Immediately scroll to top to ensure loading animation is visible
+    try {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    } catch (e) {
+      // Ignore scroll errors
+    }
+
     setLoadingState({
       isLoading: true,
       progress: 0,
@@ -242,14 +252,25 @@ export const useApiWithLoading = () => {
       console.error('❌ API call failed for key:', loadingKey, error);
       if (timeoutId) clearTimeout(timeoutId);
 
-      // Check if it's an authentication error or timeout
+      // Check if it's an authentication error, timeout, or no results error
       if (error instanceof Error &&
           (error.message.includes('Authentication required') ||
            error.message.includes('Please log in again') ||
            error.message.includes('401') ||
            error.message.includes('timeout') ||
-           error.message.includes('Request timeout'))) {
-        console.log('🔐 Authentication/timeout error detected, stopping loading');
+           error.message.includes('Request timeout') ||
+           error.message.includes('database timeout') ||
+           error.message.includes('connection timeout') ||
+           error.message.includes('server timeout') ||
+           error.message.includes('query timeout') ||
+           error.message.includes('Database connection') ||
+           error.message.includes('502') ||
+           error.message.includes('503') ||
+           error.message.includes('504') ||
+           error.message.includes('404') ||
+           error.message.includes('No destinations found') ||
+           error.message.includes('No matching destinations'))) {
+        console.log('🔐 Auth/timeout/no-results error detected, stopping loading');
         forceStopLoading();
       }
 

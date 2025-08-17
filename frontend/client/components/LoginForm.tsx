@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { authAPI, LoginRequest } from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import BackendStatus from "./BackendStatus";
+import ForgotPasswordForm from "./ForgotPasswordForm";
 
 const EyeIcon = ({ isVisible }: { isVisible: boolean }) => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
@@ -29,6 +30,7 @@ const LoginForm = () => {
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { login, isTimeout, clearTimeout } = useAuth();
@@ -92,6 +94,11 @@ const LoginForm = () => {
     }
   };
 
+  // Show forgot password form if requested
+  if (showForgotPassword) {
+    return <ForgotPasswordForm onBack={() => setShowForgotPassword(false)} />;
+  }
+
   return (
     <>
       <BackendStatus />
@@ -110,17 +117,17 @@ const LoginForm = () => {
         {/* Floating elements for dynamic effect */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-20 left-10 w-2 h-2 bg-white/20 rounded-full animate-pulse"
-               style={{ animationDelay: '0s', animationDuration: '3s' }} />
+            style={{ animationDelay: '0s', animationDuration: '3s' }} />
           <div className="absolute top-32 right-20 w-3 h-3 bg-cyan-300/30 rounded-full animate-pulse"
-               style={{ animationDelay: '1s', animationDuration: '4s' }} />
+            style={{ animationDelay: '1s', animationDuration: '4s' }} />
           <div className="absolute bottom-32 right-1/3 w-2 h-2 bg-cyan-200/25 rounded-full animate-pulse"
-               style={{ animationDelay: '0.5s', animationDuration: '3.5s' }} />
+            style={{ animationDelay: '0.5s', animationDuration: '3.5s' }} />
 
           {/* Floating geometric shapes */}
           <div className="absolute top-1/4 right-10 w-6 h-6 border border-white/20 rotate-45 animate-spin"
-               style={{ animationDuration: '20s' }} />
+            style={{ animationDuration: '20s' }} />
           <div className="absolute bottom-1/4 left-16 w-4 h-4 border border-cyan-300/30 rotate-12 animate-spin"
-               style={{ animationDuration: '15s', animationDirection: 'reverse' }} />
+            style={{ animationDuration: '15s', animationDirection: 'reverse' }} />
         </div>
 
         {/* Content - Responsive Login Form */}

@@ -30,6 +30,7 @@ const RegisterForm = () => {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
+    email: "",
     birthday: "",
     username: "",
     password: "",
@@ -84,6 +85,13 @@ const RegisterForm = () => {
       newErrors.firstName = "First name is required";
     if (!formData.lastName.trim()) newErrors.lastName = "Last name is required";
 
+    // Email validation
+    if (!formData.email.trim()) {
+      newErrors.email = "Email address is required";
+    } else if (!formData.email.includes('@')) {
+      newErrors.email = "Invalid email address";
+    }
+
     // Basic date validation
     if (!formData.birthday.trim()) {
       newErrors.birthday = "Birthday is required";
@@ -119,6 +127,7 @@ const RegisterForm = () => {
       const registerData: RegisterRequest = {
         firstname: formData.firstName,
         lastname: formData.lastName || undefined,
+        email: formData.email,
         date_of_birth: authAPI.formatDateForAPI(formData.birthday),
         username: formData.username,
         password: formData.password,
@@ -177,17 +186,17 @@ const RegisterForm = () => {
         {/* Floating elements for dynamic effect */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-20 left-10 w-2 h-2 bg-white/20 rounded-full animate-pulse"
-               style={{ animationDelay: '0s', animationDuration: '3s' }} />
+            style={{ animationDelay: '0s', animationDuration: '3s' }} />
           <div className="absolute top-32 right-20 w-3 h-3 bg-cyan-300/30 rounded-full animate-pulse"
-               style={{ animationDelay: '1s', animationDuration: '4s' }} />
+            style={{ animationDelay: '1s', animationDuration: '4s' }} />
           <div className="absolute bottom-32 right-1/3 w-2 h-2 bg-cyan-200/25 rounded-full animate-pulse"
-               style={{ animationDelay: '0.5s', animationDuration: '3.5s' }} />
+            style={{ animationDelay: '0.5s', animationDuration: '3.5s' }} />
 
           {/* Floating geometric shapes */}
           <div className="absolute top-1/4 right-10 w-6 h-6 border border-white/20 rotate-45 animate-spin"
-               style={{ animationDuration: '20s' }} />
+            style={{ animationDuration: '20s' }} />
           <div className="absolute bottom-1/4 left-16 w-4 h-4 border border-cyan-300/30 rotate-12 animate-spin"
-               style={{ animationDuration: '15s', animationDirection: 'reverse' }} />
+            style={{ animationDuration: '15s', animationDirection: 'reverse' }} />
         </div>
 
         {/* Content - Responsive Register Form */}
@@ -224,9 +233,8 @@ const RegisterForm = () => {
                     value={formData.firstName}
                     onChange={handleChange}
                     placeholder="Ex: Nisal"
-                    className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500 ${
-                      errors.firstName ? 'border-red-300 bg-red-50' : 'border-gray-200'
-                    }`}
+                    className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500 ${errors.firstName ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                      }`}
                   />
                   {errors.firstName && (
                     <p className="text-red-600 text-sm mt-1">{errors.firstName}</p>
@@ -243,9 +251,8 @@ const RegisterForm = () => {
                     value={formData.lastName}
                     onChange={handleChange}
                     placeholder="Ex: Sanjula"
-                    className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500 ${
-                      errors.lastName ? 'border-red-300 bg-red-50' : 'border-gray-200'
-                    }`}
+                    className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500 ${errors.lastName ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                      }`}
                   />
                   {errors.lastName && (
                     <p className="text-red-600 text-sm mt-1">{errors.lastName}</p>
@@ -264,9 +271,8 @@ const RegisterForm = () => {
                     value={formData.birthday}
                     onChange={handleChange}
                     placeholder="DD/MM/YYYY"
-                    className={`w-full p-3 pr-12 border rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500 ${
-                      errors.birthday ? 'border-red-300 bg-red-50' : 'border-gray-200'
-                    }`}
+                    className={`w-full p-3 pr-12 border rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500 ${errors.birthday ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                      }`}
                   />
                   <Popover
                     open={isCalendarOpen}
@@ -310,9 +316,8 @@ const RegisterForm = () => {
                   value={formData.username}
                   onChange={handleChange}
                   placeholder="Ex: Nisal01"
-                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500 ${
-                    errors.username ? 'border-red-300 bg-red-50' : 'border-gray-200'
-                  }`}
+                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500 ${errors.username ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                    }`}
                 />
                 {errors.username && (
                   <p className="text-red-600 text-sm mt-1">{errors.username}</p>
@@ -328,9 +333,8 @@ const RegisterForm = () => {
                     value={formData.password}
                     onChange={handleChange}
                     placeholder="Enter your password"
-                    className={`w-full p-3 pr-12 border rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500 ${
-                      errors.password ? 'border-red-300 bg-red-50' : 'border-gray-200'
-                    }`}
+                    className={`w-full p-3 pr-12 border rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500 ${errors.password ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                      }`}
                   />
                   <button
                     type="button"
@@ -356,9 +360,8 @@ const RegisterForm = () => {
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     placeholder="Confirm your password"
-                    className={`w-full p-3 pr-12 border rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500 ${
-                      errors.confirmPassword ? 'border-red-300 bg-red-50' : 'border-gray-200'
-                    }`}
+                    className={`w-full p-3 pr-12 border rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500 ${errors.confirmPassword ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                      }`}
                   />
                   <button
                     type="button"

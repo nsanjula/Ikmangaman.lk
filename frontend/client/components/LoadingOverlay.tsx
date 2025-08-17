@@ -16,9 +16,10 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({ className = '' }
       const originalStyle = window.getComputedStyle(document.body).overflow;
       const originalScrollPosition = window.pageYOffset || document.documentElement.scrollTop;
 
-      // Immediately scroll to top for loading visibility
-      // Use instant scrolling to ensure loading is always visible
+      // Immediately scroll to top for loading visibility - multiple attempts for reliability
       window.scrollTo({ top: 0, behavior: 'instant' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
 
       // Lock scroll immediately
       document.body.style.overflow = 'hidden';
@@ -60,23 +61,26 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({ className = '' }
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center ${className}`}
+      className={`fixed inset-0 z-50 flex items-center justify-center loading-overlay-force-visible ${className}`}
       style={{
         backgroundColor: 'rgba(255, 255, 255, 0.95)',
         backdropFilter: 'blur(8px)',
         position: 'fixed',
-        top: 0,
-        left: 0,
+        top: '0px !important',
+        left: '0px !important',
+        right: '0px !important',
+        bottom: '0px !important',
         width: '100vw',
         height: '100vh',
         maxWidth: '100vw',
         maxHeight: '100vh',
         overflow: 'hidden',
-        zIndex: 9999,
+        zIndex: 99999,
         pointerEvents: 'auto',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        transform: 'translate3d(0, 0, 0)' // Force GPU acceleration for better positioning
       }}
       role="dialog"
       aria-modal="true"

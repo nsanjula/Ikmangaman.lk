@@ -8,6 +8,7 @@ import {
 } from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import { useApiWithLoading, useRouteLoading } from "../contexts/LoadingContext";
+import BookmarkButton from "./BookmarkButton";
 
 interface RecommendationCard {
   id: number;
@@ -15,7 +16,8 @@ interface RecommendationCard {
   description: string;
   price: number;
   score: number;
-  type: string;
+  type: string; // Primary area type for display
+  areaTypes?: string[]; // All area types from backend for filtering (optional)
   things_to_do: string;
   thumbnail_img: string;
   distance: string;
@@ -140,6 +142,7 @@ const RecommendationForm = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<string>("best_match");
+  const [hasCachedData, setHasCachedData] = useState(false);
 
   // Helper function to parse distance string to numeric value for sorting
   const parseDistance = (distanceStr: string): number => {
@@ -163,60 +166,78 @@ const RecommendationForm = () => {
     return totalMinutes || 0;
   };
 
-  // Helper function to determine area type from destination (simplified for backend format)
-  const getAreaType = (
-    destinationId: number,
-    destinationName?: string,
-  ): string => {
-    // Since backend doesn't provide area type info, we'll assign based on destination ID
-    // to ensure variety in recommendations rather than all being "coastal"
-    const areaTypes = ["hill_country", "coastal", "dry_zone", "urban"];
+  // Cache management functions
+  const CACHE_KEY = 'recommendationData';
+  const CACHE_TIMESTAMP_KEY = 'recommendationDataTimestamp';
+  const CACHE_EXPIRY_HOURS = 1; // Cache expires after 1 hour
 
-    // Use destination name if available for more accurate classification
-    if (destinationName) {
-      const name = destinationName.toLowerCase();
-      if (
-        name.includes("galle") ||
-        name.includes("colombo") ||
-        name.includes("negombo") ||
-        name.includes("matara") ||
-        name.includes("trincomalee") ||
-        name.includes("batticaloa")
-      ) {
-        return "coastal";
-      }
-      if (
-        name.includes("kandy") ||
-        name.includes("nuwara") ||
-        name.includes("ella") ||
-        name.includes("hatton") ||
-        name.includes("badulla")
-      ) {
-        return "hill_country";
-      }
-      if (
-        name.includes("anuradhapura") ||
-        name.includes("polonnaruwa") ||
-        name.includes("sigiriya") ||
-        name.includes("dambulla") ||
-        name.includes("vavuniya")
-      ) {
-        return "dry_zone";
-      }
-      if (
-        name.includes("colombo") ||
-        name.includes("dehiwala") ||
-        name.includes("moratuwa")
-      ) {
-        return "urban";
-      }
+  const saveRecommendationsToCache = (recommendationCards: RecommendationCard[]) => {
+    try {
+      const cacheData = {
+        cards: recommendationCards,
+        timestamp: Date.now(),
+        userToken: authAPI.getToken() // Store with token to ensure cache is user-specific
+      };
+      sessionStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
+      console.log('💾 Saved recommendation data to cache:', recommendationCards.length, 'items');
+    } catch (error) {
+      console.warn('Failed to save recommendations to cache:', error);
     }
-
-    // Fallback: distribute evenly across area types based on ID
-    return areaTypes[destinationId % areaTypes.length];
   };
 
-  const fetchRecommendations = async () => {
+  const loadRecommendationsFromCache = (): RecommendationCard[] | null => {
+    try {
+      const cached = sessionStorage.getItem(CACHE_KEY);
+      if (!cached) return null;
+
+      const cacheData = JSON.parse(cached);
+      const currentTime = Date.now();
+      const cacheAge = currentTime - cacheData.timestamp;
+      const maxCacheAge = CACHE_EXPIRY_HOURS * 60 * 60 * 1000;
+
+      // Check if cache is expired
+      if (cacheAge > maxCacheAge) {
+        console.log('🕒 Cache expired, removing old data');
+        clearRecommendationsCache();
+        return null;
+      }
+
+      // Check if cache belongs to current user
+      const currentToken = authAPI.getToken();
+      if (cacheData.userToken !== currentToken) {
+        console.log('👤 Cache belongs to different user, clearing');
+        clearRecommendationsCache();
+        return null;
+      }
+
+      console.log('✅ Restored recommendation data from cache:', cacheData.cards.length, 'items');
+      return cacheData.cards;
+    } catch (error) {
+      console.warn('Failed to load recommendations from cache:', error);
+      clearRecommendationsCache();
+      return null;
+    }
+  };
+
+  const clearRecommendationsCache = () => {
+    sessionStorage.removeItem(CACHE_KEY);
+    sessionStorage.removeItem(CACHE_TIMESTAMP_KEY);
+    console.log('🗑️ Cleared recommendations cache');
+  };
+
+  // Helper function to get area types from backend filter data
+  const getAreaTypes = (filters: string[]): string[] => {
+    // Return the filters from backend directly, or fallback to empty array
+    return filters || [];
+  };
+
+  // Helper function to get primary area type for card display (use first filter)
+  const getPrimaryAreaType = (filters: string[]): string => {
+    // Use the first filter as primary, or fallback to "coastal" for display
+    return filters && filters.length > 0 ? filters[0] : "coastal";
+  };
+
+  const fetchRecommendations = async (forceRefresh: boolean = false) => {
     try {
       setError(null);
 
@@ -225,6 +246,18 @@ const RecommendationForm = () => {
         setError("Please log in to view recommendations");
         setIsLoading(false);
         return;
+      }
+
+      // Try to load from cache first (unless force refresh)
+      if (!forceRefresh) {
+        const cachedData = loadRecommendationsFromCache();
+        if (cachedData && cachedData.length > 0) {
+          console.log("📂 Using cached recommendation data");
+          setCards(cachedData);
+          setHasCachedData(true);
+          setIsLoading(false);
+          return;
+        }
       }
 
       console.log("Fetching recommendations for authenticated user...");
@@ -274,13 +307,15 @@ const RecommendationForm = () => {
           return isValid;
         })
         .map((item: BackendRecommendation) => {
+          const areaTypes = getAreaTypes(item.filters);
           return {
             id: item.destination_id,
             name: item.name || "Unknown Destination",
             description: `${item.rating_label} match (${item.distance}, ${item.travel_time})`,
             price: Math.round(item.estimated_budget || 0),
             score: item.match_score || 0,
-            type: getAreaType(item.destination_id, item.name),
+            type: getPrimaryAreaType(areaTypes), // Use primary area for card type
+            areaTypes: areaTypes, // Store all area types for filtering
             things_to_do: "", // Not provided by backend currently
             thumbnail_img: item.thumbnail_img || "",
             distance: item.distance || "N/A",
@@ -292,6 +327,12 @@ const RecommendationForm = () => {
 
       console.log("Transformed cards:", transformedCards.length, "items");
       setCards(transformedCards);
+
+      // Save to cache for future use
+      if (transformedCards.length > 0) {
+        saveRecommendationsToCache(transformedCards);
+        setHasCachedData(false); // This is fresh data
+      }
 
       // If no recommendations after successful fetch, show helpful message
       if (transformedCards.length === 0) {
@@ -330,9 +371,41 @@ const RecommendationForm = () => {
     }
   };
 
+  // Load cache on component mount, then fetch if needed
   useEffect(() => {
+    // First try to load from cache
+    if (isAuthenticated) {
+      const cachedData = loadRecommendationsFromCache();
+      if (cachedData && cachedData.length > 0) {
+        console.log("📂 Loaded cached data on mount");
+        setCards(cachedData);
+        setHasCachedData(true);
+        setIsLoading(false);
+        return;
+      }
+    }
+
+    // If no cache or not authenticated, fetch fresh data
     fetchRecommendations();
   }, [isAuthenticated]);
+
+  // Clear cache when questionnaire is updated or user logs out
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'tempQuestionnaireData' && event.newValue) {
+        // Questionnaire was updated, clear recommendations cache
+        console.log("🔄 Questionnaire updated, clearing recommendations cache");
+        clearRecommendationsCache();
+      }
+    };
+
+    // Listen for changes to temporary questionnaire data
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   const toggleFilters = () => setShowFilters(!showFilters);
 
@@ -369,9 +442,18 @@ const RecommendationForm = () => {
     }
   };
 
-  // Filter cards based on selected filters
+  // Filter cards based on selected filters - use backend filter data
   const filteredCards = cards
-    .filter((card) => selectedAreas.includes(card.type))
+    .filter((card) => {
+      // Check if any of the card's area types match selected areas
+      // If no areaTypes available, fallback to using the card's type property
+      if (card.areaTypes && card.areaTypes.length > 0) {
+        return card.areaTypes.some(areaType => selectedAreas.includes(areaType));
+      } else {
+        // Fallback to using the primary type if no areaTypes available
+        return selectedAreas.includes(card.type);
+      }
+    })
     .filter((card) => card.price <= budget)
     .sort(getSortFunction(sortBy));
 
@@ -526,7 +608,22 @@ const RecommendationForm = () => {
                 </div>
                 <div className="flex items-center gap-4">
                   <button
-                    onClick={() => navigate("/questionnaire")}
+                    onClick={() => {
+                      navigate("/create-itinerary");
+                    }}
+                    className="btn btn-primary btn-md flex items-center gap-2 whitespace-nowrap"
+                  >
+                    <span>🗺️</span>
+                    Create Itinerary
+                  </button>
+                  <button
+                    onClick={() => {
+                      // Clear temporary questionnaire data when editing main questionnaire
+                      sessionStorage.removeItem('tempQuestionnaireData');
+                      clearRecommendationsCache(); // Clear recommendations cache too
+                      console.log('Cleared temporary questionnaire data and recommendations cache - navigating to main questionnaire');
+                      navigate("/questionnaire");
+                    }}
                     className="btn btn-secondary btn-md flex items-center gap-2 whitespace-nowrap border-2 hover:bg-opacity-10"
                     style={{
                       borderColor: 'var(--primary-600)',
@@ -590,6 +687,12 @@ const RecommendationForm = () => {
                               {card.name}
                             </div>
                           </div>
+                          {/* Bookmark Button */}
+                          <BookmarkButton
+                            destinationName={card.name}
+                            variant="card"
+                            size="sm"
+                          />
                           {/* Price Badge */}
                           <div className="absolute top-3 right-3 px-2 py-1 rounded text-white text-sm font-semibold" style={{ background: 'var(--primary-700)' }}>
                             LKR {card.price.toLocaleString()}
@@ -661,7 +764,8 @@ const RecommendationForm = () => {
                       <button
                         onClick={() => {
                           setError(null);
-                          fetchRecommendations();
+                          clearRecommendationsCache(); // Clear cache before refreshing
+                          fetchRecommendations(true); // Force refresh from API
                         }}
                         className="bg-white hover:bg-gray-100 text-cyan-700 px-6 py-3 rounded transition-colors font-medium"
                         disabled={isLoading}
@@ -702,7 +806,13 @@ const RecommendationForm = () => {
                         Test API
                       </button>
                       <button
-                        onClick={() => navigate("/questionnaire")}
+                        onClick={() => {
+                          // Clear temporary questionnaire data when editing main questionnaire
+                          sessionStorage.removeItem('tempQuestionnaireData');
+                          clearRecommendationsCache(); // Clear recommendations cache too
+                          console.log('Cleared temporary questionnaire data and recommendations cache - navigating to main questionnaire');
+                          navigate("/questionnaire");
+                        }}
                         className="bg-cyan-700 hover:bg-cyan-800 text-white px-6 py-3 rounded transition-colors font-medium border-2 border-white"
                       >
                         Edit Questionnaire

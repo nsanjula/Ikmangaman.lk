@@ -25,6 +25,9 @@ export default function Header() {
   };
 
   const handleLogout = () => {
+    // Clear temporary questionnaire data when logging out
+    sessionStorage.removeItem('tempQuestionnaireData');
+    console.log('Cleared temporary questionnaire data - logging out');
     logout();
     navigate("/");
     setIsMobileMenuOpen(false);
@@ -61,7 +64,12 @@ export default function Header() {
               // Logged in state
               <>
                 <div
-                  onClick={() => handleNavigation("/profile")}
+                  onClick={() => {
+                    // Clear temporary questionnaire data when navigating to profile
+                    sessionStorage.removeItem('tempQuestionnaireData');
+                    console.log('Cleared temporary questionnaire data - navigating to profile');
+                    handleNavigation("/profile");
+                  }}
                   className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-cyan-700 shadow-lg cursor-pointer hover:bg-gray-50 transition border-2 border-cyan-600 ring-2 ring-cyan-200"
                   title="Profile"
                 >
@@ -165,7 +173,12 @@ export default function Header() {
               <div className="flex flex-col space-y-2 pt-2 px-4">
                 <div className="flex items-center space-x-4">
                   <div
-                    onClick={() => handleNavigation("/profile")}
+                    onClick={() => {
+                      // Clear temporary questionnaire data when navigating to profile
+                      sessionStorage.removeItem('tempQuestionnaireData');
+                      console.log('Cleared temporary questionnaire data - navigating to profile');
+                      handleNavigation("/profile");
+                    }}
                     className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-cyan-700 shadow-lg cursor-pointer hover:bg-gray-50 transition border-2 border-cyan-600 ring-2 ring-cyan-200"
                     title="Profile"
                   >

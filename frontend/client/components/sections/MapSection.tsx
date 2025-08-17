@@ -1,39 +1,72 @@
 import React, { useMemo } from "react";
 import { FiMapPin, FiNavigation, FiCompass } from "react-icons/fi";
+import { useLocation } from "react-router-dom";
 import OptimizedRouteMapComponent from "../OptimizedRouteMapComponent";
 import EnhancedTouristAttractionsMapComponent from "../EnhancedTouristAttractionsMapComponent";
 import { useDestination } from "../../contexts/DestinationContext";
 
 const MapSection: React.FC = () => {
   const { destinationData, questionnaireData, loading, error } = useDestination();
+  const location = useLocation();
+
+  // Check if we're coming from search results
+  const isFromSearch = location.state?.fromSearch || location.pathname.includes('/search/destination/');
+
+  // Check if we're in saved places basic view (before questionnaire metrics)
+  const isInSavedPlacesBasicView = useMemo(() => {
+    if (!location.pathname.includes('/saved-destination/')) return false;
+    if (location.state?.fromQuestionnaireMetrics) return false;
+
+    // Check if temp questionnaire is currently in progress
+    if (sessionStorage.getItem('tempQuestionnaireCompleted')) return false;
+
+    // Check if this specific destination has completed questionnaire before
+    const destinationId = destinationData?.destination_id;
+    if (destinationId) {
+      const destinationQuestionnaireStatus = sessionStorage.getItem(`tempQuestionnaire_${destinationId}`);
+      return destinationQuestionnaireStatus !== 'completed';
+    }
+
+    return true; // Default to basic view if no destination ID yet
+  }, [location.pathname, location.state?.fromQuestionnaireMetrics, destinationData?.destination_id]);
 
   // Memoize starting location calculation
   const startingLocation = useMemo(() => {
+    console.log('MapSection questionnaire data:', questionnaireData);
     if (questionnaireData?.starting_location_latitudes && questionnaireData?.starting_location_longitudes) {
+      console.log('Using questionnaire starting location:', {
+        lat: questionnaireData.starting_location_latitudes,
+        lng: questionnaireData.starting_location_longitudes
+      });
       return {
         lat: questionnaireData.starting_location_latitudes,
         lng: questionnaireData.starting_location_longitudes,
       };
     }
     // Fallback to Colombo
+    console.log('Falling back to Colombo coordinates');
     return { lat: 6.9271, lng: 79.8612 };
   }, [questionnaireData]);
 
   if (loading) {
     return (
       <div className="space-y-6 mb-6">
-        {/* Route Map Loading */}
+        {/* Best Route Loading - Only show for non-search destinations and not in saved places basic view */}
+        {!isFromSearch && !isInSavedPlacesBasicView && (
+          <div className="card p-6 animate-pulse" style={{ background: 'var(--surface)' }}>
+            <div className="h-6 bg-gray-200 rounded mb-4 w-48"></div>
+            <div className="h-4 bg-gray-200 rounded mb-4 w-full"></div>
+            <div className="w-full h-96 bg-gray-200 rounded-lg mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+          </div>
+        )}
+
+        {/* Tourist Attractions Map Loading */}
         <div className="card p-6 animate-pulse" style={{ background: 'var(--surface)' }}>
-          <div className="h-6 bg-gray-200 rounded mb-4 w-48"></div>
+          <div className="h-6 bg-gray-200 rounded mb-4 w-56"></div>
           <div className="h-4 bg-gray-200 rounded mb-4 w-full"></div>
           <div className="w-full h-96 bg-gray-200 rounded-lg mb-4"></div>
           <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-        </div>
-
-        {/* Attractions Map Loading */}
-        <div className="card p-6 animate-pulse" style={{ background: 'var(--surface)' }}>
-          <div className="h-6 bg-gray-200 rounded mb-4 w-56"></div>
-          <div className="w-full h-96 bg-gray-200 rounded-lg"></div>
         </div>
       </div>
     );
@@ -81,51 +114,51 @@ const MapSection: React.FC = () => {
 
   return (
     <div id="map-section" className="space-y-6 mb-6">
-      {/* Best Route Section */}
-      <div className="card p-6" style={{ background: 'var(--surface)' }}>
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-2">
-            <FiNavigation className="w-6 h-6" style={{ color: 'var(--primary-600)' }} />
-            <h2 className="text-2xl font-bold" style={{ color: 'var(--text-900)' }}>
-              Best Route
-            </h2>
+      {/* Best Route Section - Only show for non-search destinations and not in saved places basic view */}
+      {!isFromSearch && !isInSavedPlacesBasicView && (
+        <div className="card p-6" style={{ background: 'var(--surface)' }}>
+          <div className="mb-6">
+            <div className="flex items-center gap-3 mb-2">
+              <FiNavigation className="w-6 h-6" style={{ color: 'var(--primary-600)' }} />
+              <h2 className="text-2xl font-bold" style={{ color: 'var(--text-900)' }}>
+                Best Route
+              </h2>
+            </div>
+            <p className="text-sm" style={{ color: 'var(--text-600)' }}>
+              Optimized driving route from your starting location to {destinationData.destination_name}
+            </p>
           </div>
-          <p className="text-sm" style={{ color: 'var(--text-600)' }}>
-            Optimized driving route from your starting location to {destinationData.destination_name}
-          </p>
-        </div>
 
-        {/* Route Map Container */}
-        <div className="rounded-lg overflow-hidden">
-          <OptimizedRouteMapComponent
-            destination={destination}
-            startingLocation={startingLocation}
-            destinationName={destinationData.destination_name}
-            className="w-full"
-          />
-        </div>
+          {/* Route Map Container */}
+          <div className="rounded-lg overflow-hidden">
+            <OptimizedRouteMapComponent
+              destination={destination}
+              startingLocation={startingLocation}
+              destinationName={destinationData.destination_name}
+              className="w-full"
+            />
+          </div>
 
-        {/* Route Information */}
-        <div className="mt-4 p-4 rounded-lg border-l-4" style={{ 
-          background: 'var(--surface-alt)', 
-          borderLeftColor: 'var(--primary-600)' 
-        }}>
-          <div className="flex items-start gap-3">
-            <span className="text-xl">🛣️</span>
-            <div>
-              <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-900)' }}>
-                Navigation Information
-              </p>
-              <p className="text-sm" style={{ color: 'var(--text-600)' }}>
-                This interactive map shows the recommended driving route with real-time traffic data.
-                Click and drag to explore different routes and waypoints.
-              </p>
+          {/* Route Information */}
+          <div className="mt-4 p-4 rounded-lg border-l-4" style={{
+            background: 'var(--surface-alt)',
+            borderLeftColor: 'var(--primary-600)'
+          }}>
+            <div className="flex items-start gap-3">
+              <span className="text-xl">🛣️</span>
+              <div>
+                <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-900)' }}>
+                  Navigation Information
+                </p>
+                <p className="text-sm" style={{ color: 'var(--text-600)' }}>
+                  This interactive map shows the recommended driving route with real-time traffic data.
+                  Click and drag to explore different routes and waypoints.
+                </p>
+              </div>
             </div>
           </div>
         </div>
-
-
-      </div>
+      )}
 
       {/* Tourist Attractions Section */}
       <div className="card p-6" style={{ background: 'var(--surface)' }}>
