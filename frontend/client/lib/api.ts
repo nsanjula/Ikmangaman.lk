@@ -428,6 +428,12 @@ class AuthAPI {
     return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
   }
 
+  // Helper method to format date from YYYY-MM-DD to DD/MM/YYYY
+  formatDateFromAPI(dateString: string): string {
+    const [year, month, day] = dateString.split("-");
+    return `${day.padStart(2, "0")}/${month.padStart(2, "0")}/${year}`;
+  }
+
   // Helper method to store token in localStorage
   storeToken(token: string): void {
     console.log(

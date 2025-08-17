@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { authAPI, RegisterRequest, LoginRequest } from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import BackendStatus from "./BackendStatus";
-import { Calendar } from "./ui/calendar";
+import { CalendarWithYearSelector } from "./ui/calendar-with-year-selector";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Button } from "./ui/button";
 import { FiCalendar } from "react-icons/fi";
@@ -54,9 +54,25 @@ const RegisterForm = () => {
 
     // If birthday field is manually typed, try to parse it as a date
     if (name === "birthday" && value) {
-      const parsedDate = new Date(value.split("/").reverse().join("-")); // Convert DD/MM/YYYY to YYYY-MM-DD for parsing
-      if (!isNaN(parsedDate.getTime())) {
-        setSelectedDate(parsedDate);
+      // Check if it matches DD/MM/YYYY format exactly
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
+        const [day, month, year] = value.split("/").map(Number);
+        const parsedDate = new Date(year, month - 1, day); // month is 0-indexed
+
+        // Validate the date is actually valid (e.g., not 30/02/2023)
+        if (
+          parsedDate.getDate() === day &&
+          parsedDate.getMonth() === month - 1 &&
+          parsedDate.getFullYear() === year &&
+          parsedDate <= new Date() &&
+          parsedDate >= new Date("1900-01-01")
+        ) {
+          setSelectedDate(parsedDate);
+        } else {
+          setSelectedDate(undefined);
+        }
+      } else {
+        setSelectedDate(undefined);
       }
     }
   };
@@ -92,11 +108,27 @@ const RegisterForm = () => {
       newErrors.email = "Invalid email address";
     }
 
-    // Basic date validation
+    // Enhanced date validation
     if (!formData.birthday.trim()) {
       newErrors.birthday = "Birthday is required";
     } else if (!/^\d{2}\/\d{2}\/\d{4}$/.test(formData.birthday)) {
       newErrors.birthday = "Please use DD/MM/YYYY format";
+    } else {
+      // Validate the actual date
+      const [day, month, year] = formData.birthday.split("/").map(Number);
+      const date = new Date(year, month - 1, day);
+
+      if (
+        date.getDate() !== day ||
+        date.getMonth() !== month - 1 ||
+        date.getFullYear() !== year
+      ) {
+        newErrors.birthday = "Please enter a valid date";
+      } else if (date > new Date()) {
+        newErrors.birthday = "Birthday cannot be in the future";
+      } else if (date < new Date("1900-01-01")) {
+        newErrors.birthday = "Please enter a valid birth year";
+      }
     }
 
     if (!formData.username.trim()) newErrors.username = "Username is required";
@@ -283,14 +315,38 @@ const RegisterForm = () => {
                   Birthday
                 </label>
                 <div className="relative">
-                  <input
-                    type="date"
-                    name="birthday"
-                    value={formData.birthday}
-                    onChange={handleChange}
-                    className={`w-full p-3  border rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500 ${errors.birthday ? 'border-red-300 bg-red-50' : 'border-gray-200'
-                      }`}
-                  />
+                  <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                      variant="outline"
+                      className={`w-full p-3 h-auto justify-between text-left font-normal hover:bg-transparent hover:border-gray-300 ${errors.birthday ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                        }`}
+                    >
+                        <input
+                          type="text"
+                          name="birthday"
+                          value={formData.birthday}
+                          onChange={handleChange}
+                          placeholder="DD/MM/YYYY"
+                          className="bg-transparent border-none outline-none flex-1 text-gray-900 placeholder-gray-500"
+                          autoComplete="off"
+                        />
+                        <FiCalendar className="h-4 w-4 text-gray-400" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarWithYearSelector
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={handleDateSelect}
+                        disabled={(date) =>
+                          date > new Date() || date < new Date("1900-01-01")
+                        }
+                        yearRange={{ start: 1900, end: new Date().getFullYear() }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 {errors.birthday && (
                   <p className="text-red-600 text-sm mt-1">{errors.birthday}</p>
