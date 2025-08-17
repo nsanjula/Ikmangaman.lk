@@ -13,7 +13,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useLoading } from "../contexts/LoadingContext";
 
 // API Base URL for image URL construction
-const API_BASE_URL = "http://localhost:8000";
+const API_BASE_URL = "https://ikmangamanlk-production.up.railway.app";
 import {
   authAPI,
   UserProfile,

@@ -770,7 +770,7 @@ const SearchResultsForm = () => {
                         <div className="relative h-48 overflow-hidden">
                           {card.thumbnail_img ? (
                             <img
-                              src={`http://localhost:8000${card.thumbnail_img}`}
+                              src={`https://ikmangamanlk-production.up.railway.app${card.thumbnail_img}`}
                               alt={card.name}
                               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                               loading="lazy"

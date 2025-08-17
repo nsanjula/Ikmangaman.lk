@@ -22,7 +22,7 @@ const StartBackendGuide: React.FC<StartBackendGuideProps> = ({
   const checkBackendStatus = async () => {
     setIsChecking(true);
     try {
-      const response = await fetch("http://localhost:8000/docs", {
+      const response = await fetch("https://ikmangamanlk-production.up.railway.app/docs", {
         method: "HEAD",
         mode: "no-cors", // This allows the request even if CORS isn't set up
       });
@@ -225,11 +225,11 @@ const StartBackendGuide: React.FC<StartBackendGuideProps> = ({
               <ul className="text-sm text-green-700 space-y-1">
                 <li>
                   • The API will be available at{" "}
-                  <strong>http://localhost:8000</strong>
+                  <strong>https://ikmangamanlk-production.up.railway.app</strong>
                 </li>
                 <li>
                   • API documentation at{" "}
-                  <strong>http://localhost:8000/docs</strong>
+                  <strong>https://ikmangamanlk-production.up.railway.app/docs</strong>
                 </li>
                 <li>
                   • This travel app will automatically connect and work properly
