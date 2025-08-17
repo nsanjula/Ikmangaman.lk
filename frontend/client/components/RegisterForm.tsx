@@ -262,44 +262,35 @@ const RegisterForm = () => {
 
               <div className="mb-6">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="Ex: nisal@example.com"
+                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500 ${errors.email ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                    }`}
+                />
+                {errors.email && (
+                  <p className="text-red-600 text-sm mt-1">{errors.email}</p>
+                )}
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Birthday
                 </label>
                 <div className="relative">
                   <input
-                    type="text"
+                    type="date"
                     name="birthday"
                     value={formData.birthday}
                     onChange={handleChange}
-                    placeholder="DD/MM/YYYY"
-                    className={`w-full p-3 pr-12 border rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500 ${errors.birthday ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                    className={`w-full p-3  border rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500 ${errors.birthday ? 'border-red-300 bg-red-50' : 'border-gray-200'
                       }`}
                   />
-                  <Popover
-                    open={isCalendarOpen}
-                    onOpenChange={setIsCalendarOpen}
-                  >
-                    <PopoverTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                        onClick={() => setIsCalendarOpen(!isCalendarOpen)}
-                      >
-                        <FiCalendar className="h-5 w-5" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={selectedDate}
-                        onSelect={handleDateSelect}
-                        disabled={(date) =>
-                          date > new Date() || date < new Date("1900-01-01")
-                        }
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
                 </div>
                 {errors.birthday && (
                   <p className="text-red-600 text-sm mt-1">{errors.birthday}</p>

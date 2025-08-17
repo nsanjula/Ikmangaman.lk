@@ -452,8 +452,10 @@ const Profile = () => {
                 <div className="w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ background: 'var(--surface-alt)' }}>
                   <FiUser size={32} style={{ color: 'var(--primary-600)' }} />
                 </div>
-                <p className="text-lg mb-4" style={{ color: 'var(--text-900)' }}>No saved places yet</p>
-                <p className="mb-6" style={{ color: 'var(--text-600)' }}>
+                <p className="mb-4 text-center" style={{ color: 'var(--text-900)', fontSize: '33px', fontWeight: '700', lineHeight: '28px', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                  No saved places yet
+                </p>
+                <p className="mb-6 mx-auto text-center max-w-md" style={{ color: 'var(--text-600)' }}>
                   Start exploring destinations and save your favorites!
                 </p>
                 <button

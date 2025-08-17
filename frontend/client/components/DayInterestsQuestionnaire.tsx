@@ -23,7 +23,7 @@ const DayInterestsQuestionnaire: React.FC<DayInterestsQuestionnaireProps> = ({
 
   const interests = [
     "Nature",
-    "Adventure", 
+    "Adventure",
     "Luxury",
     "Culture",
     "Relaxation",
@@ -133,7 +133,7 @@ const DayInterestsQuestionnaire: React.FC<DayInterestsQuestionnaireProps> = ({
         <h2 className="text-3xl font-bold mb-4" style={{ color: 'var(--text-900)' }}>
           Day {dayNumber.toString().padStart(2, '0')} - What interests you?
         </h2>
-        <p className="text-lg" style={{ color: 'var(--text-600)' }}>
+        <p className="text-lg mx-auto text-center max-w-md" style={{ color: 'var(--text-600)' }}>
           Select your interests to get personalized destination recommendations for this day
         </p>
       </div>
@@ -153,11 +153,10 @@ const DayInterestsQuestionnaire: React.FC<DayInterestsQuestionnaireProps> = ({
               key={interest}
               onClick={() => toggleInterest(interest)}
               disabled={isSubmitting}
-              className={`relative h-32 overflow-hidden rounded-lg transition-all group ${
-                selectedInterests.includes(interest)
-                  ? "ring-2 ring-cyan-500 shadow-2xl transform scale-105"
-                  : "hover:ring-2 hover:ring-cyan-300 hover:shadow-xl hover:transform hover:scale-101"
-              } ${isSubmitting ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+              className={`relative h-32 overflow-hidden rounded-lg transition-all group ${selectedInterests.includes(interest)
+                ? "ring-2 ring-cyan-500 shadow-2xl transform scale-105"
+                : "hover:ring-2 hover:ring-cyan-300 hover:shadow-xl hover:transform hover:scale-101"
+                } ${isSubmitting ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
               style={{
                 backgroundImage: `url(${interestImages[interest]})`,
                 backgroundSize: "cover",
@@ -166,11 +165,10 @@ const DayInterestsQuestionnaire: React.FC<DayInterestsQuestionnaireProps> = ({
               }}
             >
               <div
-                className={`absolute inset-0 transition-all ${
-                  selectedInterests.includes(interest)
-                    ? "bg-black bg-opacity-40"
-                    : "bg-black bg-opacity-50 group-hover:bg-opacity-30"
-                }`}
+                className={`absolute inset-0 transition-all ${selectedInterests.includes(interest)
+                  ? "bg-black bg-opacity-40"
+                  : "bg-black bg-opacity-50 group-hover:bg-opacity-30"
+                  }`}
               />
               {selectedInterests.includes(interest) && (
                 <div className="absolute top-2 right-2 z-10">
@@ -187,10 +185,10 @@ const DayInterestsQuestionnaire: React.FC<DayInterestsQuestionnaireProps> = ({
             </button>
           ))}
         </div>
-        
+
         {selectedInterests.length > 0 && (
           <div className="mt-6">
-            <p className="text-sm text-gray-600 mb-3 text-center">Selected interests:</p>
+            <p className="text-sm text-gray-600 mb-3 mx-auto text-center max-w-md">Selected interests:</p>
             <div className="flex flex-wrap justify-center gap-2">
               {selectedInterests.map((interest) => (
                 <span

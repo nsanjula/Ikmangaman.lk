@@ -524,13 +524,13 @@ const QuestionnaireMetrics: React.FC = () => {
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold mb-4" style={{ color: 'var(--text-900)' }}>
             {isDayInterestsMode ? `Day ${dayNumber} Preferences` :
-             isItineraryMode ? 'Create Your Travel Plan' :
-             'Complete Your Travel Details'}
+              isItineraryMode ? 'Create Your Travel Plan' :
+                'Complete Your Travel Details'}
           </h1>
-          <p className="text-lg" style={{ color: 'var(--text-600)' }}>
+          <p className="text-lg mx-auto text-center max-w-md" style={{ color: 'var(--text-600)' }}>
             {isDayInterestsMode ? 'Select your interests to get personalized recommendations' :
-             isItineraryMode ? 'Set up your basic travel information' :
-             `Provide your travel preferences for ${destinationName}`}
+              isItineraryMode ? 'Set up your basic travel information' :
+                `Provide your travel preferences for ${destinationName}`}
           </p>
         </div>
 
@@ -542,21 +542,19 @@ const QuestionnaireMetrics: React.FC = () => {
                 {[1, 2].map((step) => (
                   <div key={step} className="flex items-center">
                     <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold ${
-                        step === currentStep
+                      className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold ${step === currentStep
                           ? 'bg-cyan-600'
                           : step < currentStep
-                          ? 'bg-cyan-500'
-                          : 'bg-gray-300'
-                      }`}
+                            ? 'bg-cyan-500'
+                            : 'bg-gray-300'
+                        }`}
                     >
                       {step}
                     </div>
                     {step < 2 && (
                       <div
-                        className={`w-16 h-1 mx-2 ${
-                          step < currentStep ? 'bg-cyan-500' : 'bg-gray-300'
-                        }`}
+                        className={`w-16 h-1 mx-2 ${step < currentStep ? 'bg-cyan-500' : 'bg-gray-300'
+                          }`}
                       />
                     )}
                   </div>
@@ -625,7 +623,7 @@ const QuestionnaireMetrics: React.FC = () => {
               <h2 className="text-2xl font-bold mb-8" style={{ color: 'var(--text-900)' }}>
                 {isItineraryMode ? 'Travel Details' : 'Travel Details'}
               </h2>
-              
+
               <div className="max-w-lg mx-auto space-y-8">
                 <div>
                   <label className="block text-lg font-semibold mb-4" style={{ color: 'var(--text-900)' }}>
@@ -762,8 +760,8 @@ const QuestionnaireMetrics: React.FC = () => {
                 </>
               ) : (
                 isDayInterestsMode ? 'Get Recommendations →' :
-                isItineraryMode ? 'Continue →' :
-                'Create Travel Plan →'
+                  isItineraryMode ? 'Continue →' :
+                    'Create Travel Plan →'
               )}
             </button>
           )}
