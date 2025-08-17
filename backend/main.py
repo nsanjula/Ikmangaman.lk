@@ -18,6 +18,9 @@ env_origins = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if
 dev_origins = [
     "http://localhost:5173", "http://127.0.0.1:5173",   # Vite default
     "http://localhost:3000", "http://127.0.0.1:3000",   # CRA default (if you use it)
+    "http://localhost:8080", "http://127.0.0.1:8080",
+    "http://localhost:8000", "http://127.0.0.1:8000",
+    "https://eloquent-frangollo-7975e1.netlify.app",
 ]
 origins = env_origins or dev_origins
 
