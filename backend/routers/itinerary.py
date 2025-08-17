@@ -129,6 +129,18 @@ def get_day_recommendations(
     response = []
     for i, (destination, score) in enumerate(top_destinations_with_scores):
         rating_label = "Very Good" if score >= 0.8 else "Good" if score >= 0.6 else "Average"
+
+        # Add filters (same logic as in /recommendations)
+        filters = []
+        if destination.hill_country == 1:
+            filters.append("hill_country")
+        if destination.coastal == 1:
+            filters.append("coastal")
+        if destination.dry_zone == 1:
+            filters.append("dry_zone")
+        if destination.urban == 1:
+            filters.append("urban")
+
         response.append({
             "destination_id": destination.destination_id,
             "name": destination.name,
@@ -139,11 +151,12 @@ def get_day_recommendations(
                 distance_results[i]["distance"],
                 itinerary.no_of_people
             ),
+            "filters": filters,
             "distance": distance_results[i]["distance"],
             "travel_time": distance_results[i]["travel_time"],
             "thumbnail_img": f"/destination-image/{destination.destination_id}"
         })
-    print(response)
+    # print(response)
     return response
 
 @router.put("/{itinerary_id}/day/{day_number}")
