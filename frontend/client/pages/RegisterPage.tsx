@@ -9,7 +9,7 @@ export default function RegisterPage() {
   }, []);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, var(--bg) 0%, var(--surface-alt) 100%)' }}>
       <Header />
       <RegisterForm />
       <Footer />

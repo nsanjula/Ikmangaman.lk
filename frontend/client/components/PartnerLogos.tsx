@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useScrollAnimation } from "../hooks/useScrollAnimation";
 
 export default function PartnerLogos() {
-  const [imageErrors, setImageErrors] = useState<{[key: string]: boolean}>({});
+  const [imageErrors, setImageErrors] = useState<{ [key: string]: boolean }>({});
+  const { ref, isVisible } = useScrollAnimation();
 
   const handleImageError = (imageKey: string) => {
     setImageErrors(prev => ({ ...prev, [imageKey]: true }));
@@ -10,8 +12,11 @@ export default function PartnerLogos() {
   return (
     <section className="bg-white py-12">
       <div className="container iframe-container">
-        <div className="text-center">
-          <p className="text-gray-600 text-lg mb-8">Powered by</p>
+        <div
+          ref={ref}
+          className={`text-center scroll-animate-slide-up ${isVisible ? 'animate' : ''}`}
+        >
+          <p className="text-[#159CAF] text-lg mb-8">Powered by</p>
 
           <div className="flex justify-center items-center space-x-12 md:space-x-16 flex-wrap gap-4">
             {/* Google Maps Logo */}
@@ -27,7 +32,7 @@ export default function PartnerLogos() {
                       crossOrigin="anonymous"
                     />
                   ) : (
-                    <div className="w-full h-full bg-blue-500 rounded flex items-center justify-center">
+                    <div className="w-full h-full bg-[#159CAF] rounded flex items-center justify-center">
                       <span className="text-white text-xs font-bold">G</span>
                     </div>
                   )}
@@ -51,7 +56,7 @@ export default function PartnerLogos() {
                       crossOrigin="anonymous"
                     />
                   ) : (
-                    <div className="w-full h-full bg-orange-500 rounded flex items-center justify-center">
+                    <div className="w-full h-full bg-[#159CAF] rounded flex items-center justify-center">
                       <span className="text-white text-xs font-bold">W</span>
                     </div>
                   )}

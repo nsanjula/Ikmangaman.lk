@@ -1,4 +1,9 @@
+import { useScrollAnimation } from "../hooks/useScrollAnimation";
+
 export default function Testimonials() {
+  const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
+  const { ref: cardsRef, isVisible: cardsVisible } = useScrollAnimation();
+
   const testimonials = [
     {
       name: "Sarah Johnson",
@@ -24,11 +29,11 @@ export default function Testimonials() {
   ];
 
   return (
-    <section className="bg-gray-50 py-20">
+    <section className="bg-[#e6f7f9] py-20">
       <div className="container">
         <div className="text-center mb-16">
           <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-            What Our Clients Says
+            What Our Clients Say
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             Join thousands of satisfied travelers who have discovered Sri Lanka
@@ -43,7 +48,7 @@ export default function Testimonials() {
               className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300"
             >
               <div className="flex items-center mb-6">
-                <div className="w-12 h-12 bg-cyan-500 rounded-full flex items-center justify-center text-white font-bold mr-4">
+                <div className="w-12 h-12 bg-[#159CAF] rounded-full flex items-center justify-center text-white font-bold mr-4">
                   {testimonial.avatar}
                 </div>
                 <div>
