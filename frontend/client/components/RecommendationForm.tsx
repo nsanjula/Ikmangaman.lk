@@ -483,7 +483,7 @@ const RecommendationForm = () => {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Filters Sidebar */}
           <div className="lg:w-1/4">
-            <div className="card p-6 sticky top-4" style={{ background: 'var(--surface)' }}>
+            <div className="card p-6 sticky top-4" style={{ background: 'var(--surface)', zIndex: 30 }}>
               <div
                 className="flex items-center justify-between cursor-pointer mb-4"
                 onClick={toggleFilters}
@@ -609,6 +609,8 @@ const RecommendationForm = () => {
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => {
+                      // Set flag to indicate navigation from recommendations page
+                      sessionStorage.setItem('navigate_from_recommendations', 'true');
                       navigate("/create-itinerary");
                     }}
                     className="btn btn-primary btn-md flex items-center gap-2 whitespace-nowrap"
@@ -666,7 +668,7 @@ const RecommendationForm = () => {
                         <div className="relative h-48 overflow-hidden">
                           {card.thumbnail_img ? (
                             <img
-                              src={`http://localhost:8000${card.thumbnail_img}`}
+                              src={`https://ikmangamanlk-production.up.railway.app${card.thumbnail_img}`}
                               alt={card.name}
                               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                               loading="lazy"
@@ -780,7 +782,7 @@ const RecommendationForm = () => {
                             const timeoutId = setTimeout(() => controller.abort(), 3000);
 
                             const response = await fetch(
-                              "http://localhost:8000/docs",
+                              "https://ikmangamanlk-production.up.railway.app/docs",
                               {
                                 signal: controller.signal,
                                 mode: 'cors'

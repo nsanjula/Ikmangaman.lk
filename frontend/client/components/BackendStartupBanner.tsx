@@ -8,8 +8,7 @@ const BackendStartupBanner: React.FC = () => {
   const [showBanner, setShowBanner] = useState(false);
   const [commandCopied, setCommandCopied] = useState(false);
 
-  const command =
-    "cd backend && python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000";
+  const hostedBackendUrl = "https://ikmangamanlk-production.up.railway.app";
 
   const checkBackend = async () => {
     // Create an AbortController for timeout
@@ -19,7 +18,7 @@ const BackendStartupBanner: React.FC = () => {
     try {
       timeoutId = setTimeout(() => controller.abort(), 3000);
 
-      const response = await fetch("http://localhost:8000/docs", {
+      const response = await fetch("https://ikmangamanlk-production.up.railway.app/docs", {
         method: "HEAD",
         signal: controller.signal,
         mode: 'cors'
@@ -49,13 +48,13 @@ const BackendStartupBanner: React.FC = () => {
 
   const copyCommand = async () => {
     try {
-      await navigator.clipboard.writeText(command);
+      await navigator.clipboard.writeText(hostedBackendUrl);
       setCommandCopied(true);
       setTimeout(() => setCommandCopied(false), 2000);
     } catch (err) {
       // Fallback for older browsers
       const textArea = document.createElement("textarea");
-      textArea.value = command;
+      textArea.value = hostedBackendUrl;
       document.body.appendChild(textArea);
       textArea.select();
       document.execCommand("copy");
@@ -96,10 +95,9 @@ const BackendStartupBanner: React.FC = () => {
           <div className="flex items-center gap-3">
             <FiServer className="w-5 h-5" />
             <div>
-              <div className="font-semibold">Backend Server Required</div>
+              <div className="font-semibold">Backend Connection Issue</div>
               <div className="text-sm text-red-100">
-                The FastAPI backend is not running. Start it to use all
-                features.
+                Unable to connect to hosted backend. Please check if the server is running.
               </div>
             </div>
           </div>
@@ -107,11 +105,11 @@ const BackendStartupBanner: React.FC = () => {
           <div className="flex items-center gap-3">
             <div className="hidden md:flex items-center gap-2 bg-black bg-opacity-30 px-3 py-1 rounded">
               <FiTerminal className="w-4 h-4" />
-              <code className="text-sm font-mono">{command}</code>
+              <code className="text-sm font-mono">{hostedBackendUrl}</code>
               <button
                 onClick={copyCommand}
                 className="p-1 hover:bg-white hover:bg-opacity-20 rounded transition-colors"
-                title="Copy command"
+                title="Copy URL"
               >
                 {commandCopied ? (
                   <FiCheck className="w-3 h-3 text-green-300" />
@@ -130,14 +128,14 @@ const BackendStartupBanner: React.FC = () => {
           </div>
         </div>
 
-        {/* Mobile command display */}
+        {/* Mobile URL display */}
         <div className="md:hidden mt-2 bg-black bg-opacity-30 p-2 rounded">
           <div className="flex items-center justify-between">
-            <code className="text-xs font-mono break-all">{command}</code>
+            <code className="text-xs font-mono break-all">{hostedBackendUrl}</code>
             <button
               onClick={copyCommand}
               className="ml-2 p-1 hover:bg-white hover:bg-opacity-20 rounded transition-colors flex-shrink-0"
-              title="Copy command"
+              title="Copy URL"
             >
               {commandCopied ? (
                 <FiCheck className="w-3 h-3 text-green-300" />

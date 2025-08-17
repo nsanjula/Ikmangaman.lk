@@ -40,9 +40,9 @@ const BackendStatus = () => {
   if (!isConnected) {
     return (
       <div className="backend-status error bg-red-500 text-white px-4 py-2 text-sm">
-        ⚠️ Backend server not reachable at localhost:8000.
+        ⚠️ Backend server not reachable at https://ikmangamanlk-production.up.railway.app.
         <br />
-        Please start the FastAPI backend server.
+        This might be a CORS issue. Please ensure your backend allows requests from this domain.
       </div>
     );
   }

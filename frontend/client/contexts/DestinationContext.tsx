@@ -120,10 +120,56 @@ export const DestinationProvider: React.FC<DestinationProviderProps> = ({
       const tempData = sessionStorage.getItem(tempQuestionnaireKey);
       const tempCompletedKey = 'tempQuestionnaireDestinationData';
       const tempCompletedData = sessionStorage.getItem(tempCompletedKey);
+      const tempDestinationKey = 'tempDestinationData';
+      const tempDestinationData = sessionStorage.getItem(tempDestinationKey);
       let useTemporaryQuestionnaire = false;
       let temporaryQuestionnaireData = null;
 
-      // Check for completed temp questionnaire data first (from API call)
+      // Check for itinerary temp destination data first (for itinerary context)
+      if (useItineraryContext && tempDestinationData) {
+        try {
+          const parsedTempDestData = JSON.parse(tempDestinationData);
+          console.log('Using itinerary temp destination data:', parsedTempDestData);
+
+          // Make API call to get destination details with temp questionnaire
+          setProgress(50);
+          const tempQuestionnairePayload = {
+            destination_id: destinationId,
+            travel_month: parsedTempDestData.travel_month,
+            no_of_people: parsedTempDestData.no_of_people,
+            start_location: parsedTempDestData.start_location
+          };
+
+          const destinationDetailsWithTemp = await authAPI.getDestinationWithTempQuestionnaire(tempQuestionnairePayload);
+
+          // Create questionnaire data for map
+          const locationCoords = getLocationCoordinates(parsedTempDestData.start_location);
+          const questionnaireDataForMap = {
+            starting_location_latitudes: locationCoords.lat,
+            starting_location_longitudes: locationCoords.lng,
+            travel_month: parsedTempDestData.travel_month,
+            no_of_people: parsedTempDestData.no_of_people,
+            start_location: parsedTempDestData.start_location
+          };
+
+          setDestinationData(destinationDetailsWithTemp);
+          setQuestionnaireData(questionnaireDataForMap);
+          setIsFallbackData(false);
+          setLoading(false);
+          setError(null);
+          setProgress(100);
+          finishLoading();
+
+          // Set a flag to indicate we've successfully used this temp data
+          sessionStorage.setItem('tempDataUsedSuccessfully', 'true');
+          return;
+        } catch (e) {
+          console.warn('Failed to use itinerary temp destination data:', e);
+          // Fall through to other methods
+        }
+      }
+
+      // Check for completed temp questionnaire data (from API call)
       if (tempCompletedData) {
         try {
           const parsedTempData = JSON.parse(tempCompletedData);
@@ -159,9 +205,9 @@ export const DestinationProvider: React.FC<DestinationProviderProps> = ({
           setLoading(false);
           setError(null);
 
-          // Clear the temp data after using it
-          sessionStorage.removeItem(tempCompletedKey);
-          sessionStorage.removeItem('tempQuestionnaireParams');
+          // Don't clear temp data immediately - keep for potential return visits
+          // sessionStorage.removeItem(tempCompletedKey);
+          // sessionStorage.removeItem('tempQuestionnaireParams');
           return;
         } catch (e) {
           console.warn('Failed to parse completed temp questionnaire data, removing:', e);

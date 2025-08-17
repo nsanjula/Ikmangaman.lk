@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend Connection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+        }
+        button:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>Backend Connection Test</h1>
+    <p>Testing connection to: <strong>https://ikmangamanlk-production.up.railway.app</strong></p>
+    
+    <button onclick="testConnection()">Test Basic Connection</button>
+    <button onclick="testDocs()">Test API Docs</button>
+    <button onclick="testStartingLocations()">Test Starting Locations</button>
+    
+    <div id="results"></div>
+
+    <script>
+        const API_BASE_URL = "https://ikmangamanlk-production.up.railway.app";
+        
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}:</strong> ${message}`;
+            results.appendChild(div);
+        }
+
+        async function testConnection() {
+            addResult('Testing basic connection...', 'info');
+            try {
+                const response = await fetch(`${API_BASE_URL}/docs`, {
+                    method: 'HEAD',
+                    mode: 'cors'
+                });
+                
+                if (response.ok) {
+                    addResult('✅ Basic connection successful!', 'success');
+                } else {
+                    addResult(`❌ Connection failed with status: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Connection error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testDocs() {
+            addResult('Testing API documentation endpoint...', 'info');
+            try {
+                const response = await fetch(`${API_BASE_URL}/docs`);
+                
+                if (response.ok) {
+                    addResult('✅ API docs endpoint accessible!', 'success');
+                } else {
+                    addResult(`❌ API docs failed with status: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ API docs error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testStartingLocations() {
+            addResult('Testing starting locations endpoint...', 'info');
+            try {
+                const response = await fetch(`${API_BASE_URL}/starting-locations`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult(`✅ Starting locations accessible! Found ${data.locations?.length || 0} locations`, 'success');
+                } else {
+                    addResult(`❌ Starting locations failed with status: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Starting locations error: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-test on page load
+        window.onload = function() {
+            addResult('Page loaded. Click buttons to test different endpoints.', 'info');
+        };
+    </script>
+</body>
+</html>

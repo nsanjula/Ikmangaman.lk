@@ -13,7 +13,7 @@ export default function Index() {
   }, []);
 
   return (
-    <div className="min-h-screen iframe-safe">
+    <div className="min-h-screen iframe-safe bg-white">
       <Header />
       <HeroSection />
       <PartnerLogos />

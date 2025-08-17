@@ -3,7 +3,7 @@ import { FiUser, FiPhone, FiMail } from "react-icons/fi";
 import { useDestination } from "../../contexts/DestinationContext";
 
 // API Base URL for image URL construction
-const API_BASE_URL = "http://localhost:8000";
+const API_BASE_URL = "https://ikmangamanlk-production.up.railway.app";
 
 interface Guide {
   guide_id?: number;

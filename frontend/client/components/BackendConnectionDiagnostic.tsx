@@ -38,7 +38,7 @@ const BackendConnectionDiagnostic: React.FC = () => {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-        const response = await fetch(`http://localhost:8000${endpoint}`, {
+        const response = await fetch(`https://ikmangamanlk-production.up.railway.app${endpoint}`, {
           method,
           headers: method === 'GET' ? { 'Content-Type': 'application/json' } : {},
           signal: controller.signal,
@@ -175,7 +175,7 @@ const BackendConnectionDiagnostic: React.FC = () => {
         )}
 
         <div className="text-xs text-gray-500 pt-2 border-t">
-          <p><strong>Backend URL:</strong> http://localhost:8000</p>
+          <p><strong>Backend URL:</strong> https://ikmangamanlk-production.up.railway.app</p>
           <p><strong>Timeout:</strong> 20 seconds</p>
         </div>
       </div>
