@@ -3,13 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { FiUser } from "react-icons/fi";
+
 import SearchBar from "./SearchBar";
 
 export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, userProfile } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Show search bar only on recommendation and search pages
@@ -70,10 +70,10 @@ export default function Header() {
                     console.log('Cleared temporary questionnaire data - navigating to profile');
                     handleNavigation("/profile");
                   }}
-                  className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-cyan-700 shadow-lg cursor-pointer hover:bg-gray-50 transition border-2 border-cyan-600 ring-2 ring-cyan-200"
+                  className="w-10 h-10 bg-cyan-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg cursor-pointer hover:bg-cyan-700 transition border-2 border-white ring-2 ring-cyan-200"
                   title="Profile"
                 >
-                  <FiUser size={20} />
+                  {userProfile?.firstname ? userProfile.firstname.charAt(0).toUpperCase() : 'U'}
                 </div>
                 <Button
                   onClick={handleLogout}
@@ -179,10 +179,10 @@ export default function Header() {
                       console.log('Cleared temporary questionnaire data - navigating to profile');
                       handleNavigation("/profile");
                     }}
-                    className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-cyan-700 shadow-lg cursor-pointer hover:bg-gray-50 transition border-2 border-cyan-600 ring-2 ring-cyan-200"
+                    className="w-10 h-10 bg-cyan-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg cursor-pointer hover:bg-cyan-700 transition border-2 border-white ring-2 ring-cyan-200"
                     title="Profile"
                   >
-                    <FiUser size={20} />
+                    {userProfile?.firstname ? userProfile.firstname.charAt(0).toUpperCase() : 'U'}
                   </div>
                   <Button
                     onClick={handleLogout}

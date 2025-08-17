@@ -5,17 +5,19 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import { authAPI, setGlobalTimeoutHandler } from "../lib/api";
+import { authAPI, setGlobalTimeoutHandler, UserProfile } from "../lib/api";
 
 interface AuthContextType {
   isAuthenticated: boolean;
   token: string | null;
+  userProfile: UserProfile | null;
   login: (token: string) => void;
   logout: () => void;
   loading: boolean;
   handleAuthError: (error: Error) => void;
   isTimeout: boolean;
   clearTimeout: () => void;
+  refreshUserProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -34,6 +36,7 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [token, setToken] = useState<string | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isTimeout, setIsTimeout] = useState(false);
 
@@ -56,10 +59,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           'Content-Type': 'application/json',
         },
       })
-      .then(response => {
+      .then(async response => {
         if (response.ok) {
           console.log("Token is valid, setting authenticated state");
           setToken(existingToken);
+          // Fetch user profile data
+          try {
+            const profile = await authAPI.getUserProfile();
+            setUserProfile(profile);
+          } catch (profileError) {
+            console.log("Failed to fetch user profile:", profileError);
+          }
         } else {
           console.log("Token is invalid, removing and staying logged out");
           authAPI.removeToken();
@@ -83,11 +93,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = (newToken: string) => {
     authAPI.storeToken(newToken);
     setToken(newToken);
+    // Fetch user profile after login (async)
+    authAPI.getUserProfile()
+      .then(profile => {
+        setUserProfile(profile);
+      })
+      .catch(profileError => {
+        console.log("Failed to fetch user profile after login:", profileError);
+      });
   };
 
   const logout = () => {
     authAPI.removeToken();
     setToken(null);
+    setUserProfile(null);
     setIsTimeout(false);
   };
 
@@ -148,6 +167,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsTimeout(false);
   };
 
+  const refreshUserProfile = async () => {
+    if (token) {
+      try {
+        const profile = await authAPI.getUserProfile();
+        setUserProfile(profile);
+      } catch (error) {
+        console.log("Failed to refresh user profile:", error);
+      }
+    }
+  };
+
   // Set up global timeout handler
   useEffect(() => {
     setGlobalTimeoutHandler(handleAuthError);
@@ -158,12 +188,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const value: AuthContextType = {
     isAuthenticated,
     token,
+    userProfile,
     login,
     logout,
     loading,
     handleAuthError,
     isTimeout,
     clearTimeout,
+    refreshUserProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
