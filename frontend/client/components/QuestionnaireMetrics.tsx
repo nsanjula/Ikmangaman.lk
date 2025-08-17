@@ -135,34 +135,20 @@ const QuestionnaireMetrics: React.FC = () => {
 
   // Handle browser back button properly and cache management
   useEffect(() => {
-    let navigationHandled = false;
-
-    const handleBackButton = (event: PopStateEvent) => {
-      if (navigationHandled) return;
-
-      console.log('Browser back button pressed on questionnaire');
-
-      // For create-itinerary mode, navigate back to recommendations page instead of reloading
+    const handleBeforeUnload = () => {
+      // Clean up session storage when leaving the page
       if (isItineraryMode || fromCreateItinerary || backToRecommendations) {
-        console.log('Navigating back to recommendations from questionnaire');
-        navigationHandled = true;
-
-        // Clear temporary questionnaire data
         sessionStorage.removeItem('tempQuestionnaireData');
         sessionStorage.removeItem('itinerary_questionnaire_data');
-
-        // Navigate to recommendations page
-        navigate('/recommendation', { replace: true });
       }
     };
 
-    // Only handle popstate for back button, remove pageshow handler that was causing reload issues
-    window.addEventListener('popstate', handleBackButton);
+    window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
-      window.removeEventListener('popstate', handleBackButton);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [isItineraryMode, fromCreateItinerary, backToRecommendations, navigate]);
+  }, [isItineraryMode, fromCreateItinerary, backToRecommendations]);
 
   // Load existing questionnaire after locations are available (only step 2 and 3 data)
   useEffect(() => {
@@ -298,7 +284,9 @@ const QuestionnaireMetrics: React.FC = () => {
       };
 
       sessionStorage.setItem('itinerary_questionnaire_data', JSON.stringify(itineraryData));
-      navigate('/create-itinerary');
+      // Clean up questionnaire flag
+      sessionStorage.removeItem('questionnaire_from_create_itinerary');
+      navigate('/create-itinerary', { replace: true });
       return;
     }
 
@@ -728,7 +716,8 @@ const QuestionnaireMetrics: React.FC = () => {
                 if (isDayInterestsMode) {
                   navigate('/create-itinerary');
                 } else if (isItineraryMode || backToRecommendations) {
-                  navigate('/recommendation');
+                  // Always go back to recommendations for itinerary mode
+                  navigate('/recommendation', { replace: true });
                 } else {
                   navigate(-1);
                 }

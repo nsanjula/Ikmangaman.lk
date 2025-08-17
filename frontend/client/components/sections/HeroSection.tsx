@@ -8,7 +8,7 @@ import QuickBackendFix from "../QuickBackendFix";
 import BookmarkButton from "../BookmarkButton";
 
 // API Base URL for image URL construction
-const API_BASE_URL = "http://localhost:8000";
+const API_BASE_URL = "https://ikmangamanlk-production.up.railway.app";
 
 const HeroSection: React.FC = () => {
   const {

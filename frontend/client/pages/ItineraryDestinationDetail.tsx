@@ -32,13 +32,16 @@ const ItineraryDestinationDetailContent: React.FC = () => {
         {/* Back to Itinerary Button */}
         <div className="mb-6">
           <button
-            onClick={() => navigate('/create-itinerary')}
+            onClick={() => {
+              // Always navigate back to create-itinerary page when coming from itinerary flow
+              navigate('/create-itinerary', { replace: true });
+            }}
             className="flex items-center gap-2 px-4 py-2 text-cyan-600 border border-cyan-600 rounded-lg hover:bg-cyan-50 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            Back to Recommendations
+            Back to Itinerary
           </button>
         </div>
 

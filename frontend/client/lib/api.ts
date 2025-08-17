@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:8000"; // Backend FastAPI server
+const API_BASE_URL = "https://ikmangamanlk-production.up.railway.app"; // Backend FastAPI server
 
 // Helper function to check if response indicates database timeout
 const isDatabaseTimeout = (response: Response): boolean => {
@@ -1005,7 +1005,7 @@ class AuthAPI {
       if (error instanceof TypeError && error.message === "Failed to fetch") {
         console.log("🔧 Backend appears to be offline");
         throw new Error(
-          "Backend server is not running. Please start the backend server at http://localhost:8000 and try again.",
+          "Backend server is not running. Please check if the backend server at https://ikmangamanlk-production.up.railway.app is available and try again.",
         );
       }
 
@@ -1089,7 +1089,7 @@ class AuthAPI {
       if (error instanceof TypeError && error.message === "Failed to fetch") {
         console.log("🔧 Backend appears to be offline");
         throw new Error(
-          "Backend server is not running. Please start the backend server at http://localhost:8000 and try again.",
+          "Backend server is not running. Please check if the backend server at https://ikmangamanlk-production.up.railway.app is available and try again.",
         );
       }
 

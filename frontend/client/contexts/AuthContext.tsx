@@ -53,7 +53,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log("Token found, validating...");
 
       // Make a simple authenticated API call to validate token
-      fetch('http://localhost:8000/users/me', {
+              fetch('https://ikmangamanlk-production.up.railway.app/users/me', {
         headers: {
           'Authorization': `Bearer ${existingToken}`,
           'Content-Type': 'application/json',
