@@ -107,6 +107,23 @@ const CreateItinerary: React.FC = () => {
   const [showCancelSelection, setShowCancelSelection] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
+  // Immediate early check for temp data to prevent empty state flash
+  useEffect(() => {
+    const tempData = sessionStorage.getItem('tempDestinationData');
+    if (tempData && isAuthenticated) {
+      try {
+        const data = JSON.parse(tempData);
+        if (data.currentItineraryState && data.currentItineraryState.itinerary_id) {
+          console.log('Early restoration: setting questionnaireSaved immediately');
+          setQuestionnaireSaved(true);
+          setHasInitializedFromSessionData(true);
+        }
+      } catch (error) {
+        console.error('Error in early restoration check:', error);
+      }
+    }
+  }, [isAuthenticated]);
+
   // Check if user is authenticated
   useEffect(() => {
     if (!isAuthenticated) {
@@ -159,6 +176,16 @@ const CreateItinerary: React.FC = () => {
 
   // Handle browser back button - simplified to prevent navigation loops
   useEffect(() => {
+    const handlePopState = () => {
+      // Handle browser back button navigation
+      // Check if we have temp data to restore state
+      const tempData = sessionStorage.getItem('tempDestinationData');
+      if (tempData && questionnaireSaved) {
+        console.log('Back button pressed, attempting to restore state from temp data');
+        // State will be restored by existing useEffect
+      }
+    };
+
     const handleBeforeUnload = () => {
       // Clean up session storage when leaving the page
       if (!questionnaireSaved && itinerary.itinerary_id === null) {
@@ -167,9 +194,11 @@ const CreateItinerary: React.FC = () => {
       }
     };
 
+    window.addEventListener('popstate', handlePopState);
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
+      window.removeEventListener('popstate', handlePopState);
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [questionnaireSaved, itinerary.itinerary_id]);
@@ -328,24 +357,28 @@ const CreateItinerary: React.FC = () => {
     }
   }, [questionnaireSaved, hasInitializedFromSessionData]);
 
-  // Handle immediate state restoration on component mount
+  // Handle immediate state restoration on component mount and navigation
   useEffect(() => {
     const immediateRestore = () => {
       const tempData = sessionStorage.getItem('tempDestinationData');
       if (tempData && isAuthenticated) {
-        console.log('Attempting immediate state restoration on mount...');
+        console.log('Attempting immediate state restoration on mount...', tempData.substring(0, 100));
 
         try {
           const data = JSON.parse(tempData);
 
           // If we have itinerary data, restore it immediately
           if (data.currentItineraryState && data.currentItineraryState.itinerary_id) {
-            console.log('Restoring itinerary state on mount');
-            setItinerary(data.currentItineraryState);
+            console.log('Restoring itinerary state on mount - ID:', data.currentItineraryState.itinerary_id);
+
+            // Set questionnaireSaved FIRST to prevent showing empty state
             setQuestionnaireSaved(true);
             setHasInitializedFromSessionData(true);
 
-            // Restore other states too
+            // Then restore all other states
+            setItinerary(data.currentItineraryState);
+
+            // Restore selection state
             if (data.selectedDestinationForDay) {
               setSelectedDestinationForDay(data.selectedDestinationForDay);
               const selectedDays = Object.keys(data.selectedDestinationForDay).map(Number);
@@ -354,25 +387,85 @@ const CreateItinerary: React.FC = () => {
               }
             }
 
+            // Restore questionnaire completion state
             if (data.completedQuestionnaireDays) {
               setCompletedQuestionnaireDays(new Set(data.completedQuestionnaireDays));
             }
 
+            // Restore recommendations and UI state
             if (data.currentDayRecommendations && data.currentDayRecommendations.length > 0) {
               setCurrentDayRecommendations(data.currentDayRecommendations);
               if (data.showingRecommendationsForDay) {
                 setShowingRecommendationsForDay(data.showingRecommendationsForDay);
               }
             }
+
+            // Restore filter state
+            if (data.sortBy) {
+              setSortBy(data.sortBy);
+            }
+            if (data.budgetFilter) {
+              setBudgetFilter(data.budgetFilter);
+            }
+
+            // Clean up after successful restoration
+            sessionStorage.removeItem('tempDestinationData');
+            sessionStorage.removeItem('tempDestinationDataTimestamp');
+            console.log('Complete state restoration finished and cache cleared');
           }
         } catch (error) {
           console.error('Error in immediate restoration:', error);
+          // Clean up corrupted data
+          sessionStorage.removeItem('tempDestinationData');
+          sessionStorage.removeItem('tempDestinationDataTimestamp');
         }
       }
     };
 
-    // Try immediate restoration
-    immediateRestore();
+    // Try immediate restoration on component mount
+    if (isAuthenticated) {
+      immediateRestore();
+    }
+  }, [isAuthenticated]);
+
+  // Also try restoration when the page becomes visible (for browser back button)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        const tempData = sessionStorage.getItem('tempDestinationData');
+        if (tempData && isAuthenticated) {
+          console.log('Page became visible, attempting restoration...');
+          try {
+            const data = JSON.parse(tempData);
+            if (data.currentItineraryState && data.currentItineraryState.itinerary_id) {
+              console.log('Visibility restoration: restoring state');
+              setQuestionnaireSaved(true);
+              setHasInitializedFromSessionData(true);
+              setItinerary(data.currentItineraryState);
+
+              // Restore other states if available
+              if (data.selectedDestinationForDay) {
+                setSelectedDestinationForDay(data.selectedDestinationForDay);
+              }
+              if (data.completedQuestionnaireDays) {
+                setCompletedQuestionnaireDays(new Set(data.completedQuestionnaireDays));
+              }
+              if (data.currentDayRecommendations && data.currentDayRecommendations.length > 0) {
+                setCurrentDayRecommendations(data.currentDayRecommendations);
+                if (data.showingRecommendationsForDay) {
+                  setShowingRecommendationsForDay(data.showingRecommendationsForDay);
+                }
+              }
+            }
+          } catch (error) {
+            console.error('Error in visibility restoration:', error);
+          }
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [isAuthenticated]);
 
   // Track scroll position for floating filter
@@ -538,8 +631,25 @@ const CreateItinerary: React.FC = () => {
     const dayData = itinerary.days[dayNumber];
     if (!dayData.destination_id) return;
 
-    // Allow retracting any selected destination that's not locked
-    if (lockedDays.has(dayNumber)) return;
+    // Check if this day can be retracted based on user requirements
+    // Only allow retraction if:
+    // 1. It's the latest selected day, OR
+    // 2. It's Day 1 and no other days are locked, OR  
+    // 3. It's Day 4 and we're in cancel selection mode
+    const isLatestSelected = latestSelectedDay === dayNumber;
+    const isDay1 = dayNumber === 1;
+    const isDay4 = dayNumber === 4;
+    const hasLockedDays = completedQuestionnaireDays.size > 0;
+    
+    // Determine if retraction is allowed
+    const canRetract = isLatestSelected || 
+                      (isDay1 && !hasLockedDays) || 
+                      (isDay4 && showCancelSelection);
+
+    if (!canRetract) {
+      // Show error or just return silently
+      return;
+    }
 
     // Find the selected destination
     const selectedDestination = selectedDestinationForDay[dayNumber];
@@ -657,11 +767,20 @@ const CreateItinerary: React.FC = () => {
       return;
     }
 
+    // Check if this day can be accessed based on user requirements
+    if (dayNumber > 1) {
+      // For days 2-4, check if the previous day is filled
+      const previousDay = dayNumber - 1;
+      if (!itinerary.days[previousDay]?.destination_id) {
+        setError(`Please complete Day ${previousDay} first`);
+        return;
+      }
+    }
+
     // Process any pending backend calls before proceeding
     await processPendingBackendCalls();
 
-    // No need to lock days automatically - only lock when questionnaire is taken
-    // Now show the interests questionnaire for the next day
+    // Show the interests questionnaire for this day
     handleDayQuestionnaire(dayNumber);
   };
 
@@ -750,13 +869,36 @@ const CreateItinerary: React.FC = () => {
                   const isSelected = dayData.destination_id !== null;
                   const nextDay = getNextAvailableDay();
                   const hasCompletedQuestionnaire = completedQuestionnaireDays.has(dayNum);
-                  const isClickable = questionnaireSaved && (
-                    // Can always click if selected (for retraction) OR if it's the next day OR if it's day 1
-                    isSelected ||
-                    (!isSelected && dayNum === nextDay) ||
-                    dayNum === 1
+                  
+
+
+                  // Per user requirements:
+                  // 1. Day 1: Always clickable when empty, locked after questionnaire completion until cancel selection
+                  // 2. Day 2: Appears when Day 1 is filled, clickable when empty, locked after questionnaire completion
+                  // 3. Day 3: Appears when Day 2 is filled, clickable when empty, locked after questionnaire completion  
+                  // 4. Day 4: Appears when Day 3 is filled, clickable when empty, locked after questionnaire completion
+                  // 5. Filled containers: Always clickable for retraction unless previous days are locked
+                  
+                  // Determine if this day should be shown
+                  const shouldShow = questionnaireSaved && (
+                    dayNum === 1 || // Day 1 always shows
+                    (dayNum === 2 && itinerary.days[1]?.destination_id !== null) || // Day 2 shows when Day 1 is filled
+                    (dayNum === 3 && itinerary.days[2]?.destination_id !== null) || // Day 3 shows when Day 2 is filled
+                    (dayNum === 4 && itinerary.days[3]?.destination_id !== null) // Day 4 shows when Day 3 is filled
                   );
-                  const shouldShow = questionnaireSaved && (dayNum === 1 || itinerary.days[dayNum - 1]?.destination_id !== null);
+
+                  // Determine if this day is clickable
+                  const isClickable = questionnaireSaved && shouldShow && (
+                    (isSelected && (
+                      // Allow retraction only for latest selected day, Day 1 (if no locks), or Day 4 (in cancel mode)
+                      latestSelectedDay === dayNum || 
+                      (dayNum === 1 && completedQuestionnaireDays.size === 0) ||
+                      (dayNum === 4 && showCancelSelection)
+                    )) || 
+                    (!isSelected && !hasCompletedQuestionnaire) // Allow empty containers only if questionnaire not completed
+                  );
+                  
+
 
                   // Don't render containers that shouldn't be shown yet
                   if (!shouldShow) {
@@ -775,15 +917,15 @@ const CreateItinerary: React.FC = () => {
                           ref={provided.innerRef}
                           {...provided.droppableProps}
                           className={`relative w-64 h-64 rounded-xl border-2 shadow-lg transition-all duration-300 ${
-                            isSelected 
-                              ? 'border-gray-300 bg-cover bg-center' 
+                            isSelected
+                              ? 'border-gray-300 bg-cover bg-center'
                               : `border-gray-300 bg-gray-100 hover:border-cyan-400 hover:shadow-xl ${
                                   snapshot.isDraggingOver ? 'border-cyan-500 bg-cyan-50' : ''
                                 }`
                           } ${(
                             (isSelected && !showingRecommendationsForDay) ||
                             (!isSelected && isClickable && !showingRecommendationsForDay)
-                          ) ? 'cursor-pointer' : (shouldShow ? 'cursor-not-allowed opacity-60' : 'hidden')}`}
+                          ) ? 'cursor-pointer' : (shouldShow ? 'cursor-not-allowed' : 'hidden')}`}
                           style={isSelected && dayData.destination_image ? {
                             backgroundImage: `url(https://ikmangamanlk-production.up.railway.app${dayData.destination_image})`,
                             backgroundSize: 'cover',
@@ -834,9 +976,11 @@ const CreateItinerary: React.FC = () => {
                               } transition-colors duration-200`}>
                                 {showingRecommendationsForDay
                                   ? "Drag Your Destination Here"
-                                  : isClickable
-                                    ? "Click to Select Interests"
-                                    : "Complete previous day first"
+                                  : !shouldShow
+                                    ? "Complete previous day first"
+                                    : hasCompletedQuestionnaire
+                                      ? "Selection locked"
+                                      : "Click to Select Interests"
                                 }
                               </div>
                             </div>
@@ -865,11 +1009,13 @@ const CreateItinerary: React.FC = () => {
           {!showingInterestsForDay && showingRecommendationsForDay && currentDayRecommendations.length > 0 && (
             <div className="flex flex-col lg:flex-row gap-8">
               {/* Sidebar Filter */}
-              <div className="lg:w-1/4">
-                <div className="card p-6 sticky top-4" style={{
-                  background: 'var(--surface)',
-                  zIndex: 30
-                }}>
+              <div className="lg:w-1/4 filter-container">
+                <div 
+                  className="card p-6 sticky-filter" 
+                  style={{
+                    background: 'var(--surface)'
+                  }}
+                >
                   <div
                     className="flex items-center justify-between cursor-pointer mb-4"
                     onClick={() => setShowFilters(!showFilters)}
@@ -1125,13 +1271,21 @@ const CreateItinerary: React.FC = () => {
                           setCurrentDayRecommendations([]);
                           setShowingRecommendationsForDay(null);
                           setShowCancelSelection(false);
-                          // Clear the completed questionnaire for this day to allow re-selection
+
+                          // Per user requirements: Only unlock the current day's questionnaire
+                          // Previous days remain locked
                           if (showingRecommendationsForDay) {
                             setCompletedQuestionnaireDays(prev => {
                               const updated = new Set(prev);
                               updated.delete(showingRecommendationsForDay);
                               return updated;
                             });
+
+                            // Update day container state to allow retaking questionnaire
+                            setDayContainerStates(prev => ({
+                              ...prev,
+                              [showingRecommendationsForDay]: 'unlocked'
+                            }));
                           }
                         }}
                         className="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-3 rounded-lg font-bold text-lg transition-colors duration-200 shadow-lg"

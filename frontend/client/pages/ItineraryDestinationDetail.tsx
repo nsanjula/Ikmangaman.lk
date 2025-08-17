@@ -33,8 +33,9 @@ const ItineraryDestinationDetailContent: React.FC = () => {
         <div className="mb-6">
           <button
             onClick={() => {
-              // Always navigate back to create-itinerary page when coming from itinerary flow
-              navigate('/create-itinerary', { replace: true });
+              // Navigate back to create-itinerary with state preservation
+              // The CreateItinerary component should restore state from sessionStorage
+              navigate('/create-itinerary');
             }}
             className="flex items-center gap-2 px-4 py-2 text-cyan-600 border border-cyan-600 rounded-lg hover:bg-cyan-50 transition-colors"
           >

@@ -16,14 +16,14 @@ interface RecommendationCard {
   description: string;
   price: number;
   score: number;
-  type: string; // Primary area type for display
-  areaTypes?: string[]; // All area types from backend for filtering (optional)
+  type: string;
+  areaTypes?: string[];
   things_to_do: string;
   thumbnail_img: string;
   distance: string;
   travel_time: string;
-  distanceValue: number; // For sorting purposes
-  travelTimeValue: number; // For sorting purposes
+  distanceValue: number;
+  travelTimeValue: number;
 }
 
 interface DropdownOption {
@@ -50,7 +50,6 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({ value, onChange, option
 
   return (
     <div className="relative">
-      {/* Dropdown trigger */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -76,7 +75,6 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({ value, onChange, option
         </div>
       </button>
 
-      {/* Dropdown menu */}
       {isOpen && (
         <div
           className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden"
@@ -114,7 +112,6 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({ value, onChange, option
         </div>
       )}
 
-      {/* Backdrop to close dropdown */}
       {isOpen && (
         <div
           className="fixed inset-0 z-40"
@@ -144,13 +141,11 @@ const RecommendationForm = () => {
   const [sortBy, setSortBy] = useState<string>("best_match");
   const [hasCachedData, setHasCachedData] = useState(false);
 
-  // Helper function to parse distance string to numeric value for sorting
   const parseDistance = (distanceStr: string): number => {
     const match = distanceStr.match(/(\d+(?:\.\d+)?)/);
     return match ? parseFloat(match[1]) : 0;
   };
 
-  // Helper function to parse travel time string to numeric value for sorting (in minutes)
   const parseTravelTime = (timeStr: string): number => {
     const hoursMatch = timeStr.match(/(\d+(?:\.\d+)?)\s*h/);
     const minutesMatch = timeStr.match(/(\d+(?:\.\d+)?)\s*m/);
@@ -166,20 +161,18 @@ const RecommendationForm = () => {
     return totalMinutes || 0;
   };
 
-  // Cache management functions
   const CACHE_KEY = 'recommendationData';
   const CACHE_TIMESTAMP_KEY = 'recommendationDataTimestamp';
-  const CACHE_EXPIRY_HOURS = 1; // Cache expires after 1 hour
+  const CACHE_EXPIRY_HOURS = 1;
 
   const saveRecommendationsToCache = (recommendationCards: RecommendationCard[]) => {
     try {
       const cacheData = {
         cards: recommendationCards,
         timestamp: Date.now(),
-        userToken: authAPI.getToken() // Store with token to ensure cache is user-specific
+        userToken: authAPI.getToken()
       };
       sessionStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
-      console.log('💾 Saved recommendation data to cache:', recommendationCards.length, 'items');
     } catch (error) {
       console.warn('Failed to save recommendations to cache:', error);
     }
@@ -195,22 +188,17 @@ const RecommendationForm = () => {
       const cacheAge = currentTime - cacheData.timestamp;
       const maxCacheAge = CACHE_EXPIRY_HOURS * 60 * 60 * 1000;
 
-      // Check if cache is expired
       if (cacheAge > maxCacheAge) {
-        console.log('🕒 Cache expired, removing old data');
         clearRecommendationsCache();
         return null;
       }
 
-      // Check if cache belongs to current user
       const currentToken = authAPI.getToken();
       if (cacheData.userToken !== currentToken) {
-        console.log('👤 Cache belongs to different user, clearing');
         clearRecommendationsCache();
         return null;
       }
 
-      console.log('✅ Restored recommendation data from cache:', cacheData.cards.length, 'items');
       return cacheData.cards;
     } catch (error) {
       console.warn('Failed to load recommendations from cache:', error);
@@ -222,18 +210,13 @@ const RecommendationForm = () => {
   const clearRecommendationsCache = () => {
     sessionStorage.removeItem(CACHE_KEY);
     sessionStorage.removeItem(CACHE_TIMESTAMP_KEY);
-    console.log('🗑️ Cleared recommendations cache');
   };
 
-  // Helper function to get area types from backend filter data
   const getAreaTypes = (filters: string[]): string[] => {
-    // Return the filters from backend directly, or fallback to empty array
     return filters || [];
   };
 
-  // Helper function to get primary area type for card display (use first filter)
   const getPrimaryAreaType = (filters: string[]): string => {
-    // Use the first filter as primary, or fallback to "coastal" for display
     return filters && filters.length > 0 ? filters[0] : "coastal";
   };
 
@@ -242,17 +225,14 @@ const RecommendationForm = () => {
       setError(null);
 
       if (!isAuthenticated) {
-        console.log("User not authenticated, redirecting...");
         setError("Please log in to view recommendations");
         setIsLoading(false);
         return;
       }
 
-      // Try to load from cache first (unless force refresh)
       if (!forceRefresh) {
         const cachedData = loadRecommendationsFromCache();
         if (cachedData && cachedData.length > 0) {
-          console.log("📂 Using cached recommendation data");
           setCards(cachedData);
           setHasCachedData(true);
           setIsLoading(false);
@@ -260,51 +240,33 @@ const RecommendationForm = () => {
         }
       }
 
-      console.log("Fetching recommendations for authenticated user...");
       const data: RecommendationsResponse = await callWithLoading(
         async () => {
           const result = await authAPI.getRecommendations();
-          console.log("Recommendations response:", result);
           return result;
         },
         'recommendations',
         'Loading your personalized recommendations...'
       );
 
-      console.log(
-        "Response type:",
-        typeof data,
-        "Length:",
-        Array.isArray(data) ? data.length : "not array",
-      );
-
-      // Check if backend returned an error object instead of array
       if (data && typeof data === "object" && "error" in data) {
-        console.log("Backend returned error:", data.error);
         setError(
-          "No recommendations available. Please complete the questionnaire first to get personalized recommendations.",
+          "No recommendations available. Please complete the questionnaire first."
         );
         setCards([]);
         setIsLoading(false);
         return;
       }
 
-      // Check if data is an array
       if (!Array.isArray(data)) {
-        console.error("Expected array but got:", typeof data, data);
         setError("Invalid response format from server. Please try again.");
         setIsLoading(false);
         return;
       }
 
-      // Transform backend data to frontend format
       const transformedCards: RecommendationCard[] = data
         .filter((item: BackendRecommendation) => {
-          const isValid = item && item.destination_id && item.name;
-          if (!isValid) {
-            console.log("Filtering out invalid item:", item);
-          }
-          return isValid;
+          return item && item.destination_id && item.name;
         })
         .map((item: BackendRecommendation) => {
           const areaTypes = getAreaTypes(item.filters);
@@ -314,9 +276,9 @@ const RecommendationForm = () => {
             description: `${item.rating_label} match (${item.distance}, ${item.travel_time})`,
             price: Math.round(item.estimated_budget || 0),
             score: item.match_score || 0,
-            type: getPrimaryAreaType(areaTypes), // Use primary area for card type
-            areaTypes: areaTypes, // Store all area types for filtering
-            things_to_do: "", // Not provided by backend currently
+            type: getPrimaryAreaType(areaTypes),
+            areaTypes: areaTypes,
+            things_to_do: "",
             thumbnail_img: item.thumbnail_img || "",
             distance: item.distance || "N/A",
             travel_time: item.travel_time || "N/A",
@@ -325,20 +287,16 @@ const RecommendationForm = () => {
           };
         });
 
-      console.log("Transformed cards:", transformedCards.length, "items");
       setCards(transformedCards);
 
-      // Save to cache for future use
       if (transformedCards.length > 0) {
         saveRecommendationsToCache(transformedCards);
-        setHasCachedData(false); // This is fresh data
+        setHasCachedData(false);
       }
 
-      // If no recommendations after successful fetch, show helpful message
       if (transformedCards.length === 0) {
-        console.log("No recommendations found after transformation");
         setError(
-          "No recommendations available. Please complete the questionnaire first to get personalized recommendations.",
+          "No recommendations available. Please complete the questionnaire first."
         );
       }
 
@@ -352,15 +310,10 @@ const RecommendationForm = () => {
           err.message.includes("Please log in again") ||
           err.message.includes("401")
         ) {
-          console.log("🔐 Authentication error detected, handling gracefully");
           handleAuthError(err);
-          setError(
-            "Your session has expired. Redirecting to login page...",
-          );
+          setError("Your session has expired. Redirecting to login page...");
         } else if (err.message.includes("Unable to connect") || err.message.includes("timeout")) {
-          setError(
-            "Unable to connect to the backend server. Please check if the backend is running and try again.",
-          );
+          setError("Unable to connect to the backend server.");
         } else {
           setError(err.message);
         }
@@ -371,13 +324,10 @@ const RecommendationForm = () => {
     }
   };
 
-  // Load cache on component mount, then fetch if needed
   useEffect(() => {
-    // First try to load from cache
     if (isAuthenticated) {
       const cachedData = loadRecommendationsFromCache();
       if (cachedData && cachedData.length > 0) {
-        console.log("📂 Loaded cached data on mount");
         setCards(cachedData);
         setHasCachedData(true);
         setIsLoading(false);
@@ -385,23 +335,17 @@ const RecommendationForm = () => {
       }
     }
 
-    // If no cache or not authenticated, fetch fresh data
     fetchRecommendations();
   }, [isAuthenticated]);
 
-  // Clear cache when questionnaire is updated or user logs out
   useEffect(() => {
     const handleStorageChange = (event: StorageEvent) => {
       if (event.key === 'tempQuestionnaireData' && event.newValue) {
-        // Questionnaire was updated, clear recommendations cache
-        console.log("🔄 Questionnaire updated, clearing recommendations cache");
         clearRecommendationsCache();
       }
     };
 
-    // Listen for changes to temporary questionnaire data
     window.addEventListener('storage', handleStorageChange);
-
     return () => {
       window.removeEventListener('storage', handleStorageChange);
     };
@@ -424,7 +368,6 @@ const RecommendationForm = () => {
     );
   };
 
-  // Sort function based on selected sort option
   const getSortFunction = (sortOption: string) => {
     switch (sortOption) {
       case "best_match":
@@ -442,22 +385,17 @@ const RecommendationForm = () => {
     }
   };
 
-  // Filter cards based on selected filters - use backend filter data
   const filteredCards = cards
     .filter((card) => {
-      // Check if any of the card's area types match selected areas
-      // If no areaTypes available, fallback to using the card's type property
       if (card.areaTypes && card.areaTypes.length > 0) {
         return card.areaTypes.some(areaType => selectedAreas.includes(areaType));
       } else {
-        // Fallback to using the primary type if no areaTypes available
         return selectedAreas.includes(card.type);
       }
     })
     .filter((card) => card.price <= budget)
     .sort(getSortFunction(sortBy));
 
-  // Redirect to login if not authenticated
   if (!isAuthenticated && !isLoading) {
     return (
       <div className="min-h-screen w-full flex items-center justify-center" style={{ background: 'var(--bg)' }}>
@@ -481,9 +419,22 @@ const RecommendationForm = () => {
     <div className="min-h-screen w-full section" style={{ background: 'var(--bg)' }}>
       <div className="container">
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Filters Sidebar */}
-          <div className="lg:w-1/4">
-            <div className="card p-6 sticky top-4" style={{ background: 'var(--surface)', zIndex: 30 }}>
+          {/* Filters Sidebar - Updated with sticky positioning */}
+          <div className="lg:w-1/4 relative">
+            <div
+              className="card p-6"
+              style={{
+                background: 'var(--surface)',
+                zIndex: 30,
+                position: 'sticky',
+                top: '20px',
+                width: '100%',
+                maxHeight: 'calc(100vh - 40px)',
+                overflowY: 'auto',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                transition: 'transform 0.2s ease, opacity 0.2s ease'
+              }}
+            >
               <div
                 className="flex items-center justify-between cursor-pointer mb-4"
                 onClick={toggleFilters}
@@ -501,7 +452,6 @@ const RecommendationForm = () => {
 
               {showFilters && (
                 <div className="space-y-6">
-                  {/* Budget Filter */}
                   <div>
                     <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-900)' }}>
                       Budget: LKR {budget.toLocaleString()}
@@ -524,7 +474,6 @@ const RecommendationForm = () => {
                     </div>
                   </div>
 
-                  {/* Area Filter */}
                   <div>
                     <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-900)' }}>
                       Areas
@@ -549,7 +498,6 @@ const RecommendationForm = () => {
                     </div>
                   </div>
 
-                  {/* Sort Order Filter */}
                   <div>
                     <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-900)' }}>
                       Sort by
@@ -565,7 +513,6 @@ const RecommendationForm = () => {
                         { value: 'travel_time', label: 'Travel time: Shortest first' }
                       ]}
                     />
-                    {/* Sort indicator */}
                     <div className="mt-2 text-xs" style={{ color: 'var(--text-600)' }}>
                       {sortBy === 'best_match' && 'Showing most relevant destinations first'}
                       {sortBy === 'budget_low_high' && 'Showing cheapest destinations first'}
@@ -575,7 +522,6 @@ const RecommendationForm = () => {
                     </div>
                   </div>
 
-                  {/* Reset Button */}
                   <button
                     onClick={() => {
                       setSelectedAreas(areas.map((a) => a.id));
@@ -593,7 +539,6 @@ const RecommendationForm = () => {
 
           {/* Content Section */}
           <div className="lg:w-3/4">
-            {/* Header */}
             <div className="mb-6">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                 <div>
@@ -609,7 +554,6 @@ const RecommendationForm = () => {
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => {
-                      // Set flag to indicate navigation from recommendations page
                       sessionStorage.setItem('navigate_from_recommendations', 'true');
                       navigate("/create-itinerary");
                     }}
@@ -620,10 +564,8 @@ const RecommendationForm = () => {
                   </button>
                   <button
                     onClick={() => {
-                      // Clear temporary questionnaire data when editing main questionnaire
                       sessionStorage.removeItem('tempQuestionnaireData');
-                      clearRecommendationsCache(); // Clear recommendations cache too
-                      console.log('Cleared temporary questionnaire data and recommendations cache - navigating to main questionnaire');
+                      clearRecommendationsCache();
                       navigate("/questionnaire");
                     }}
                     className="btn btn-secondary btn-md flex items-center gap-2 whitespace-nowrap border-2 hover:bg-opacity-10"
@@ -641,19 +583,17 @@ const RecommendationForm = () => {
               </div>
               {error && (
                 <div className="bg-red-500 text-white p-3 rounded-lg">
-                  <p>⚠�� {error}</p>
+                  <p>⚠️ {error}</p>
                 </div>
               )}
             </div>
 
-            {/* Loading State */}
             {isLoading && (
               <div className="flex justify-center items-center h-64">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: 'var(--primary-600)' }}></div>
               </div>
             )}
 
-            {/* Cards Grid */}
             {!isLoading && (
               <>
                 {filteredCards.length > 0 ? (
@@ -664,7 +604,6 @@ const RecommendationForm = () => {
                         className="group card p-0 flex flex-col overflow-hidden cursor-pointer hover:scale-102 transition-all duration-300 hover:shadow-lg"
                         style={{ background: 'var(--surface)' }}
                       >
-                        {/* Destination Image with Price Badge */}
                         <div className="relative h-48 overflow-hidden">
                           {card.thumbnail_img ? (
                             <img
@@ -689,31 +628,25 @@ const RecommendationForm = () => {
                               {card.name}
                             </div>
                           </div>
-                          {/* Bookmark Button */}
                           <BookmarkButton
                             destinationName={card.name}
                             variant="card"
                             size="sm"
                           />
-                          {/* Price Badge */}
                           <div className="absolute top-3 right-3 px-2 py-1 rounded text-white text-sm font-semibold" style={{ background: 'var(--primary-700)' }}>
                             LKR {card.price.toLocaleString()}
                           </div>
                         </div>
 
-                        {/* Card Content */}
                         <div className="flex-grow p-4">
-                          {/* Name */}
                           <h3 className="font-bold text-lg mb-2" style={{ color: 'var(--text-900)' }}>
                             {card.name}
                           </h3>
 
-                          {/* Description */}
                           <p className="text-sm mb-3" style={{ color: 'var(--text-600)' }}>
                             {card.description}
                           </p>
 
-                          {/* Match Score */}
                           <div className="mb-4">
                             <div className="flex items-center justify-between mb-1">
                               <span className="text-xs font-medium" style={{ color: 'var(--text-600)' }}>
@@ -737,7 +670,6 @@ const RecommendationForm = () => {
                           </div>
                         </div>
 
-                        {/* Button always at bottom */}
                         <div className="p-4 pt-0">
                           <button
                             onClick={() => {
@@ -760,14 +692,14 @@ const RecommendationForm = () => {
                     </p>
                     <p className="text-sm text-cyan-200 mb-6">
                       {error ||
-                        "Complete the questionnaire to get personalized travel recommendations based on your preferences."}
+                        "Complete the questionnaire to get personalized travel recommendations."}
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
                       <button
                         onClick={() => {
                           setError(null);
-                          clearRecommendationsCache(); // Clear cache before refreshing
-                          fetchRecommendations(true); // Force refresh from API
+                          clearRecommendationsCache();
+                          fetchRecommendations(true);
                         }}
                         className="bg-white hover:bg-gray-100 text-cyan-700 px-6 py-3 rounded transition-colors font-medium"
                         disabled={isLoading}
@@ -776,7 +708,6 @@ const RecommendationForm = () => {
                       </button>
                       <button
                         onClick={async () => {
-                          console.log("=== TESTING API CONNECTION ===");
                           try {
                             const controller = new AbortController();
                             const timeoutId = setTimeout(() => controller.abort(), 3000);
@@ -790,16 +721,9 @@ const RecommendationForm = () => {
                             );
 
                             clearTimeout(timeoutId);
-                            console.log(
-                              "Direct fetch to /docs:",
-                              response.status,
-                              response.ok,
-                            );
                           } catch (err: any) {
                             if (err.name === 'AbortError') {
                               console.log("Test API: Request timeout");
-                            } else {
-                              console.log("Test API: Connection failed - this is expected when backend is not running");
                             }
                           }
                         }}
@@ -809,10 +733,8 @@ const RecommendationForm = () => {
                       </button>
                       <button
                         onClick={() => {
-                          // Clear temporary questionnaire data when editing main questionnaire
                           sessionStorage.removeItem('tempQuestionnaireData');
-                          clearRecommendationsCache(); // Clear recommendations cache too
-                          console.log('Cleared temporary questionnaire data and recommendations cache - navigating to main questionnaire');
+                          clearRecommendationsCache();
                           navigate("/questionnaire");
                         }}
                         className="bg-cyan-700 hover:bg-cyan-800 text-white px-6 py-3 rounded transition-colors font-medium border-2 border-white"
@@ -828,8 +750,7 @@ const RecommendationForm = () => {
                         No recommendations match your current filters
                       </h3>
                       <p className="text-sm mb-5 max-w-md text-cyan-100">
-                        We couldn't find any destinations that match your selected budget and areas.
-                        Try adjusting your filters to see more options.
+                        We couldn't find any destinations that match your selected filters.
                       </p>
                       <div className="flex flex-wrap gap-3 justify-center">
                         <button
