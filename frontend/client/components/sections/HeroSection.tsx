@@ -254,15 +254,25 @@ const HeroSection: React.FC = () => {
                 variant="page"
                 size="md"
               />
-              {/* Show Questionnaire Metrics button only for search destinations */}
+              {/* Show Questionnaire Metrics card only for search destinations */}
               {isFromSearch && (
-                <button
-                  onClick={handleQuestionnaireMetrics}
-                  className="btn btn-secondary btn-md flex items-center gap-2"
-                >
-                  <FiSettings className="w-4 h-4" />
-                  Use Questionnaire Metrics
-                </button>
+                <div className="w-full mt-6">
+                  <div className="card p-6 text-center" style={{ background: 'var(--surface)' }}>
+                    <h3 className="text-xl font-bold mb-3" style={{ color: 'var(--text-900)' }}>
+                      Get Personalized Travel Details
+                    </h3>
+                    <p className="text-sm mb-4" style={{ color: 'var(--text-600)' }}>
+                      Complete a quick questionnaire to get budget breakdown, best route, and 5-day weather forecast for {destinationData?.destination_name}.
+                    </p>
+                    <button
+                      onClick={handleQuestionnaireMetrics}
+                      className="btn btn-primary btn-md flex items-center gap-2 mx-auto"
+                    >
+                      <FiSettings className="w-4 h-4" />
+                      Use Questionnaire Metrics
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
           </div>

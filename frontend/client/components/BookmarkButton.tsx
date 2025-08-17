@@ -112,15 +112,15 @@ const BookmarkButton: React.FC<BookmarkButtonProps> = ({
   const getButtonStyle = () => {
     if (variant === "card") {
       return {
-        background: isSaved ? 'var(--primary-600)' : 'rgba(255, 255, 255, 0.9)',
-        color: isSaved ? 'white' : '#6B7280',
-        border: 'none'
+        background: isSaved ? '#06B6D4' : 'rgba(255, 255, 255, 0.9)', // Use teal-500 when saved
+        color: isSaved ? 'white' : '#06B6D4', // Use teal outline when not saved
+        border: isSaved ? 'none' : '1px solid #06B6D4'
       };
     } else {
       return {
-        borderColor: isSaved ? 'var(--primary-600)' : 'var(--border)',
-        color: isSaved ? 'var(--primary-600)' : 'var(--text-900)',
-        backgroundColor: isSaved ? 'var(--primary-100)' : 'transparent'
+        borderColor: isSaved ? '#06B6D4' : '#E2E8F0',
+        color: isSaved ? '#06B6D4' : '#475569',
+        backgroundColor: isSaved ? '#F0F9FF' : 'transparent' // Light teal background when saved
       };
     }
   };
@@ -161,11 +161,7 @@ const BookmarkButton: React.FC<BookmarkButtonProps> = ({
   };
 
   const getButtonText = () => {
-    if (variant === "page") {
-      if (isLoading) return "Saving...";
-      if (showSuccess) return "Saved!";
-      return isSaved ? "Saved" : "Save Place";
-    }
+    // Remove text for all variants - only show icon
     return "";
   };
 
@@ -179,9 +175,6 @@ const BookmarkButton: React.FC<BookmarkButtonProps> = ({
       type="button"
     >
       {renderIcon()}
-      {variant === "page" && (
-        <span className="ml-2">{getButtonText()}</span>
-      )}
     </button>
   );
 };
