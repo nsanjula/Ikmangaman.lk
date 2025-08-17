@@ -15,13 +15,22 @@
 #  to = "/.netlify/functions/api/:splat"
 
 
-[build]
-  command = "npm ci && npm run build"
-  publish = "dist"
+#[build]
+#  command = "npm ci && npm run build"
+#  publish = "dist"
+#
+## SPA routing so refresh works
+#[[redirects]]
+#  from = "/*"
+#  to = "/index.html"
+#  status = 200
 
-# SPA routing so refresh works
+[build]
+  command = "npm ci && npm run build:client"
+  publish = "dist/spa"   # use "dist" if your client build outputs there
+
+# SPA fallback so refresh works on client routes
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-
