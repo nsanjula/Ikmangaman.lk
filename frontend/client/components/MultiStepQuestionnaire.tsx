@@ -14,7 +14,7 @@ const MultiStepQuestionnaire: React.FC = () => {
 
   const interests = [
     "Nature",
-    "Adventure", 
+    "Adventure",
     "Luxury",
     "Culture",
     "Relaxation",
@@ -314,7 +314,7 @@ const MultiStepQuestionnaire: React.FC = () => {
           <h1 className="text-3xl font-bold mb-4" style={{ color: 'var(--text-900)' }}>
             Travel Preferences Questionnaire
           </h1>
-          <p className="text-lg" style={{ color: 'var(--text-600)' }}>
+          <p className="text-lg mx-auto text-center max-w-md" style={{ color: 'var(--text-600)' }}>
             Tell us about your travel preferences to get personalized recommendations
           </p>
         </div>
@@ -326,21 +326,19 @@ const MultiStepQuestionnaire: React.FC = () => {
               {[1, 2, 3].map((step) => (
                 <div key={step} className="flex items-center">
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold ${
-                      step === currentStep
-                        ? 'bg-cyan-600'
-                        : step < currentStep
+                    className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold ${step === currentStep
+                      ? 'bg-cyan-600'
+                      : step < currentStep
                         ? 'bg-cyan-500'
                         : 'bg-gray-300'
-                    }`}
+                      }`}
                   >
                     {step}
                   </div>
                   {step < 3 && (
                     <div
-                      className={`w-16 h-1 mx-2 ${
-                        step < currentStep ? 'bg-cyan-500' : 'bg-gray-300'
-                      }`}
+                      className={`w-16 h-1 mx-2 ${step < currentStep ? 'bg-cyan-500' : 'bg-gray-300'
+                        }`}
                     />
                   )}
                 </div>
@@ -366,7 +364,7 @@ const MultiStepQuestionnaire: React.FC = () => {
               <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-900)' }}>
                 What are your interests?
               </h2>
-              <p className="text-gray-600 mb-8">
+              <p className="text-gray-600 mx-auto text-center max-w-md mb-8">
                 Select one or more activities that interest you
               </p>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
@@ -374,11 +372,10 @@ const MultiStepQuestionnaire: React.FC = () => {
                   <button
                     key={interest}
                     onClick={() => toggleInterest(interest)}
-                    className={`relative h-32 overflow-hidden rounded-lg transition-all group ${
-                      selectedInterests.includes(interest)
-                        ? "ring-2 ring-cyan-500 shadow-2xl transform scale-105"
-                        : "hover:ring-2 hover:ring-cyan-300 hover:shadow-xl hover:transform hover:scale-101"
-                    }`}
+                    className={`relative h-32 overflow-hidden rounded-lg transition-all group ${selectedInterests.includes(interest)
+                      ? "ring-2 ring-cyan-500 shadow-2xl transform scale-105"
+                      : "hover:ring-2 hover:ring-cyan-300 hover:shadow-xl hover:transform hover:scale-101"
+                      }`}
                     style={{
                       backgroundImage: `url(${interestImages[interest]})`,
                       backgroundSize: "cover",
@@ -387,11 +384,10 @@ const MultiStepQuestionnaire: React.FC = () => {
                     }}
                   >
                     <div
-                      className={`absolute inset-0 transition-all ${
-                        selectedInterests.includes(interest)
-                          ? "bg-black bg-opacity-40"
-                          : "bg-black bg-opacity-50 group-hover:bg-opacity-30"
-                      }`}
+                      className={`absolute inset-0 transition-all ${selectedInterests.includes(interest)
+                        ? "bg-black bg-opacity-40"
+                        : "bg-black bg-opacity-50 group-hover:bg-opacity-30"
+                        }`}
                     />
                     {selectedInterests.includes(interest) && (
                       <div className="absolute top-2 right-2 z-10">
@@ -408,10 +404,10 @@ const MultiStepQuestionnaire: React.FC = () => {
                   </button>
                 ))}
               </div>
-              
+
               {selectedInterests.length > 0 && (
                 <div className="mb-8">
-                  <p className="text-sm text-gray-600 mb-3">Selected interests:</p>
+                  <p className="text-sm text-gray-600 mb-3 mx-auto text-center max-w-md">Selected interests:</p>
                   <div className="flex flex-wrap justify-center gap-2">
                     {selectedInterests.map((interest) => (
                       <span
@@ -438,7 +434,7 @@ const MultiStepQuestionnaire: React.FC = () => {
               <h2 className="text-2xl font-bold mb-8" style={{ color: 'var(--text-900)' }}>
                 Travel Details
               </h2>
-              
+
               <div className="max-w-lg mx-auto space-y-8">
                 <div>
                   <label className="block text-lg font-semibold mb-4" style={{ color: 'var(--text-900)' }}>
@@ -506,7 +502,7 @@ const MultiStepQuestionnaire: React.FC = () => {
               <h2 className="text-2xl font-bold mb-8" style={{ color: 'var(--text-900)' }}>
                 Starting Location
               </h2>
-              
+
               <div className="max-w-lg mx-auto">
                 <label className="block text-lg font-semibold mb-4" style={{ color: 'var(--text-900)' }}>
                   Where will you be starting your trip?
