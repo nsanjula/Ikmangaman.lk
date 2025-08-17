@@ -99,7 +99,7 @@ const ResetPasswordForm: React.FC = () => {
   return (
     <>
       <BackendStatus />
-      <section className="relative h-screen bg-cover bg-center bg-no-repeat" style={{ background: 'var(--bg)' }}>
+      <section className="relative bg-cover bg-center bg-no-repeat py-12 md:py-20" style={{ background: 'var(--bg)', minHeight: 'calc(100vh - 160px)' }}>
         {/* Background Image */}
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -108,119 +108,120 @@ const ResetPasswordForm: React.FC = () => {
           }}
         />
 
-        {/* Dark gradient overlay */}
-        <div className="absolute inset-0 gradient-overlay" />
+        {/* Lighter gradient overlay for better visibility */}
+        <div className="absolute inset-0 bg-gradient-to-br from-black/30 via-black/20 to-black/40" />
 
-        {/* Content */}
-        <div className="relative z-10 flex flex-col md:flex-row justify-center items-center min-h-screen">
-          <div className="container flex flex-col md:flex-row justify-center items-center gap-16">
-            {/* Left side - Message */}
-            <div className="text-white text-center md:text-left">
-              <h1 className="text-white mb-4">Reset Your Password</h1>
-              <p className="text-xl text-white/90">Enter your new password to complete the reset process</p>
-            </div>
+        {/* Floating elements for dynamic effect */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-20 left-10 w-2 h-2 bg-white/20 rounded-full animate-pulse"
+            style={{ animationDelay: '0s', animationDuration: '3s' }} />
+          <div className="absolute top-32 right-20 w-3 h-3 bg-cyan-300/30 rounded-full animate-pulse"
+            style={{ animationDelay: '1s', animationDuration: '4s' }} />
+          <div className="absolute bottom-32 right-1/3 w-2 h-2 bg-cyan-200/25 rounded-full animate-pulse"
+            style={{ animationDelay: '0.5s', animationDuration: '3.5s' }} />
 
-            {/* Right side - Reset Password Form */}
-            <div className="w-full max-w-md">
-              <form
-                onSubmit={handleSubmit}
-                className="card surface-blur p-8"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.95)',
-                  backdropFilter: 'blur(12px)',
-                }}
-              >
-                <h2 className="text-center mb-6" style={{ color: 'var(--text-900)' }}>Set New Password</h2>
+          {/* Floating geometric shapes */}
+          <div className="absolute top-1/4 right-10 w-6 h-6 border border-white/20 rotate-45 animate-spin"
+            style={{ animationDuration: '20s' }} />
+          <div className="absolute bottom-1/4 left-16 w-4 h-4 border border-cyan-300/30 rotate-12 animate-spin"
+            style={{ animationDuration: '15s', animationDirection: 'reverse' }} />
+        </div>
 
-                {error && (
-                  <div className="mb-4 p-3 rounded" style={{ background: '#FEF2F2', color: '#B91C1C', borderLeft: '4px solid #EF4444' }}>
+        {/* Content - Responsive Reset Password Form */}
+        <div className="relative z-10 flex items-center justify-center min-h-full py-8">
+          <div className="container max-w-md mx-auto px-4">
+            <form
+              onSubmit={handleSubmit}
+              className="bg-white p-8 rounded-2xl shadow-2xl border border-gray-100"
+            >
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">Reset Your Password</h2>
+                <p className="text-gray-600">Enter your new password to complete the reset process</p>
+              </div>
+
+              {error && (
+                <div className="mb-4 p-4 rounded-lg bg-red-50 text-red-800 border border-red-200">
+                  <div className="flex items-center">
+                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
                     {error}
                   </div>
-                )}
-
-                <div className="mb-4">
-                  <label className="block mb-2 font-medium" style={{ color: 'var(--text-900)' }}>
-                    New Password
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Enter your new password"
-                      className="w-full p-3 pr-12 rounded-lg border transition-colors duration-150"
-                      style={{
-                        background: 'var(--surface)',
-                        borderColor: 'var(--border)',
-                        color: 'var(--text-900)',
-                      }}
-                      onFocus={(e) => e.target.style.borderColor = 'var(--primary-600)'}
-                      onBlur={(e) => e.target.style.borderColor = 'var(--border)'}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                      style={{ color: 'var(--text-600)' }}
-                    >
-                      <EyeIcon isVisible={showPassword} />
-                    </button>
-                  </div>
                 </div>
+              )}
 
-                <div className="mb-6">
-                  <label className="block mb-2 font-medium" style={{ color: 'var(--text-900)' }}>
-                    Confirm New Password
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showConfirmPassword ? "text" : "password"}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Confirm your new password"
-                      className="w-full p-3 pr-12 rounded-lg border transition-colors duration-150"
-                      style={{
-                        background: 'var(--surface)',
-                        borderColor: 'var(--border)',
-                        color: 'var(--text-900)',
-                      }}
-                      onFocus={(e) => e.target.style.borderColor = 'var(--primary-600)'}
-                      onBlur={(e) => e.target.style.borderColor = 'var(--border)'}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                      style={{ color: 'var(--text-600)' }}
-                    >
-                      <EyeIcon isVisible={showConfirmPassword} />
-                    </button>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isLoading || !token}
-                  className="btn btn-primary btn-lg w-full mb-4"
-                  style={{
-                    opacity: (isLoading || !token) ? 0.7 : 1,
-                    cursor: (isLoading || !token) ? 'not-allowed' : 'pointer'
-                  }}
-                >
-                  {isLoading ? "Resetting..." : "Reset Password"}
-                </button>
-
-                <div className="text-center text-sm">
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  New Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter your new password"
+                    className="w-full p-4 pr-12 border border-gray-200 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500"
+                  />
                   <button
                     type="button"
-                    onClick={() => navigate("/login")}
-                    className="btn btn-tertiary text-sm"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                   >
-                    ← Back to Login
+                    <EyeIcon isVisible={showPassword} />
                   </button>
                 </div>
-              </form>
-            </div>
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Confirm New Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm your new password"
+                    className="w-full p-4 pr-12 border border-gray-200 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <EyeIcon isVisible={showConfirmPassword} />
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading || !token}
+                className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold py-4 px-6 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:transform-none disabled:cursor-not-allowed"
+              >
+                {isLoading ? (
+                  <div className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Resetting...
+                  </div>
+                ) : (
+                  "Reset Password"
+                )}
+              </button>
+
+              <div className="text-center text-sm mt-6">
+                <button
+                  type="button"
+                  onClick={() => navigate("/login")}
+                  className="text-cyan-600 hover:text-cyan-700 font-medium transition-colors"
+                >
+                  ← Back to Login
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </section>
