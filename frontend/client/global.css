@@ -10,7 +10,7 @@
    */
   :root {
     /* Colors */
-    --bg: #F7FAFC;
+    --bg: #F0F9FF; /* Changed to light teal/cyan background for better contrast */
     --surface: #FFFFFF;
     --surface-alt: #F1F5F9;
     --primary-700: #0C7C84;
@@ -43,7 +43,7 @@
     --space-8: 88px;
     
     /* Legacy theme variables for compatibility */
-    --background: 244 50% 98%; /* F7FAFC */
+    --background: 199 100% 96%; /* F0F9FF - Light teal background */
     --foreground: 222 84% 5%; /* 0F172A */
     --card: 0 0% 100%; /* FFFFFF */
     --card-foreground: 222 84% 5%; /* 0F172A */
@@ -435,6 +435,50 @@
     padding: 0 !important;
   }
 
+  /* Team Member Cards */
+  .team-member-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    transition: all 150ms ease;
+  }
+
+  .team-member-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+  }
+
+  .team-member-image {
+    width: 128px;
+    height: 128px;
+    background: var(--surface-alt);
+  }
+
+  .team-member-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .team-member-name {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-family: var(--font-heading);
+  }
+
+  .team-member-role {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 12px;
+  }
+
+  .team-member-description {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
   /* Responsive adjustments */
   @media (max-width: 768px) {
     .container {
@@ -469,6 +513,24 @@
     .btn-lg {
       padding: 0 var(--space-3);
       font-size: 15px;
+    }
+
+    /* Team member responsive adjustments */
+    .team-member-image {
+      width: 96px;
+      height: 96px;
+    }
+
+    .team-member-name {
+      font-size: 16px;
+    }
+
+    .team-member-role {
+      font-size: 13px;
+    }
+
+    .team-member-description {
+      font-size: 12px;
     }
   }
 

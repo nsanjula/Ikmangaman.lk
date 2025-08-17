@@ -12,8 +12,9 @@ export default function Header() {
   const { isAuthenticated, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Show search bar only on recommendation and search pages
-  const showSearchBar = location.pathname === '/recommendation' || location.pathname.startsWith('/search');
+  // Show search bar only on recommendation and search results pages (not destination details)
+  const showSearchBar = location.pathname === '/recommendation' ||
+                        (location.pathname.startsWith('/search') && !location.pathname.includes('/destination/'));
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -39,7 +40,9 @@ export default function Header() {
         <div className="flex justify-between items-center py-6">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <h1 className="text-2xl font-bold" style={{ color: 'var(--primary-700)' }}>Ikmangaman.lk</h1>
+            <Link to="/recommendation" className="text-2xl font-bold" style={{ color: 'var(--primary-700)' }}>
+              Ikmangaman.lk
+            </Link>
           </div>
 
           {/* Desktop Navigation */}

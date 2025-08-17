@@ -29,6 +29,8 @@ const QuestionnaireMetrics: React.FC = () => {
   const destinationId = location.state?.destinationId;
   const destinationName = location.state?.destinationName;
   const isSavedPlace = location.state?.isSavedPlace || false;
+  const fromCreateItinerary = location.state?.fromCreateItinerary || false;
+  const backToRecommendations = location.state?.backToRecommendations || false;
 
   const months = [
     "January", "February", "March", "April", "May", "June",
@@ -130,6 +132,37 @@ const QuestionnaireMetrics: React.FC = () => {
 
     loadStartingLocations();
   }, []);
+
+  // Handle browser back button properly and cache management
+  useEffect(() => {
+    let navigationHandled = false;
+
+    const handleBackButton = (event: PopStateEvent) => {
+      if (navigationHandled) return;
+
+      console.log('Browser back button pressed on questionnaire');
+
+      // For create-itinerary mode, navigate back to recommendations page instead of reloading
+      if (isItineraryMode || fromCreateItinerary || backToRecommendations) {
+        console.log('Navigating back to recommendations from questionnaire');
+        navigationHandled = true;
+
+        // Clear temporary questionnaire data
+        sessionStorage.removeItem('tempQuestionnaireData');
+        sessionStorage.removeItem('itinerary_questionnaire_data');
+
+        // Navigate to recommendations page
+        navigate('/recommendation', { replace: true });
+      }
+    };
+
+    // Only handle popstate for back button, remove pageshow handler that was causing reload issues
+    window.addEventListener('popstate', handleBackButton);
+
+    return () => {
+      window.removeEventListener('popstate', handleBackButton);
+    };
+  }, [isItineraryMode, fromCreateItinerary, backToRecommendations, navigate]);
 
   // Load existing questionnaire after locations are available (only step 2 and 3 data)
   useEffect(() => {
@@ -694,15 +727,17 @@ const QuestionnaireMetrics: React.FC = () => {
           ) : (
             <button
               onClick={() => {
-                if (isDayInterestsMode || isItineraryMode) {
+                if (isDayInterestsMode) {
                   navigate('/create-itinerary');
+                } else if (isItineraryMode || backToRecommendations) {
+                  navigate('/recommendation');
                 } else {
                   navigate(-1);
                 }
               }}
               className="flex items-center px-6 py-3 text-gray-600 border border-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              {isDayInterestsMode || isItineraryMode ? '��� Back to Itinerary' : '← Back to Destination'}
+              {isDayInterestsMode || isItineraryMode ? '← Back to Recommendations' : '← Back to Destination'}
             </button>
           )}
 

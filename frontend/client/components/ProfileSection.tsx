@@ -6,6 +6,7 @@ import {
   FiChevronLeft,
   FiChevronRight,
   FiUser,
+  FiBookmark,
 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -455,12 +456,12 @@ const Profile = () => {
                 <p className="mb-6" style={{color: 'var(--text-600)'}}>
                   Start exploring destinations and save your favorites!
                 </p>
-                <a
-                  href="/recommendations"
+                <button
+                  onClick={() => navigate("/recommendation")}
                   className="btn btn-primary btn-lg"
                 >
                   Explore Destinations
-                </a>
+                </button>
               </div>
             )}
 
@@ -542,10 +543,15 @@ const Profile = () => {
                               loadSavedPlaces(false);
                             }
                           }}
-                          className="btn btn-secondary btn-md px-3"
+                          className="flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200"
+                          style={{
+                            background: '#06B6D4',
+                            color: 'white',
+                            border: 'none'
+                          }}
                           title="Remove from saved places"
                         >
-                          ✕
+                          <FiBookmark className="w-5 h-5 fill-current" />
                         </button>
                       </div>
                     </div>

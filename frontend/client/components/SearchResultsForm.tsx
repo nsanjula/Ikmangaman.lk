@@ -251,6 +251,15 @@ const SearchResultsForm = () => {
         return;
       }
 
+      // Handle empty results array
+      if (searchResults.results.length === 0) {
+        console.log("Search returned empty results array");
+        setError("No matching destinations found for your search.");
+        setCards([]);
+        setIsLoading(false);
+        return;
+      }
+
       // Transform search results to match card format
       const transformedCards: SearchResultCard[] = searchResults.results
         .filter((item: any) => item && item.destination_id && item.destination_name)
@@ -729,8 +738,12 @@ const SearchResultsForm = () => {
                 </div>
               </div>
               {error && (
-                <div className="bg-red-500 text-white p-3 rounded-lg">
-                  <p>⚠️ {error}</p>
+                <div className="card p-4 border-l-4" style={{
+                  background: 'var(--primary-100)',
+                  borderLeftColor: 'var(--primary-600)',
+                  borderColor: 'var(--primary-200)'
+                }}>
+                  <p style={{ color: 'var(--primary-700)' }}>ℹ️ {error}</p>
                 </div>
               )}
             </div>
@@ -861,12 +874,12 @@ const SearchResultsForm = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="bg-cyan-600 p-8 rounded-lg text-center text-white">
-                    <div className="text-6xl mb-4">🔍</div>
-                    <p className="text-lg mb-4">
+                  <div className="card p-8 text-center" style={{ background: 'var(--surface)' }}>
+                    <div className="text-6xl mb-4" style={{ color: 'var(--text-600)' }}>🔍</div>
+                    <h3 className="text-xl font-semibold mb-4" style={{ color: 'var(--text-900)' }}>
                       No matching destinations found
-                    </p>
-                    <p className="text-sm text-cyan-200 mb-6">
+                    </h3>
+                    <p className="text-sm mb-6" style={{ color: 'var(--text-600)' }}>
                       {error || "Try adjusting your search criteria or filters to find more destinations."}
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -877,7 +890,7 @@ const SearchResultsForm = () => {
                           console.log('Cleared temporary questionnaire data - navigating to recommendations');
                           navigate("/recommendation");
                         }}
-                        className="bg-white hover:bg-gray-100 text-cyan-700 px-6 py-3 rounded transition-colors font-medium"
+                        className="btn btn-primary btn-md"
                       >
                         Browse Recommendations
                       </button>
@@ -886,7 +899,7 @@ const SearchResultsForm = () => {
                           setSelectedAreas(areas.map((a) => a.id));
                           setSortBy("best_match");
                         }}
-                        className="bg-cyan-700 hover:bg-cyan-800 text-white px-6 py-3 rounded transition-colors font-medium border-2 border-white"
+                        className="btn btn-secondary btn-md"
                       >
                         Reset Filters
                       </button>

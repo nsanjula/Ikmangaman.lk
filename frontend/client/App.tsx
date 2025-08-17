@@ -46,6 +46,29 @@ const App = () => {
       const timestamp = Date.now();
       document.documentElement.setAttribute('data-iframe-timestamp', timestamp.toString());
     }
+
+    // Handle global page cache issues that affect navigation
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        console.log('App loaded from browser cache');
+
+        // Clean up any problematic session data that might cause navigation issues
+        const currentPath = window.location.pathname;
+
+        // If we're on questionnaire-metrics with create-itinerary mode, ensure clean state
+        if (currentPath.includes('questionnaire-metrics') && window.location.search.includes('create-itinerary')) {
+          console.log('Cleaning up questionnaire cache data due to page cache');
+          sessionStorage.removeItem('tempQuestionnaireData');
+          sessionStorage.removeItem('itinerary_questionnaire_data');
+        }
+      }
+    };
+
+    window.addEventListener('pageshow', handlePageShow);
+
+    return () => {
+      window.removeEventListener('pageshow', handlePageShow);
+    };
   }, []);
 
   return (

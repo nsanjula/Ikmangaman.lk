@@ -45,58 +45,84 @@ const AboutUs = () => {
                     <h2 className="text-2xl font-bold mb-6 text-center" style={{ color: 'var(--text-900)' }}>
                         Meet The Team
                     </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {/* Team Member 1 */}
-                        <div className="card p-6 text-center" style={{ background: 'var(--surface)' }}>
-                            <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden">
-                                <div className="w-full h-full bg-cyan-100 flex items-center justify-center text-4xl">
-                                    👨‍💻
-                                </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {/* Team Member 1 - Buvindu */}
+                        <div className="team-member-card p-6 text-center" style={{ background: 'var(--surface)' }}>
+                            <div className="team-member-image mx-auto mb-4 rounded-full overflow-hidden">
+                                <img
+                                    src="https://cdn.builder.io/api/v1/image/assets%2F3457afc668d84db2a90669abceb0c107%2Ff793e7dfd1fd4b989600e3324b5b83a6?format=webp&width=800"
+                                    alt="Buvindu Suraweera"
+                                    className="team-member-photo"
+                                />
                             </div>
-                            <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-900)' }}>
-                                John Smith
+                            <h3 className="team-member-name" style={{ color: 'var(--text-900)' }}>
+                                Buvindu Suraweera
                             </h3>
-                            <p className="text-sm mb-3" style={{ color: 'var(--primary-600)' }}>
-                                Founder & CEO
+                            <p className="team-member-role" style={{ color: 'var(--primary-600)' }}>
+                                API Manager, Backend Developer
                             </p>
-                            <p className="text-sm" style={{ color: 'var(--text-600)' }}>
-                                Travel enthusiast with 10+ years in the tourism industry, passionate about showcasing Sri Lanka's beauty.
+                            <p className="team-member-description" style={{ color: 'var(--text-600)' }}>
+                                Expert in API design and backend architecture, ensuring seamless data flow and robust server infrastructure.
                             </p>
                         </div>
 
-                        {/* Team Member 2 */}
-                        <div className="card p-6 text-center" style={{ background: 'var(--surface)' }}>
-                            <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden">
-                                <div className="w-full h-full bg-cyan-100 flex items-center justify-center text-4xl">
-                                    👩‍🔬
-                                </div>
+                        {/* Team Member 2 - Anupama */}
+                        <div className="team-member-card p-6 text-center" style={{ background: 'var(--surface)' }}>
+                            <div className="team-member-image mx-auto mb-4 rounded-full overflow-hidden">
+                                <img
+                                    src="https://cdn.builder.io/api/v1/image/assets%2F3457afc668d84db2a90669abceb0c107%2F0be46b4013944247bcf9b39aaf81e304?format=webp&width=800"
+                                    alt="Anupama Wickramaratne"
+                                    className="team-member-photo"
+                                />
                             </div>
-                            <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-900)' }}>
-                                Sarah Johnson
+                            <h3 className="team-member-name" style={{ color: 'var(--text-900)' }}>
+                                Anupama Wickramaratne
                             </h3>
-                            <p className="text-sm mb-3" style={{ color: 'var(--primary-600)' }}>
-                                Data Scientist
+                            <p className="team-member-role" style={{ color: 'var(--primary-600)' }}>
+                                Debugger & Tester, Frontend Developer, Frontend Designer
                             </p>
-                            <p className="text-sm" style={{ color: 'var(--text-600)' }}>
-                                AI and machine learning expert who ensures our recommendations are perfectly tailored to you.
+                            <p className="team-member-description" style={{ color: 'var(--text-600)' }}>
+                                Quality assurance specialist and frontend developer, ensuring pixel-perfect designs and bug-free experiences.
                             </p>
                         </div>
 
-                        {/* Team Member 3 */}
-                        <div className="card p-6 text-center" style={{ background: 'var(--surface)' }}>
-                            <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden">
-                                <div className="w-full h-full bg-cyan-100 flex items-center justify-center text-4xl">
-                                    👨‍🎨
-                                </div>
+                        {/* Team Member 3 - Yasiru */}
+                        <div className="team-member-card p-6 text-center" style={{ background: 'var(--surface)' }}>
+                            <div className="team-member-image mx-auto mb-4 rounded-full overflow-hidden">
+                                <img
+                                    src="https://cdn.builder.io/api/v1/image/assets%2F3457afc668d84db2a90669abceb0c107%2Fa67d960a26b44a36bffe4442a6cb8b23?format=webp&width=800"
+                                    alt="Yasiru Aluthge"
+                                    className="team-member-photo"
+                                />
                             </div>
-                            <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-900)' }}>
-                                Michael Chen
+                            <h3 className="team-member-name" style={{ color: 'var(--text-900)' }}>
+                                Yasiru Aluthge
                             </h3>
-                            <p className="text-sm mb-3" style={{ color: 'var(--primary-600)' }}>
-                                UX Designer
+                            <p className="team-member-role" style={{ color: 'var(--primary-600)' }}>
+                                Frontend Developer, Frontend Designer
                             </p>
-                            <p className="text-sm" style={{ color: 'var(--text-600)' }}>
-                                Creates intuitive experiences that make travel planning simple and enjoyable.
+                            <p className="team-member-description" style={{ color: 'var(--text-600)' }}>
+                                Creative frontend developer and designer, crafting intuitive user interfaces and exceptional user experiences.
+                            </p>
+                        </div>
+
+                        {/* Team Member 4 - Nisal */}
+                        <div className="team-member-card p-6 text-center" style={{ background: 'var(--surface)' }}>
+                            <div className="team-member-image mx-auto mb-4 rounded-full overflow-hidden">
+                                <img
+                                    src="https://cdn.builder.io/api/v1/image/assets%2F3457afc668d84db2a90669abceb0c107%2Fb66111e6f4be4c94a170eaa4322da894?format=webp&width=800"
+                                    alt="Nisal Sanjula"
+                                    className="team-member-photo"
+                                />
+                            </div>
+                            <h3 className="team-member-name" style={{ color: 'var(--text-900)' }}>
+                                Nisal Sanjula
+                            </h3>
+                            <p className="team-member-role" style={{ color: 'var(--primary-600)' }}>
+                                Backend Developer, Database Manager
+                            </p>
+                            <p className="team-member-description" style={{ color: 'var(--text-600)' }}>
+                                Database expert and backend developer, managing data infrastructure and server-side application logic.
                             </p>
                         </div>
                     </div>

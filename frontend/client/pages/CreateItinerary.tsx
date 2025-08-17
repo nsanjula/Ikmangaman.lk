@@ -5,6 +5,8 @@ import { useAuth } from "../contexts/AuthContext";
 import { useApiWithLoading } from "../contexts/LoadingContext";
 import { authAPI } from "../lib/api";
 import DayInterestsQuestionnaire from "../components/DayInterestsQuestionnaire";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 
 // Types for the itinerary system
 interface ItineraryState {
@@ -79,6 +81,7 @@ const CreateItinerary: React.FC = () => {
   const [showingRecommendationsForDay, setShowingRecommendationsForDay] = useState<number | null>(null);
   const [showingInterestsForDay, setShowingInterestsForDay] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState<string>("distance");
+  const [hasNavigatedToQuestionnaire, setHasNavigatedToQuestionnaire] = useState(false);
 
   // Check if user is authenticated
   useEffect(() => {
@@ -89,8 +92,13 @@ const CreateItinerary: React.FC = () => {
 
   // Handler for initial questionnaire (steps 2 & 3)
   const handleInitialQuestionnaire = () => {
-    // Navigate to questionnaire metrics page for initial setup
-    navigate("/questionnaire-metrics?mode=create-itinerary");
+    if (hasNavigatedToQuestionnaire) return; // Prevent multiple navigations
+
+    setHasNavigatedToQuestionnaire(true);
+    // Use normal navigation (not replace) to preserve proper back button behavior
+    navigate("/questionnaire-metrics?mode=create-itinerary", {
+      state: { fromCreateItinerary: true, backToRecommendations: true }
+    });
   };
 
   // Check if user should be redirected to initial questionnaire
@@ -99,11 +107,48 @@ const CreateItinerary: React.FC = () => {
       // If no questionnaire data is saved, redirect to initial questionnaire
       const savedData = sessionStorage.getItem('itinerary_questionnaire_data');
       if (!savedData) {
-        handleInitialQuestionnaire();
-        return; // Don't continue execution
+        // Add a small delay to prevent issues with rapid navigation
+        const timeoutId = setTimeout(() => {
+          handleInitialQuestionnaire();
+        }, 100);
+
+        return () => clearTimeout(timeoutId);
       }
     }
   }, [isAuthenticated, questionnaireSaved, itinerary.itinerary_id]);
+
+  // Handle browser back button to prevent getting stuck in loops
+  useEffect(() => {
+    let navigationHandled = false;
+
+    const handleBackButton = (event: PopStateEvent) => {
+      if (navigationHandled) return;
+
+      console.log('Back button pressed on create-itinerary page');
+
+      // If we're on create-itinerary and have no data, go back to recommendations
+      if (!questionnaireSaved && itinerary.itinerary_id === null) {
+        const savedData = sessionStorage.getItem('itinerary_questionnaire_data');
+        if (!savedData) {
+          navigationHandled = true;
+
+          // Clean up any remaining temporary data
+          sessionStorage.removeItem('tempQuestionnaireData');
+          sessionStorage.removeItem('itinerary_questionnaire_data');
+
+          // Navigate to recommendations page
+          navigate('/recommendation', { replace: true });
+        }
+      }
+    };
+
+    // Remove pageshow handler that was causing cache-related reload issues
+    window.addEventListener('popstate', handleBackButton);
+
+    return () => {
+      window.removeEventListener('popstate', handleBackButton);
+    };
+  }, [questionnaireSaved, itinerary.itinerary_id, navigate]);
 
   // Handler for day-specific questionnaire (step 1 - interests)
   const handleDayQuestionnaire = (dayNumber: number) => {
@@ -328,47 +373,33 @@ const CreateItinerary: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: '#F0F9FF' }}>
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-6">
-            <h1 className="text-2xl font-bold" style={{ color: '#0C3230' }}>
-              Ikmangamn.lk
-            </h1>
-            <nav className="flex items-center gap-8">
-              <a href="/aboutus" className="text-gray-700 hover:text-gray-900">About Us</a>
-              <a href="#" className="text-gray-700 hover:text-gray-900">Future Improvements</a>
-            </nav>
-          </div>
-          <div className="flex items-center gap-4">
-            <button 
+    <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
+      <Header />
+
+      {/* Main Content */}
+      <main className="container iframe-container py-12">
+        {/* Title and Generate Plan Button */}
+        <div className="mb-12">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+            <h1 className="text-4xl font-bold mb-2" style={{ color: 'var(--text-900)' }}>Create Your Travel Plan</h1>
+            <button
               onClick={generatePlan}
               disabled={selectedDestinationsCount === 0 || isLoading}
-              className="px-6 py-2 bg-white border-2 border-gray-300 rounded-lg font-semibold text-gray-800 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+              className="btn btn-primary btn-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Generate Plan
             </button>
-            <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-              </svg>
-            </div>
           </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="container mx-auto px-6 py-12">
-        {/* Title */}
-        <div className="mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Create Your Travel Plan</h1>
         </div>
 
         {/* Error Display */}
         {error && (
-          <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-            {error}
+          <div className="mb-6 card p-4 border-l-4" style={{
+            background: 'var(--surface)',
+            borderLeftColor: '#F87171',
+            borderColor: '#FECACA'
+          }}>
+            <p style={{ color: '#DC2626' }}>{error}</p>
           </div>
         )}
 
@@ -450,7 +481,7 @@ const CreateItinerary: React.FC = () => {
 
         {/* Recommendations Section */}
         {!showingInterestsForDay && showingRecommendationsForDay && currentDayRecommendations.length > 0 && (
-          <div className="bg-white rounded-xl p-8 shadow-lg">
+          <div className="card p-8" style={{ background: 'var(--surface)' }}>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-3xl font-bold text-gray-900">
                 Day {showingRecommendationsForDay.toString().padStart(2, '0')}
@@ -565,12 +596,12 @@ const CreateItinerary: React.FC = () => {
 
         {/* Initial state message */}
         {!showingInterestsForDay && !questionnaireSaved && (
-          <div className="bg-cyan-50 border border-cyan-200 rounded-xl p-8 text-center">
+          <div className="card p-8 text-center" style={{ background: 'var(--primary-100)', borderColor: 'var(--primary-600)' }}>
             <div className="text-4xl mb-4">✈️</div>
-            <h3 className="text-xl font-semibold text-cyan-900 mb-2">
+            <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--primary-700)' }}>
               Ready to Plan Your Adventure?
             </h3>
-            <p className="text-cyan-700 mb-6">
+            <p className="mb-6" style={{ color: 'var(--primary-700)' }}>
               Click on the first container to start creating your personalized travel itinerary.
               We'll ask you a few questions to get started.
             </p>
@@ -578,29 +609,7 @@ const CreateItinerary: React.FC = () => {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="bg-cyan-900 text-white py-6">
-        <div className="container mx-auto px-6">
-          <div className="flex justify-between items-center">
-            <div className="text-cyan-200">Ikmangamn.lk</div>
-            <div className="flex items-center gap-8 text-sm">
-              <a href="#" className="text-cyan-200 hover:text-white">Terms of Service</a>
-              <a href="#" className="text-cyan-200 hover:text-white">Privacy Policy</a>
-              <a href="#" className="text-cyan-200 hover:text-white">Manage Cookies</a>
-            </div>
-            <div className="flex items-center gap-4">
-              {/* Social icons */}
-              <div className="flex gap-3">
-                <div className="w-6 h-6 bg-cyan-200 rounded opacity-75"></div>
-                <div className="w-6 h-6 bg-cyan-200 rounded opacity-75"></div>
-                <div className="w-6 h-6 bg-cyan-200 rounded opacity-75"></div>
-                <div className="w-6 h-6 bg-cyan-200 rounded opacity-75"></div>
-                <div className="w-6 h-6 bg-cyan-200 rounded opacity-75"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
       {/* Loading overlay */}
       {isLoading && (
