@@ -95,22 +95,45 @@ const CreateItinerary: React.FC = () => {
   const { callWithLoading } = useApiWithLoading();
   
   // State management
-  const [itinerary, setItinerary] = useState<ItineraryState>({
-    itinerary_id: null,
-    travel_month: "",
-    no_of_people: 1,
-    start_location: "",
-    days: {
-      1: { destination_id: null, destination_name: null, destination_image: null, estimated_budget: null },
-      2: { destination_id: null, destination_name: null, destination_image: null, estimated_budget: null },
-      3: { destination_id: null, destination_name: null, destination_image: null, estimated_budget: null },
-      4: { destination_id: null, destination_name: null, destination_image: null, estimated_budget: null }
+  const [itinerary, setItinerary] = useState<ItineraryState>(() => {
+    // Try to restore from localStorage on initial load
+    try {
+      const savedItinerary = localStorage.getItem('create_itinerary_state');
+      if (savedItinerary) {
+        const parsed = JSON.parse(savedItinerary);
+        console.log('CreateItinerary: Restored from localStorage:', parsed);
+        return parsed;
+      }
+    } catch (error) {
+      console.error('CreateItinerary: Error restoring from localStorage:', error);
+      localStorage.removeItem('create_itinerary_state');
     }
+
+    return {
+      itinerary_id: null,
+      travel_month: "",
+      no_of_people: 1,
+      start_location: "",
+      days: {
+        1: { destination_id: null, destination_name: null, destination_image: null, estimated_budget: null },
+        2: { destination_id: null, destination_name: null, destination_image: null, estimated_budget: null },
+        3: { destination_id: null, destination_name: null, destination_image: null, estimated_budget: null },
+        4: { destination_id: null, destination_name: null, destination_image: null, estimated_budget: null }
+      }
+    };
   });
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [questionnaireSaved, setQuestionnaireSaved] = useState(false);
+  const [questionnaireSaved, setQuestionnaireSaved] = useState(() => {
+    // Restore questionnaire saved state from localStorage
+    try {
+      const saved = localStorage.getItem('create_itinerary_questionnaire_saved');
+      return saved ? JSON.parse(saved) : false;
+    } catch {
+      return false;
+    }
+  });
   const [currentDayRecommendations, setCurrentDayRecommendations] = useState<Destination[]>([]);
   const [showingRecommendationsForDay, setShowingRecommendationsForDay] = useState<number | null>(null);
   const [showingInterestsForDay, setShowingInterestsForDay] = useState<number | null>(null);
@@ -124,6 +147,15 @@ const CreateItinerary: React.FC = () => {
     "urban",
   ]);
 
+  // Persist itinerary state to localStorage whenever it changes
+  useEffect(() => {
+    if (itinerary.itinerary_id) {
+      localStorage.setItem('create_itinerary_state', JSON.stringify(itinerary));
+      localStorage.setItem('create_itinerary_questionnaire_saved', JSON.stringify(questionnaireSaved));
+      console.log('CreateItinerary: Saved state to localStorage');
+    }
+  }, [itinerary, questionnaireSaved]);
+
   // Check if user is authenticated - wait for auth loading to complete
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -131,134 +163,235 @@ const CreateItinerary: React.FC = () => {
     }
   }, [isAuthenticated, navigate, authLoading]);
 
+  // Cleanup effect to handle page unload or navigation away
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Don't clear flag on page refresh - only on actual navigation away
+      // This is handled by the handleNavigation function in Header
+    };
+
+    const handlePopState = () => {
+      // Clear flag when user uses browser back/forward buttons to leave the page
+      if (window.location.pathname !== '/create-itinerary') {
+        sessionStorage.removeItem('has_visited_create_itinerary');
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+
   // Handler for initial questionnaire (steps 2 & 3)
   const handleInitialQuestionnaire = () => {
     // Navigate to questionnaire metrics page for initial setup
     navigate("/questionnaire-metrics?mode=create-itinerary");
   };
 
-  // Check if user should be redirected to initial questionnaire
+  // Check if user should be redirected to initial questionnaire or restore state
   useEffect(() => {
-    if (isAuthenticated && !questionnaireSaved && itinerary.itinerary_id === null) {
-      // Check if we came from recommendations page and don't have questionnaire data
-      const savedData = sessionStorage.getItem('itinerary_questionnaire_data');
-      const tempData = sessionStorage.getItem('tempDestinationData');
-      
-      // Check for temp create itinerary data first (from destination detail navigation back)
-      const tempCreateItineraryData = sessionStorage.getItem('tempCreateItineraryData');
-      if (tempCreateItineraryData && !savedData) {
-        try {
-          const data = JSON.parse(tempCreateItineraryData);
-          if (data.currentItineraryState?.itinerary_id) {
-            console.log('Restoring from temp create itinerary data...');
-            setItinerary(data.currentItineraryState);
-            setQuestionnaireSaved(true);
+    if (!isAuthenticated) return;
 
-            // Restore recommendations if available
-            if (data.currentDayRecommendations && data.showingRecommendationsForDay) {
-              setCurrentDayRecommendations(data.currentDayRecommendations);
-              setShowingRecommendationsForDay(data.showingRecommendationsForDay);
-            }
+    console.log('CreateItinerary: State check - questionnaireSaved:', questionnaireSaved, 'itinerary_id:', itinerary.itinerary_id);
 
-            // Restore sort preference
-            if (data.sortBy) {
-              setSortBy(data.sortBy);
-            }
+    // Debug storage
+    console.log('CreateItinerary: Storage debug:');
+    console.log('- localStorage create_itinerary_state:', localStorage.getItem('create_itinerary_state'));
+    console.log('- localStorage create_itinerary_questionnaire_saved:', localStorage.getItem('create_itinerary_questionnaire_saved'));
+    Object.keys(sessionStorage).forEach(key => {
+      if (key.includes('itinerary') || key.includes('temp') || key.includes('questionnaire') || key.includes('navigate')) {
+        console.log(`- sessionStorage ${key}:`, sessionStorage.getItem(key));
+      }
+    });
 
-            // Clean up temp data
-            sessionStorage.removeItem('tempCreateItineraryData');
-            sessionStorage.removeItem('tempCreateItineraryDataTimestamp');
-            return;
+    // If we already have a restored itinerary from localStorage (during component init),
+    // make sure questionnaireSaved is set correctly
+    if (itinerary.itinerary_id && !questionnaireSaved) {
+      console.log('CreateItinerary: Found existing itinerary from localStorage, setting questionnaireSaved to true');
+      setQuestionnaireSaved(true);
+      return;
+    }
+
+    // Priority 1: Check for temp create itinerary data first (from destination detail navigation back)
+    const tempCreateItineraryData = sessionStorage.getItem('tempCreateItineraryData');
+    if (tempCreateItineraryData) {
+      try {
+        const data = JSON.parse(tempCreateItineraryData);
+        if (data.currentItineraryState?.itinerary_id) {
+          console.log('CreateItinerary: Restoring from temp create itinerary data...', data.currentItineraryState);
+          setItinerary(data.currentItineraryState);
+          setQuestionnaireSaved(true);
+
+          // Restore recommendations if available
+          if (data.currentDayRecommendations && data.showingRecommendationsForDay) {
+            setCurrentDayRecommendations(data.currentDayRecommendations);
+            setShowingRecommendationsForDay(data.showingRecommendationsForDay);
           }
-        } catch (error) {
-          console.error('Error restoring from temp create itinerary data:', error);
+
+          // Restore sort preference
+          if (data.sortBy) {
+            setSortBy(data.sortBy);
+          }
+
+          // Clean up temp data
           sessionStorage.removeItem('tempCreateItineraryData');
           sessionStorage.removeItem('tempCreateItineraryDataTimestamp');
+          return;
         }
+      } catch (error) {
+        console.error('CreateItinerary: Error restoring from temp create itinerary data:', error);
+        sessionStorage.removeItem('tempCreateItineraryData');
+        sessionStorage.removeItem('tempCreateItineraryDataTimestamp');
       }
+    }
 
-      // If we have old temp data, try to restore from it (backward compatibility)
-      if (tempData && !savedData) {
-        try {
-          const data = JSON.parse(tempData);
-          if (data.currentItineraryState?.itinerary_id) {
-            console.log('Restoring from legacy temp data...');
-            setItinerary(data.currentItineraryState);
-            setQuestionnaireSaved(true);
+    // Priority 2: Check for saved questionnaire data from questionnaire completion
+    const savedData = sessionStorage.getItem('itinerary_questionnaire_data');
+    if (savedData && !questionnaireSaved) {
+      try {
+        const data = JSON.parse(savedData);
+        console.log('CreateItinerary: Found saved questionnaire data, creating itinerary...', data);
 
-            // Restore recommendations if available
-            if (data.currentDayRecommendations && data.showingRecommendationsForDay) {
-              setCurrentDayRecommendations(data.currentDayRecommendations);
-              setShowingRecommendationsForDay(data.showingRecommendationsForDay);
-            }
+        setItinerary(prev => ({
+          ...prev,
+          travel_month: data.travel_month,
+          no_of_people: data.no_of_people,
+          start_location: data.start_location
+        }));
 
-            // Restore sort preference
-            if (data.sortBy) {
-              setSortBy(data.sortBy);
-            }
+        createItinerary(data);
+        setQuestionnaireSaved(true);
+        sessionStorage.removeItem('itinerary_questionnaire_data');
+        return;
+      } catch (error) {
+        console.error('CreateItinerary: Error parsing saved questionnaire data:', error);
+        sessionStorage.removeItem('itinerary_questionnaire_data');
+      }
+    }
 
-            // Clean up temp data
-            sessionStorage.removeItem('tempDestinationData');
-            sessionStorage.removeItem('tempDestinationDataTimestamp');
-            return;
+    // Priority 3: Check for legacy temp data (backward compatibility)
+    const tempData = sessionStorage.getItem('tempDestinationData');
+    if (tempData && !questionnaireSaved && !itinerary.itinerary_id) {
+      try {
+        const data = JSON.parse(tempData);
+        if (data.currentItineraryState?.itinerary_id) {
+          console.log('CreateItinerary: Restoring from legacy temp data...', data.currentItineraryState);
+          setItinerary(data.currentItineraryState);
+          setQuestionnaireSaved(true);
+
+          // Restore recommendations if available
+          if (data.currentDayRecommendations && data.showingRecommendationsForDay) {
+            setCurrentDayRecommendations(data.currentDayRecommendations);
+            setShowingRecommendationsForDay(data.showingRecommendationsForDay);
           }
-        } catch (error) {
-          console.error('Error restoring from legacy temp data:', error);
+
+          // Restore sort preference
+          if (data.sortBy) {
+            setSortBy(data.sortBy);
+          }
+
+          // Clean up temp data
           sessionStorage.removeItem('tempDestinationData');
           sessionStorage.removeItem('tempDestinationDataTimestamp');
+          return;
         }
+      } catch (error) {
+        console.error('CreateItinerary: Error restoring from legacy temp data:', error);
+        sessionStorage.removeItem('tempDestinationData');
+        sessionStorage.removeItem('tempDestinationDataTimestamp');
       }
+    }
 
-      // Check if we're coming from recommendations and have existing questionnaire data
-      const fromRecommendations = sessionStorage.getItem('navigate_from_recommendations');
+    // Priority 4: Check if we already have active itinerary state
+    if (questionnaireSaved || itinerary.itinerary_id) {
+      console.log('CreateItinerary: Already have questionnaire/itinerary, skipping initialization');
+      return;
+    }
 
-      if (fromRecommendations) {
-        // Clean up the flag
-        sessionStorage.removeItem('navigate_from_recommendations');
+    // Priority 5: Handle new navigation and first-time visits
+    const fromRecommendations = sessionStorage.getItem('navigate_from_recommendations');
+    const hasVisitedCreateItinerary = sessionStorage.getItem('has_visited_create_itinerary');
 
-        // Try to get existing questionnaire data from the API instead of forcing temp questionnaire
-        authAPI.getQuestionnaire().then(existingData => {
-          if (existingData && existingData.travel_month && existingData.start_location) {
-            // Create itinerary data from existing questionnaire
-            const questionnaireData = {
-              travel_month: existingData.travel_month,
-              no_of_people: existingData.no_of_people,
-              start_location: existingData.start_location
-            };
+    if (fromRecommendations) {
+      console.log('CreateItinerary: Coming from recommendations');
+      // Clean up the flag
+      sessionStorage.removeItem('navigate_from_recommendations');
 
-            // Store as if it came from questionnaire-metrics
-            sessionStorage.setItem('itinerary_questionnaire_data', JSON.stringify(questionnaireData));
+      // Set flag to indicate user has visited this page
+      sessionStorage.setItem('has_visited_create_itinerary', 'true');
 
-            console.log('Using existing questionnaire data for itinerary creation:', questionnaireData);
+      // Try to get existing questionnaire data from the API instead of forcing temp questionnaire
+      authAPI.getQuestionnaire().then(existingData => {
+        if (existingData && existingData.travel_month && existingData.start_location) {
+          // Create itinerary data from existing questionnaire
+          const questionnaireData = {
+            travel_month: existingData.travel_month,
+            no_of_people: existingData.no_of_people,
+            start_location: existingData.start_location
+          };
 
-            // Trigger the itinerary creation directly
-            setItinerary(prev => ({
-              ...prev,
-              travel_month: questionnaireData.travel_month,
-              no_of_people: questionnaireData.no_of_people,
-              start_location: questionnaireData.start_location
-            }));
+          console.log('CreateItinerary: Using existing questionnaire data for itinerary creation:', questionnaireData);
 
-            createItinerary(questionnaireData);
-            setQuestionnaireSaved(true);
-            sessionStorage.removeItem('itinerary_questionnaire_data');
-          } else if (!hasNavigatedToQuestionnaire) {
-            // Only redirect to questionnaire if we don't have existing data
-            setHasNavigatedToQuestionnaire(true);
-            handleInitialQuestionnaire();
-          }
-        }).catch(error => {
-          console.log('No existing questionnaire data found, will need to redirect to questionnaire');
-          if (!hasNavigatedToQuestionnaire) {
-            setHasNavigatedToQuestionnaire(true);
-            handleInitialQuestionnaire();
-          }
-        });
-      } else if (!savedData && !hasNavigatedToQuestionnaire) {
-        // Normal flow for users not coming from recommendations
-        setHasNavigatedToQuestionnaire(true);
-        handleInitialQuestionnaire();
-      }
+          // Trigger the itinerary creation directly
+          setItinerary(prev => ({
+            ...prev,
+            travel_month: questionnaireData.travel_month,
+            no_of_people: questionnaireData.no_of_people,
+            start_location: questionnaireData.start_location
+          }));
+
+          createItinerary(questionnaireData);
+          setQuestionnaireSaved(true);
+        } else if (!hasNavigatedToQuestionnaire) {
+          // Only redirect to questionnaire if we don't have existing data
+          console.log('CreateItinerary: No existing questionnaire data, redirecting to questionnaire');
+          setHasNavigatedToQuestionnaire(true);
+          handleInitialQuestionnaire();
+        }
+      }).catch(error => {
+        console.log('CreateItinerary: No existing questionnaire data found, will need to redirect to questionnaire');
+        if (!hasNavigatedToQuestionnaire) {
+          setHasNavigatedToQuestionnaire(true);
+          handleInitialQuestionnaire();
+        }
+      });
+    } else if (hasVisitedCreateItinerary) {
+      // User has visited before but no active state - try to restore from existing questionnaire
+      console.log('CreateItinerary: Has visited before, trying to restore from existing questionnaire');
+      authAPI.getQuestionnaire().then(existingData => {
+        if (existingData && existingData.travel_month && existingData.start_location) {
+          // Create itinerary data from existing questionnaire
+          const questionnaireData = {
+            travel_month: existingData.travel_month,
+            no_of_people: existingData.no_of_people,
+            start_location: existingData.start_location
+          };
+
+          console.log('CreateItinerary: Restoring from existing questionnaire after refresh:', questionnaireData);
+
+          // Trigger the itinerary creation directly
+          setItinerary(prev => ({
+            ...prev,
+            travel_month: questionnaireData.travel_month,
+            no_of_people: questionnaireData.no_of_people,
+            start_location: questionnaireData.start_location
+          }));
+
+          createItinerary(questionnaireData);
+          setQuestionnaireSaved(true);
+        }
+      }).catch(error => {
+        console.log('CreateItinerary: No existing questionnaire data found on refresh');
+      });
+    } else if (!hasNavigatedToQuestionnaire) {
+      // True first visit - redirect to questionnaire
+      console.log('CreateItinerary: First visit, redirecting to questionnaire');
+      setHasNavigatedToQuestionnaire(true);
+      handleInitialQuestionnaire();
     }
   }, [isAuthenticated, questionnaireSaved, itinerary.itinerary_id, hasNavigatedToQuestionnaire]);
 
@@ -453,6 +586,58 @@ const CreateItinerary: React.FC = () => {
     }
   };
 
+  // Start a new itinerary - clear all data and redirect to questionnaire
+  const startNewItinerary = () => {
+    try {
+      // Clear all session storage data related to itineraries
+      sessionStorage.removeItem('itinerary_questionnaire_data');
+      sessionStorage.removeItem('tempCreateItineraryData');
+      sessionStorage.removeItem('tempCreateItineraryDataTimestamp');
+      sessionStorage.removeItem('tempDestinationData');
+      sessionStorage.removeItem('tempDestinationDataTimestamp');
+      sessionStorage.removeItem('has_visited_create_itinerary');
+      sessionStorage.removeItem('navigate_from_recommendations');
+      sessionStorage.removeItem('tempQuestionnaireData');
+      sessionStorage.removeItem('tempQuestionnaireParams');
+      sessionStorage.removeItem('tempQuestionnaireCompleted');
+      sessionStorage.removeItem('tempQuestionnaireDestinationData');
+
+      // Clear localStorage data
+      localStorage.removeItem('create_itinerary_state');
+      localStorage.removeItem('create_itinerary_questionnaire_saved');
+
+      console.log('StartNewItinerary: Cleared all itinerary session and local storage data');
+
+      // Reset component state to initial values
+      setItinerary({
+        itinerary_id: null,
+        travel_month: "",
+        no_of_people: 1,
+        start_location: "",
+        days: {
+          1: { destination_id: null, destination_name: null, destination_image: null, estimated_budget: null },
+          2: { destination_id: null, destination_name: null, destination_image: null, estimated_budget: null },
+          3: { destination_id: null, destination_name: null, destination_image: null, estimated_budget: null },
+          4: { destination_id: null, destination_name: null, destination_image: null, estimated_budget: null }
+        }
+      });
+
+      setQuestionnaireSaved(false);
+      setCurrentDayRecommendations([]);
+      setShowingRecommendationsForDay(null);
+      setShowingInterestsForDay(null);
+      setSortBy("distance");
+      setError(null);
+
+      // Navigate to questionnaire to start fresh
+      navigate("/questionnaire-metrics?mode=create-itinerary");
+
+    } catch (error) {
+      console.error('Error starting new itinerary:', error);
+      setError('Failed to start new itinerary. Please try again.');
+    }
+  };
+
   // Get the next available day
   const getNextAvailableDay = () => {
     for (let day = 1; day <= 4; day++) {
@@ -529,13 +714,22 @@ const CreateItinerary: React.FC = () => {
         <div className="mb-12">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
             <h1 className="text-4xl font-bold mb-2" style={{ color: 'var(--text-900)' }}>Create Your Travel Plan</h1>
-            <button 
-              onClick={generatePlan}
-              disabled={selectedDestinationsCount === 0 || isLoading}
-              className="btn btn-primary btn-lg disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Generate Plan
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={startNewItinerary}
+                disabled={isLoading}
+                className="btn btn-secondary btn-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                New Itinerary
+              </button>
+              <button
+                onClick={generatePlan}
+                disabled={selectedDestinationsCount === 0 || isLoading}
+                className="btn btn-primary btn-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Generate Plan
+              </button>
+            </div>
           </div>
         </div>
 

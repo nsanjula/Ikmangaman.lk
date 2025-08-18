@@ -554,6 +554,8 @@ const RecommendationForm = () => {
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => {
+                      // Clear any existing visit flag and set the from recommendations flag
+                      sessionStorage.removeItem('has_visited_create_itinerary');
                       sessionStorage.setItem('navigate_from_recommendations', 'true');
                       navigate("/create-itinerary");
                     }}
