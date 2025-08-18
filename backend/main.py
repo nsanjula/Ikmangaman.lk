@@ -57,14 +57,14 @@ def health():
     return {"ok": True}
 
 # --- Diagnostics: PDF stack versions (hide from /docs) ---
-@app.get("/__pdf_versions", include_in_schema=False)
-def pdf_versions():
-    import weasyprint, pydyf, tinycss2, cssselect2, PIL
-    return {
-        "weasyprint": getattr(weasyprint, "__version__", "?"),
-        "pydyf": getattr(pydyf, "__version__", "?"),
-        "tinycss2": getattr(tinycss2, "__version__", "?"),
-        "cssselect2": getattr(cssselect2, "__version__", "?"),
-        "Pillow": getattr(PIL, "__version__", "?"),
-    }
+# @app.get("/__pdf_versions", include_in_schema=False)
+# def pdf_versions():
+#     import weasyprint, pydyf, tinycss2, cssselect2, PIL
+#     return {
+#         "weasyprint": getattr(weasyprint, "__version__", "?"),
+#         "pydyf": getattr(pydyf, "__version__", "?"),
+#         "tinycss2": getattr(tinycss2, "__version__", "?"),
+#         "cssselect2": getattr(cssselect2, "__version__", "?"),
+#         "Pillow": getattr(PIL, "__version__", "?"),
+#     }
 
