@@ -574,13 +574,9 @@ class AuthAPI {
   async getUserProfile(): Promise<UserProfile> {
     try {
       const token = this.getToken();
-      console.log("🔍 Getting user profile - token status:", token ? "exists" : "missing");
-
       if (!token) {
-        throw new Error("Authentication required. Please log in again.");
+        throw new Error("Authentication required");
       }
-
-      console.log("Making request to:", `${API_BASE_URL}/my-profile`);
 
       const response = await fetch(`${API_BASE_URL}/my-profile`, {
         method: "GET",
@@ -590,33 +586,24 @@ class AuthAPI {
         },
       });
 
-      console.log("User profile response status:", response.status);
-
       if (!response.ok) {
         if (response.status === 401) {
           // Clear invalid token
-          console.log("🔐 Authentication failed - clearing invalid token");
           this.removeToken();
           throw new Error("Authentication required. Please log in again.");
         }
-
         let errorMessage = "Failed to fetch user profile";
         try {
           const error: ApiError = await response.json();
           errorMessage = error.detail || errorMessage;
-          console.log("❌ User profile API error:", errorMessage);
         } catch (jsonError) {
           console.warn("Failed to parse user profile error response:", jsonError);
         }
         throw new Error(errorMessage);
       }
 
-      const profileData = await response.json();
-      console.log("✅ Successfully fetched user profile");
-      return profileData;
+      return await response.json();
     } catch (error) {
-      console.error("❌ Failed to fetch user profile:", error);
-
       if (error instanceof TypeError && error.message.includes("fetch")) {
         throw new Error(
           "Unable to connect to server. Please check your connection.",

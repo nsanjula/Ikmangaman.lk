@@ -53,36 +53,41 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setToken(existingToken);
       console.log("Token found, setting authenticated state immediately");
 
-      // Validate token and fetch user profile in background
-      authAPI.getUserProfile()
-        .then(profile => {
-          console.log("Token validation successful, user profile loaded");
-          setUserProfile(profile);
-        })
-        .catch(error => {
-          console.log("Token validation/profile fetch failed:", error.message);
-
-          // Check if it's an authentication error (401 or explicit auth failure)
-          const isAuthError = error.message.includes('Authentication required') ||
-                             error.message.includes('Authentication failed') ||
-                             error.message.includes('Please log in again') ||
-                             error.message.includes('401') ||
-                             error.message.includes('Unauthorized');
-
-          if (isAuthError) {
-            // Only logout on explicit auth failures
-            console.log("Authentication failed, removing invalid token");
-            authAPI.removeToken();
-            setToken(null);
-            setUserProfile(null);
-          } else {
-            // For network errors or other issues, keep user logged in
-            console.log("Non-auth error occurred, keeping user logged in");
+      // Validate token in background (but don't logout if validation fails due to network issues)
+      fetch('https://ikmangamanlk-production.up.railway.app/users/me', {
+        headers: {
+          'Authorization': `Bearer ${existingToken}`,
+          'Content-Type': 'application/json',
+        },
+      })
+      .then(async response => {
+        if (response.ok) {
+          console.log("Token validation successful");
+          // Fetch user profile data
+          try {
+            const profile = await authAPI.getUserProfile();
+            setUserProfile(profile);
+          } catch (profileError) {
+            console.log("Failed to fetch user profile:", profileError);
           }
-        })
-        .finally(() => {
-          setLoading(false);
-        });
+        } else if (response.status === 401) {
+          // Only logout on explicit 401 Unauthorized
+          console.log("Token is invalid (401), removing and staying logged out");
+          authAPI.removeToken();
+          setToken(null);
+          setUserProfile(null);
+        } else {
+          // For other errors (network issues, server errors), keep user logged in
+          console.log("Token validation failed with non-401 error, keeping user logged in");
+        }
+      })
+      .catch(error => {
+        // For network errors, keep user logged in - only actual auth errors should log out
+        console.log("Token validation failed due to network/connection error, keeping user logged in:", error.message);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
     } else {
       console.log("No token found, user not authenticated");
       setLoading(false);
@@ -95,13 +100,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Fetch user profile after login (async)
     authAPI.getUserProfile()
       .then(profile => {
-        console.log("✅ User profile loaded after login");
         setUserProfile(profile);
       })
       .catch(profileError => {
-        console.log("❌ Failed to fetch user profile after login:", profileError);
-        // Don't logout here - just log the error. User is still authenticated.
-        // The profile will be retried on next app refresh
+        console.log("Failed to fetch user profile after login:", profileError);
       });
   };
 
@@ -170,25 +172,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const refreshUserProfile = async () => {
     if (token) {
       try {
-        console.log("🔄 Refreshing user profile...");
         const profile = await authAPI.getUserProfile();
         setUserProfile(profile);
-        console.log("✅ User profile refreshed successfully");
-      } catch (error: any) {
-        console.log("❌ Failed to refresh user profile:", error.message);
-
-        // Only logout on authentication errors
-        const isAuthError = error.message.includes('Authentication required') ||
-                           error.message.includes('Authentication failed') ||
-                           error.message.includes('Please log in again') ||
-                           error.message.includes('401') ||
-                           error.message.includes('Unauthorized');
-
-        if (isAuthError) {
-          console.log("🚨 Authentication error during profile refresh - logging out");
-          handleAuthError(error);
-        }
-        // For other errors, just log but don't logout
+      } catch (error) {
+        console.log("Failed to refresh user profile:", error);
       }
     }
   };
