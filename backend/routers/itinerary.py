@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request, Response
 from fastapi.params import Depends
 from sqlalchemy.orm import Session
 from fastapi import Response
@@ -129,6 +129,18 @@ def get_day_recommendations(
     response = []
     for i, (destination, score) in enumerate(top_destinations_with_scores):
         rating_label = "Very Good" if score >= 0.8 else "Good" if score >= 0.6 else "Average"
+
+        # Add filters (same logic as in /recommendations)
+        filters = []
+        if destination.hill_country == 1:
+            filters.append("hill_country")
+        if destination.coastal == 1:
+            filters.append("coastal")
+        if destination.dry_zone == 1:
+            filters.append("dry_zone")
+        if destination.urban == 1:
+            filters.append("urban")
+
         response.append({
             "destination_id": destination.destination_id,
             "name": destination.name,
@@ -139,11 +151,12 @@ def get_day_recommendations(
                 distance_results[i]["distance"],
                 itinerary.no_of_people
             ),
+            "filters": filters,
             "distance": distance_results[i]["distance"],
             "travel_time": distance_results[i]["travel_time"],
             "thumbnail_img": f"/destination-image/{destination.destination_id}"
         })
-    print(response)
+    # print(response)
     return response
 
 @router.put("/{itinerary_id}/day/{day_number}")
@@ -178,6 +191,7 @@ def assign_destination_to_a_day(
 @router.post("/{itinerary_id}/export")
 def export_itinerary(
     itinerary_id: int,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: user.User = Depends(get_current_user)
 ):
@@ -192,7 +206,10 @@ def export_itinerary(
     ).first()
 
     # Build days data
-    BASE_URL = "http://127.0.0.1:8000"  # In production, replace with actual domain
+    # BASE_URL = "http://127.0.0.1:8000"  # In production, replace with actual domain
+    # BASE_URL = os.getenv("FRONTEND_URL", "http://localhost:8080").rstrip("/")
+    backend_base = str(request.base_url).rstrip("/")
+
     days_data = []
     for day_num in range(1, 5):
         dest_id = getattr(itinerary, f"day{day_num}_dest_id")
@@ -206,7 +223,7 @@ def export_itinerary(
                 "longitude": dest.longitude,
                 "description": dest.description,
                 "things_to_do": dest.things_to_do,
-                "thumbnail": f"{BASE_URL}/destination-image/{dest.destination_id}",
+                "thumbnail": f"{backend_base}/destination-image/{dest.destination_id}",
                 "budget": budget
             })
 
@@ -231,15 +248,14 @@ def export_itinerary(
     )
 
     # Convert HTML → PDF
-    pdf_bytes = HTML(string=html_content).write_pdf()
+    # pdf_bytes = HTML(string=html_content).write_pdf()
+    pdf_bytes = HTML(string=html_content, base_url=backend_base).write_pdf()
 
     # Return PDF as download
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
-        headers={
-            "Content-Disposition": f"attachment; filename=itinerary_{itinerary_id}.pdf"
-        }
+        headers={"Content-Disposition": f"attachment; filename=itinerary_{itinerary_id}.pdf"}
     )
 
 @router.get("/{itinerary_id}/day/{day_number}/destination/{destination_id}")

@@ -7,6 +7,7 @@ import {
   FiChevronRight,
   FiUser,
   FiBookmark,
+  FiCalendar,
 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -20,6 +21,9 @@ import {
   UserUpdateRequest,
   DestinationDetails,
 } from "../lib/api";
+import { CalendarWithYearSelector } from "./ui/calendar-with-year-selector";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { Button } from "./ui/button";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -45,6 +49,8 @@ const Profile = () => {
   const [savedPlacesLoading, setSavedPlacesLoading] = useState(false);
   const [savedPlacesError, setSavedPlacesError] = useState<string | null>(null);
   const [imagesLoading, setImagesLoading] = useState(0); // Track loading images
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const placesPerPage = 3;
   const totalPages = Math.ceil(savedPlaces.length / placesPerPage);
@@ -105,14 +111,21 @@ const Profile = () => {
         try {
           const profile = await authAPI.getUserProfile();
           setOriginalData(profile);
+          const formattedBirthday = profile.date_0f_birth ? authAPI.formatDateFromAPI(profile.date_0f_birth) : "";
           setUserData({
             firstName: profile.firstname,
             lastName: profile.lastname || "",
             email: profile.email || "",
-            birthday: profile.date_0f_birth, // Note: backend has typo in field name
+            birthday: formattedBirthday, // Note: backend has typo in field name
             username: profile.username,
             password: "********",
           });
+
+          // Set the selected date for the calendar
+          if (profile.date_0f_birth) {
+            const [year, month, day] = profile.date_0f_birth.split("-").map(Number);
+            setSelectedDate(new Date(year, month - 1, day));
+          }
           setProgress(60);
         } catch (profileError) {
           console.error("Failed to load user profile:", profileError);
@@ -154,10 +167,87 @@ const Profile = () => {
 
   const handleChange = (field: string, value: string) => {
     setUserData({ ...userData, [field]: value });
+
+    // If birthday field is manually typed, try to parse it as a date
+    if (field === "birthday" && value) {
+      // Check if it matches DD/MM/YYYY format exactly
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
+        const [day, month, year] = value.split("/").map(Number);
+        const parsedDate = new Date(year, month - 1, day); // month is 0-indexed
+
+        // Validate the date is actually valid (e.g., not 30/02/2023)
+        if (
+          parsedDate.getDate() === day &&
+          parsedDate.getMonth() === month - 1 &&
+          parsedDate.getFullYear() === year &&
+          parsedDate <= new Date() &&
+          parsedDate >= new Date("1900-01-01")
+        ) {
+          setSelectedDate(parsedDate);
+        } else {
+          setSelectedDate(undefined);
+        }
+      } else {
+        setSelectedDate(undefined);
+      }
+    }
+  };
+
+  const handleDateSelect = (date: Date | undefined) => {
+    setSelectedDate(date);
+    if (date) {
+      // Format date as DD/MM/YYYY for display
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+      const formattedDate = `${day}/${month}/${year}`;
+
+      setUserData((prev) => ({
+        ...prev,
+        birthday: formattedDate,
+      }));
+    }
+    setIsCalendarOpen(false);
+  };
+
+  const validateBirthday = (birthday: string): string | null => {
+    if (!birthday.trim()) {
+      return "Birthday is required";
+    }
+    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(birthday)) {
+      return "Please use DD/MM/YYYY format";
+    }
+
+    const [day, month, year] = birthday.split("/").map(Number);
+    const date = new Date(year, month - 1, day);
+
+    if (
+      date.getDate() !== day ||
+      date.getMonth() !== month - 1 ||
+      date.getFullYear() !== year
+    ) {
+      return "Please enter a valid date";
+    }
+    if (date > new Date()) {
+      return "Birthday cannot be in the future";
+    }
+    if (date < new Date("1900-01-01")) {
+      return "Please enter a valid birth year";
+    }
+    return null;
   };
 
   const handleSave = async () => {
     if (!originalData) return;
+
+    // Validate birthday if it's being updated
+    if (userData.birthday && userData.birthday !== (originalData.date_0f_birth ? authAPI.formatDateFromAPI(originalData.date_0f_birth) : "")) {
+      const birthdayError = validateBirthday(userData.birthday);
+      if (birthdayError) {
+        setError(birthdayError);
+        return;
+      }
+    }
 
     setIsSaving(true);
     setError(null);
@@ -175,8 +265,8 @@ const Profile = () => {
       if (userData.email !== (originalData.email || "")) {
         updateData.email = userData.email;
       }
-      if (userData.birthday !== originalData.date_0f_birth) {
-        updateData.date_of_birth = userData.birthday;
+      if (userData.birthday !== (originalData.date_0f_birth ? authAPI.formatDateFromAPI(originalData.date_0f_birth) : "")) {
+        updateData.date_of_birth = authAPI.formatDateForAPI(userData.birthday);
       }
       // Only update password if it's not the placeholder
       if (userData.password && userData.password !== "********") {
@@ -189,14 +279,21 @@ const Profile = () => {
         // Reload profile data to get the latest state
         const updatedProfile = await authAPI.getUserProfile();
         setOriginalData(updatedProfile);
+        const formattedBirthday = updatedProfile.date_0f_birth ? authAPI.formatDateFromAPI(updatedProfile.date_0f_birth) : "";
         setUserData({
           firstName: updatedProfile.firstname,
           lastName: updatedProfile.lastname || "",
           email: updatedProfile.email || "",
-          birthday: updatedProfile.date_0f_birth,
+          birthday: formattedBirthday,
           username: updatedProfile.username,
           password: "********",
         });
+
+        // Set the selected date for the calendar
+        if (updatedProfile.date_0f_birth) {
+          const [year, month, day] = updatedProfile.date_0f_birth.split("-").map(Number);
+          setSelectedDate(new Date(year, month - 1, day));
+        }
       }
 
       setEditMode(false);
@@ -273,75 +370,192 @@ const Profile = () => {
             <h3 className="text-xl font-semibold" style={{ color: 'var(--text-900)' }}>Personal Information</h3>
           </div>
 
-          {[
-            {
-              label: "First Name",
-              field: "firstName",
-              placeholder: "Ex: Nisal",
-            },
-            {
-              label: "Last Name",
-              field: "lastName",
-              placeholder: "Ex: Sanjula",
-            },
-            {
-              label: "Email Address",
-              field: "email",
-              placeholder: "Ex: nisal@example.com",
-              type: "email",
-            },
-            {
-              label: "Birthday",
-              field: "birthday",
-              placeholder: "YYYY-MM-DD",
-              type: "date",
-            },
-            {
-              label: "Username",
-              field: "username",
-              placeholder: "Ex: lkuser01",
-              disabled: true,
-            },
-            {
-              label: "Password",
-              field: "password",
-              placeholder: "********",
-              type: "password",
-            },
-          ].map(
-            ({
-              label,
-              field,
-              placeholder,
-              type = "text",
-              disabled = false,
-            }) => (
-              <div className="mb-4" key={field}>
-                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-600)' }}>
-                  {label}
-                </label>
-                <div className="relative">
-                  <input
-                    type={type}
-                    value={userData[field as keyof typeof userData]}
-                    placeholder={placeholder}
-                    onChange={(e) => handleChange(field, e.target.value)}
-                    className="w-full p-3 rounded pr-10 disabled:cursor-not-allowed"
-                    style={{
-                      background: 'var(--surface)',
-                      color: 'var(--text-900)',
-                      border: '1px solid var(--border)',
-                      opacity: (!editMode || disabled) ? '0.7' : '1'
-                    }}
-                    disabled={!editMode || disabled}
-                  />
-                  {editMode && !disabled && (
-                    <FiEdit className="absolute right-3 top-1/2 transform -translate-y-1/2" style={{ color: 'var(--primary-600)' }} />
-                  )}
-                </div>
-              </div>
-            ),
-          )}
+          {/* First Name */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-600)' }}>
+              First Name
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                value={userData.firstName}
+                placeholder="Ex: Nisal"
+                onChange={(e) => handleChange("firstName", e.target.value)}
+                className="w-full p-3 rounded pr-10 disabled:cursor-not-allowed"
+                style={{
+                  background: 'var(--surface)',
+                  color: 'var(--text-900)',
+                  border: '1px solid var(--border)',
+                  opacity: !editMode ? '0.7' : '1'
+                }}
+                disabled={!editMode}
+              />
+              {editMode && (
+                <FiEdit className="absolute right-3 top-1/2 transform -translate-y-1/2" style={{ color: 'var(--primary-600)' }} />
+              )}
+            </div>
+          </div>
+
+          {/* Last Name */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-600)' }}>
+              Last Name
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                value={userData.lastName}
+                placeholder="Ex: Sanjula"
+                onChange={(e) => handleChange("lastName", e.target.value)}
+                className="w-full p-3 rounded pr-10 disabled:cursor-not-allowed"
+                style={{
+                  background: 'var(--surface)',
+                  color: 'var(--text-900)',
+                  border: '1px solid var(--border)',
+                  opacity: !editMode ? '0.7' : '1'
+                }}
+                disabled={!editMode}
+              />
+              {editMode && (
+                <FiEdit className="absolute right-3 top-1/2 transform -translate-y-1/2" style={{ color: 'var(--primary-600)' }} />
+              )}
+            </div>
+          </div>
+
+          {/* Email */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-600)' }}>
+              Email Address
+            </label>
+            <div className="relative">
+              <input
+                type="email"
+                value={userData.email}
+                placeholder="Ex: nisal@example.com"
+                onChange={(e) => handleChange("email", e.target.value)}
+                className="w-full p-3 rounded pr-10 disabled:cursor-not-allowed"
+                style={{
+                  background: 'var(--surface)',
+                  color: 'var(--text-900)',
+                  border: '1px solid var(--border)',
+                  opacity: !editMode ? '0.7' : '1'
+                }}
+                disabled={!editMode}
+              />
+              {editMode && (
+                <FiEdit className="absolute right-3 top-1/2 transform -translate-y-1/2" style={{ color: 'var(--primary-600)' }} />
+              )}
+            </div>
+          </div>
+
+          {/* Birthday */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-600)' }}>
+              Birthday
+            </label>
+            <div className="relative">
+              {editMode ? (
+                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full p-3 h-auto justify-between text-left font-normal hover:bg-transparent"
+                      style={{
+                        background: 'var(--surface)',
+                        color: 'var(--text-900)',
+                        border: '1px solid var(--border)',
+                      }}
+                    >
+                      <input
+                        type="text"
+                        value={userData.birthday}
+                        onChange={(e) => handleChange("birthday", e.target.value)}
+                        placeholder="DD/MM/YYYY"
+                        className="bg-transparent border-none outline-none flex-1"
+                        style={{ color: 'var(--text-900)' }}
+                        autoComplete="off"
+                      />
+                      <FiCalendar className="h-4 w-4" style={{ color: 'var(--text-600)' }} />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarWithYearSelector
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={handleDateSelect}
+                      disabled={(date) =>
+                        date > new Date() || date < new Date("1900-01-01")
+                      }
+                      yearRange={{ start: 1900, end: new Date().getFullYear() }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              ) : (
+                <input
+                  type="text"
+                  value={userData.birthday}
+                  placeholder="DD/MM/YYYY"
+                  className="w-full p-3 rounded pr-10 disabled:cursor-not-allowed"
+                  style={{
+                    background: 'var(--surface)',
+                    color: 'var(--text-900)',
+                    border: '1px solid var(--border)',
+                    opacity: '0.7'
+                  }}
+                  disabled
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Username */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-600)' }}>
+              Username
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                value={userData.username}
+                placeholder="Ex: lkuser01"
+                className="w-full p-3 rounded pr-10 disabled:cursor-not-allowed"
+                style={{
+                  background: 'var(--surface)',
+                  color: 'var(--text-900)',
+                  border: '1px solid var(--border)',
+                  opacity: '0.7'
+                }}
+                disabled
+              />
+            </div>
+          </div>
+
+          {/* Password */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-600)' }}>
+              Password
+            </label>
+            <div className="relative">
+              <input
+                type="password"
+                value={userData.password}
+                placeholder="********"
+                onChange={(e) => handleChange("password", e.target.value)}
+                className="w-full p-3 rounded pr-10 disabled:cursor-not-allowed"
+                style={{
+                  background: 'var(--surface)',
+                  color: 'var(--text-900)',
+                  border: '1px solid var(--border)',
+                  opacity: !editMode ? '0.7' : '1'
+                }}
+                disabled={!editMode}
+              />
+              {editMode && (
+                <FiEdit className="absolute right-3 top-1/2 transform -translate-y-1/2" style={{ color: 'var(--primary-600)' }} />
+              )}
+            </div>
+          </div>
 
           {editMode && (
             <button
@@ -452,8 +666,10 @@ const Profile = () => {
                 <div className="w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ background: 'var(--surface-alt)' }}>
                   <FiUser size={32} style={{ color: 'var(--primary-600)' }} />
                 </div>
-                <p className="text-lg mb-4" style={{ color: 'var(--text-900)' }}>No saved places yet</p>
-                <p className="mb-6" style={{ color: 'var(--text-600)' }}>
+                <p className="mb-4 text-center" style={{ color: 'var(--text-900)', fontSize: '33px', fontWeight: '700', lineHeight: '28px', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                  No saved places yet
+                </p>
+                <p className="mb-6 mx-auto text-center max-w-md" style={{ color: 'var(--text-600)' }}>
                   Start exploring destinations and save your favorites!
                 </p>
                 <button

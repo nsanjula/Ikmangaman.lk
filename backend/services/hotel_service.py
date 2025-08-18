@@ -1,10 +1,11 @@
 import httpx    #this is the HTTP client library we use to make web requests asynchronously.
 from dotenv import load_dotenv      #loads your .env file so those environment variables become available.
 import random
+import os
 
 load_dotenv()
 
-MOCKAPI_KEY = "https://687923f063f24f1fdca10976.mockapi.io/api/v1/Hotels"
+MOCKAPI_KEY = os.getenv("HOTELS_MOCKAPI_KEY")
 
 IMAGE_URLS = [
     "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/2a/8e/96/2d/caption.jpg?w=1200&h=-1&s=1",
