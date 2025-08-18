@@ -21,6 +21,10 @@ export default function Header() {
   };
 
   const handleNavigation = (path: string) => {
+    // Clear create itinerary visit flag when navigating away
+    if (location.pathname === '/create-itinerary' && path !== '/create-itinerary') {
+      sessionStorage.removeItem('has_visited_create_itinerary');
+    }
     navigate(path);
     setIsMobileMenuOpen(false);
   };
@@ -28,6 +32,9 @@ export default function Header() {
   const handleLogout = () => {
     // Clear temporary questionnaire data when logging out
     sessionStorage.removeItem('tempQuestionnaireData');
+    sessionStorage.removeItem('has_visited_create_itinerary');
+    localStorage.removeItem('create_itinerary_state');
+    localStorage.removeItem('create_itinerary_questionnaire_saved');
     console.log('Cleared temporary questionnaire data - logging out');
     logout();
     navigate("/");
@@ -70,6 +77,7 @@ export default function Header() {
                   onClick={() => {
                     // Clear temporary questionnaire data when navigating to profile
                     sessionStorage.removeItem('tempQuestionnaireData');
+                    sessionStorage.removeItem('has_visited_create_itinerary');
                     console.log('Cleared temporary questionnaire data - navigating to profile');
                     handleNavigation("/profile");
                   }}
@@ -179,6 +187,7 @@ export default function Header() {
                     onClick={() => {
                       // Clear temporary questionnaire data when navigating to profile
                       sessionStorage.removeItem('tempQuestionnaireData');
+                      sessionStorage.removeItem('has_visited_create_itinerary');
                       console.log('Cleared temporary questionnaire data - navigating to profile');
                       handleNavigation("/profile");
                     }}

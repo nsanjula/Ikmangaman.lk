@@ -887,6 +887,7 @@ const SearchResultsForm = () => {
                         onClick={() => {
                           // Clear temporary questionnaire data when returning to recommendations
                           sessionStorage.removeItem('tempQuestionnaireData');
+                          sessionStorage.removeItem('has_visited_create_itinerary');
                           console.log('Cleared temporary questionnaire data - navigating to recommendations');
                           navigate("/recommendation");
                         }}
