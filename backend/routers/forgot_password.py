@@ -1,3 +1,4 @@
+import os
 from datetime import timezone
 
 from fastapi import APIRouter, Depends, BackgroundTasks, HTTPException
@@ -17,7 +18,9 @@ router = APIRouter(
     tags=["auth"]
 )
 
-FRONTEND_URL = "http://localhost:8080"  # change to your frontend domain later
+# FRONTEND_URL = "http://localhost:8080"  # change to your frontend domain later
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:8080").rstrip("/")
+
 
 @router.post("/forgot-password")
 def forgot_password(
