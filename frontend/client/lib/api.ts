@@ -1045,6 +1045,8 @@ class AuthAPI {
           console.log(
             "🔐 Authentication failed - token may be expired or invalid",
           );
+          console.log("Response headers:", Object.fromEntries(response.headers.entries()));
+
           // Clear the invalid token
           this.removeToken();
 
@@ -1052,10 +1054,11 @@ class AuthAPI {
           let errorDetail = "Authentication failed";
           try {
             const errorText = await response.text();
+            console.log("Backend 401 error response:", errorText);
             const errorData = JSON.parse(errorText);
             errorDetail = errorData.detail || errorDetail;
           } catch (e) {
-            // If we can't parse the error, use default message
+            console.log("Could not parse 401 error response:", e);
           }
 
           throw new Error(

@@ -95,7 +95,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Fetch user profile after login (async)
     authAPI.getUserProfile()
       .then(profile => {
-        console.log("✅ User profile loaded after login");
+        console.log("��� User profile loaded after login");
         setUserProfile(profile);
       })
       .catch(profileError => {
@@ -193,12 +193,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const isAuthenticated = !!token;
+
   // Set up global timeout handler
   useEffect(() => {
     setGlobalTimeoutHandler(handleAuthError);
-  }, []);
 
-  const isAuthenticated = !!token;
+    // Add debug helper to window for troubleshooting
+    if (typeof window !== 'undefined') {
+      (window as any).debugAuth = () => {
+        const currentToken = authAPI.getToken();
+        console.log('🔍 Auth Debug Info:');
+        console.log('- isAuthenticated:', isAuthenticated);
+        console.log('- token in state:', token ? `${token.substring(0, 20)}...` : 'null');
+        console.log('- token in localStorage:', currentToken ? `${currentToken.substring(0, 20)}...` : 'null');
+        console.log('- userProfile:', userProfile);
+        console.log('- loading:', loading);
+        console.log('- isTimeout:', isTimeout);
+        return {
+          isAuthenticated,
+          hasToken: !!token,
+          hasLocalStorageToken: !!currentToken,
+          userProfile,
+          loading,
+          isTimeout
+        };
+      };
+    }
+  }, [isAuthenticated, token, userProfile, loading, isTimeout]);
 
   const value: AuthContextType = {
     isAuthenticated,

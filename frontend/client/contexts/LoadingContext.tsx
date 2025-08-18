@@ -52,11 +52,35 @@ export const LoadingProvider: React.FC<LoadingProviderProps> = ({ children }) =>
 
     progressIntervalRef.current = setInterval(() => {
       progressRef.current = Math.min(progressRef.current + Math.random() * 2, 85);
-      setLoadingState(prev => ({ 
-        ...prev, 
-        progress: progressRef.current 
+      setLoadingState(prev => ({
+        ...prev,
+        progress: progressRef.current
       }));
     }, 100);
+
+    // Failsafe: If progress gets stuck at 85% for more than 10 seconds, force complete
+    setTimeout(() => {
+      if (progressRef.current >= 84 && progressRef.current <= 86) {
+        console.log('🚨 Failsafe triggered - progress stuck at 85%, force completing');
+        if (progressIntervalRef.current) {
+          clearInterval(progressIntervalRef.current);
+        }
+        setLoadingState(prev => ({
+          ...prev,
+          progress: 100
+        }));
+
+        setTimeout(() => {
+          setLoadingState({
+            isLoading: false,
+            progress: 0,
+            loadingKey: null,
+            message: undefined
+          });
+          progressRef.current = 0;
+        }, 500);
+      }
+    }, 10000); // 10 second failsafe
   }, []);
 
   const startLoading = useCallback((key: string, message?: string) => {
@@ -181,6 +205,18 @@ export const LoadingProvider: React.FC<LoadingProviderProps> = ({ children }) =>
     });
     progressRef.current = 0;
   }, []);
+
+  // Debug helper - make forceStopLoading globally available
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).forceStopLoading = forceStopLoading;
+      (window as any).debugLoadingState = () => {
+        console.log('🔍 Current loading state:', loadingState);
+        console.log('🔍 Progress ref:', progressRef.current);
+        console.log('🔍 Progress interval active:', !!progressIntervalRef.current);
+      };
+    }
+  }, [forceStopLoading, loadingState]);
 
   // Cleanup on unmount
   useEffect(() => {

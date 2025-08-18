@@ -72,12 +72,60 @@ const getLocationCoordinates = (locationName: string) => {
   return locationCoords[locationName] || { lat: 6.9271, lng: 79.8612 }; // Fallback to Colombo
 };
 
+// Global helper function to clear all destination cache (for debugging)
+export const clearAllDestinationCache = (): void => {
+  const allKeys = Object.keys(sessionStorage);
+  const destinationCacheKeys = allKeys.filter(key =>
+    key.startsWith('tempQuestionnaireData_') ||
+    key.startsWith('tempQuestionnaireDestinationData_') ||
+    key.startsWith('tempDestinationData_') ||
+    key.startsWith('tempQuestionnaireParams_')
+  );
+
+  console.log(`🧹 Clearing all destination cache keys:`, destinationCacheKeys);
+  destinationCacheKeys.forEach(key => sessionStorage.removeItem(key));
+
+  // Make it globally accessible for debugging
+  if (typeof window !== 'undefined') {
+    (window as any).clearDestinationCache = clearAllDestinationCache;
+  }
+};
+
+// Initialize global helper on module load
+if (typeof window !== 'undefined') {
+  (window as any).clearDestinationCache = clearAllDestinationCache;
+
+  // Add authentication troubleshooting helper
+  (window as any).debugDestinationAuth = () => {
+    const token = authAPI.getToken();
+    console.log('🔍 Destination Auth Debug:');
+    console.log('- Token exists:', !!token);
+    console.log('- Token preview:', token ? `${token.substring(0, 20)}...` : 'none');
+    console.log('- Current URL:', window.location.href);
+    console.log('- Session storage keys:', Object.keys(sessionStorage).filter(k => k.includes('temp')));
+
+    if (!token) {
+      console.log('❌ No authentication token found. Please log in.');
+      return { authenticated: false, hasToken: false };
+    }
+
+    if (token.length < 10 || !token.includes('.')) {
+      console.log('❌ Token appears malformed.');
+      return { authenticated: false, hasToken: true, tokenMalformed: true };
+    }
+
+    console.log('✅ Token appears valid.');
+    return { authenticated: true, hasToken: true, tokenValid: true };
+  };
+}
+
 interface DestinationProviderProps {
   children: React.ReactNode;
   destinationId: number;
   itineraryId?: number;
   dayNumber?: number;
   useItineraryContext?: boolean;
+  contextType?: 'search' | 'saved' | 'itinerary';
 }
 
 export const DestinationProvider: React.FC<DestinationProviderProps> = ({
@@ -85,7 +133,8 @@ export const DestinationProvider: React.FC<DestinationProviderProps> = ({
   destinationId,
   itineraryId,
   dayNumber,
-  useItineraryContext = false
+  useItineraryContext = false,
+  contextType
 }) => {
   const [destinationData, setDestinationData] = useState<DestinationDetails | null>(null);
   const [questionnaireData, setQuestionnaireData] = useState<QuestionnaireData | null>(null);
@@ -97,8 +146,24 @@ export const DestinationProvider: React.FC<DestinationProviderProps> = ({
   const { startLoading, setProgress, finishLoading } = useLoading();
 
   const fetchAllData = useCallback(async () => {
-    if (!destinationId || !isAuthenticated) {
+    if (!destinationId) {
       setLoading(false);
+      return;
+    }
+
+    // Comprehensive authentication check
+    const token = authAPI.getToken();
+    if (!isAuthenticated || !token) {
+      console.log("🚫 User not authenticated or no token found");
+      console.log("isAuthenticated:", isAuthenticated, "token exists:", !!token);
+
+      if (!token) {
+        // Clear auth state to ensure consistency
+        logout();
+      }
+
+      setLoading(false);
+      setError("Please log in to view destination details.");
       return;
     }
 
@@ -114,6 +179,12 @@ export const DestinationProvider: React.FC<DestinationProviderProps> = ({
       setError(null);
       setIsFallbackData(false);
 
+      // Ensure any previous loading state is cleared first
+      finishLoading('destination-data');
+
+      // Small delay to ensure cleanup completes before starting new loading
+      await new Promise(resolve => setTimeout(resolve, 50));
+
       // Start loading screen and ensure it's visible by scrolling to top
       startLoading('destination-data', `Loading destination details...`);
       // Scroll to top immediately to ensure loading animation is visible
@@ -128,16 +199,61 @@ export const DestinationProvider: React.FC<DestinationProviderProps> = ({
         throw new Error("Please log in to view destination details.");
       }
 
+      // Additional validation: check if token looks valid (not empty or malformed)
+      if (token.length < 10 || !token.includes('.')) {
+        console.log("🔐 Token appears malformed, clearing and triggering logout");
+        authAPI.removeToken();
+        logout();
+        throw new Error("Invalid authentication token. Please log in again.");
+      }
+
+      console.log(`🔑 Using token for API call: ${token.substring(0, 20)}...`);
+
       // Set progress for concurrent API calls
       setProgress(30);
 
-      // Check for temporary questionnaire data first
-      const tempQuestionnaireKey = 'tempQuestionnaireData';
+      // Create destination-specific and context-aware cache keys
+      let contextPrefix: string;
+      if (contextType) {
+        contextPrefix = contextType === 'itinerary' ? `itinerary_${itineraryId}_${dayNumber}` : contextType;
+      } else {
+        contextPrefix = useItineraryContext ? `itinerary_${itineraryId}_${dayNumber}` : 'search';
+      }
+      const tempQuestionnaireKey = `tempQuestionnaireData_${contextPrefix}_${destinationId}`;
       const tempData = sessionStorage.getItem(tempQuestionnaireKey);
-      const tempCompletedKey = 'tempQuestionnaireDestinationData';
+      const tempCompletedKey = `tempQuestionnaireDestinationData_${contextPrefix}_${destinationId}`;
       const tempCompletedData = sessionStorage.getItem(tempCompletedKey);
-      const tempDestinationKey = 'tempDestinationData';
+      const tempDestinationKey = `tempDestinationData_${contextPrefix}_${destinationId}`;
       const tempDestinationData = sessionStorage.getItem(tempDestinationKey);
+      const tempQuestionnaireParamsKey = `tempQuestionnaireParams_${contextPrefix}_${destinationId}`;
+
+      // Debug logging for cache state
+      console.log(`🔍 Cache lookup for destination ${destinationId} with context "${contextPrefix}"`);
+      console.log(`📋 Cache keys being checked:`, {
+        tempQuestionnaireKey,
+        tempCompletedKey,
+        tempDestinationKey,
+        tempQuestionnaireParamsKey
+      });
+
+      // Clear any stale cache from other destinations to prevent cross-contamination
+      const allKeys = Object.keys(sessionStorage);
+      const destinationCacheKeys = allKeys.filter(key =>
+        key.startsWith('tempQuestionnaireData_') ||
+        key.startsWith('tempQuestionnaireDestinationData_') ||
+        key.startsWith('tempDestinationData_') ||
+        key.startsWith('tempQuestionnaireParams_')
+      );
+
+      console.log(`📊 All destination cache keys found:`, destinationCacheKeys);
+
+      destinationCacheKeys.forEach(key => {
+        if (!key.includes(`_${destinationId}`)) {
+          console.log(`🧹 Clearing stale cache key: ${key}`);
+          sessionStorage.removeItem(key);
+        }
+      });
+
       let useTemporaryQuestionnaire = false;
       let temporaryQuestionnaireData = null;
 
@@ -179,10 +295,10 @@ export const DestinationProvider: React.FC<DestinationProviderProps> = ({
             setLoading(false);
             setError(null);
             setProgress(100);
-            finishLoading();
+            finishLoading('destination-data');
 
             // Clean up the temp data after successful use
-            sessionStorage.removeItem('tempDestinationData');
+            sessionStorage.removeItem(tempDestinationKey);
             console.log('✅ Successfully loaded destination with temp questionnaire data');
             return;
 
@@ -214,10 +330,10 @@ export const DestinationProvider: React.FC<DestinationProviderProps> = ({
             setLoading(false);
             setError(null);
             setProgress(100);
-            finishLoading();
+            finishLoading('destination-data');
 
             // Clean up the temp data after successful use
-            sessionStorage.removeItem('tempDestinationData');
+            sessionStorage.removeItem(tempDestinationKey);
             console.log('✅ Successfully loaded destination with legacy temp data');
             return;
           }
@@ -235,7 +351,7 @@ export const DestinationProvider: React.FC<DestinationProviderProps> = ({
           console.log('Using completed temp questionnaire destination data:', parsedTempData);
 
           // Also get the temp questionnaire parameters to create proper questionnaire data
-          const tempQuestionnaireParams = sessionStorage.getItem('tempQuestionnaireParams');
+          const tempQuestionnaireParams = sessionStorage.getItem(tempQuestionnaireParamsKey);
           let questionnaireDataForMap = null;
 
           if (tempQuestionnaireParams) {
@@ -270,6 +386,8 @@ export const DestinationProvider: React.FC<DestinationProviderProps> = ({
         } catch (e) {
           console.warn('Failed to parse completed temp questionnaire data, removing:', e);
           sessionStorage.removeItem(tempCompletedKey);
+          // Also clean up related keys
+          sessionStorage.removeItem(tempQuestionnaireParamsKey);
         }
       }
 
@@ -370,11 +488,29 @@ export const DestinationProvider: React.FC<DestinationProviderProps> = ({
       if (
         err instanceof Error &&
         (err.message.includes("Authentication failed") ||
-          err.message.includes("Authentication required"))
+          err.message.includes("Authentication required") ||
+          err.message.includes("Please log in again") ||
+          err.message.includes("Invalid authentication token"))
       ) {
-        console.log("🔐 Authentication error detected - ensuring logout");
+        console.log("🔐 Authentication error detected - clearing token and ensuring logout");
+
+        // Clear any existing token immediately
+        authAPI.removeToken();
+
+        // Trigger logout which will redirect to login page
         logout();
-        setError("Your session has expired. Please log in again to view destination details.");
+
+        // Set a clear error message
+        setError("Your session has expired. Please log in again to access destination details.");
+
+        // Force redirect to login after a short delay
+        setTimeout(() => {
+          if (window.location.pathname !== '/login') {
+            console.log("🔄 Forcing redirect to login page");
+            window.location.href = '/login';
+          }
+        }, 1000);
+
       } else if (err instanceof Error) {
         setError(err.message);
       } else {
@@ -391,10 +527,50 @@ export const DestinationProvider: React.FC<DestinationProviderProps> = ({
     setRetryCount((prev) => prev + 1);
   }, []);
 
+  // Effect to clear stale cache when destination changes
+  useEffect(() => {
+    // Only perform cleanup if we're not currently loading to prevent conflicts
+    if (loading) {
+      console.log('⏸️ Skipping cache cleanup during loading to prevent conflicts');
+      return;
+    }
+
+    let currentContextPrefix: string;
+    if (contextType) {
+      currentContextPrefix = contextType === 'itinerary' ? `itinerary_${itineraryId}_${dayNumber}` : contextType;
+    } else {
+      currentContextPrefix = useItineraryContext ? `itinerary_${itineraryId}_${dayNumber}` : 'search';
+    }
+
+    // Clear any cache that doesn't match the current destination and context
+    const allKeys = Object.keys(sessionStorage);
+    allKeys.forEach(key => {
+      if (
+        (key.startsWith('tempQuestionnaireData_') ||
+         key.startsWith('tempQuestionnaireDestinationData_') ||
+         key.startsWith('tempDestinationData_') ||
+         key.startsWith('tempQuestionnaireParams_')) &&
+        !key.includes(`_${currentContextPrefix}_${destinationId}`)
+      ) {
+        console.log(`🧹 Navigation cleanup - removing cache key: ${key}`);
+        sessionStorage.removeItem(key);
+      }
+    });
+  }, [destinationId, useItineraryContext, itineraryId, dayNumber, contextType, loading]);
+
   // Effect to fetch data when dependencies change
   useEffect(() => {
     fetchAllData();
   }, [fetchAllData]);
+
+  // Cleanup effect to ensure loading is finished on unmount
+  useEffect(() => {
+    return () => {
+      // Force finish loading when component unmounts to prevent stuck states
+      console.log('🧹 DestinationProvider unmounting - ensuring loading is finished');
+      finishLoading('destination-data');
+    };
+  }, [finishLoading]);
 
   const contextValue: DestinationContextData = {
     destinationData,
