@@ -65,20 +65,13 @@ const SavedPlaceDestinationDetailContent: React.FC = () => {
     // This ensures saved places show the questionnaire button by default
     let shouldShowFullView = false;
 
-    // For saved places, ONLY show full view if we have a very specific completion flag
-    // Check ONLY for the specific saved destination completion flag (just returned from questionnaire)
-    const savedDestinationQuestionnaireFlag = sessionStorage.getItem('tempQuestionnaireCompleted');
-    const isComingFromQuestionnaire = savedDestinationQuestionnaireFlag === 'true';
-    const savedDestinationSpecificFlag = sessionStorage.getItem(`tempQuestionnaire_saved_${destinationId}`);
-
-    console.log('🔍 Saved destination specific checks:', {
-      isComingFromQuestionnaire,
-      savedDestinationSpecificFlag,
-      tempCompletedData: !!tempCompletedData,
-      destinationId
-    });
-
-    if (isComingFromQuestionnaire && destinationId) {
+    // Priority 1: Check if we have completed questionnaire data for this specific saved destination
+    if (tempCompletedData) {
+      console.log('✅ Found completed questionnaire data for saved destination');
+      shouldShowFullView = true;
+    }
+    // Priority 2: Check for fresh completion flag (just returned from questionnaire)
+    else if (tempQuestionnaireCompleted === 'true' && destinationId) {
       console.log('✅ Fresh questionnaire completion detected for saved destination');
       shouldShowFullView = true;
       // Store the completion for this specific SAVED destination with timestamp
@@ -86,37 +79,50 @@ const SavedPlaceDestinationDetailContent: React.FC = () => {
       sessionStorage.setItem(`tempQuestionnaire_saved_${destinationId}_time`, Date.now().toString());
       // Clear the general flag after processing
       sessionStorage.removeItem('tempQuestionnaireCompleted');
-    } else if (savedDestinationSpecificFlag === 'completed') {
-      // Check if this saved destination completion is recent (within 1 hour)
-      const completionTime = sessionStorage.getItem(`tempQuestionnaire_saved_${destinationId}_time`);
-      const now = Date.now();
-      const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
-
-      if (completionTime && (now - parseInt(completionTime)) < oneHour) {
-        console.log('✅ Found recent saved destination completion');
-        shouldShowFullView = true;
-      } else {
-        console.log('ℹ️ Found expired saved destination completion - resetting to basic view');
-        sessionStorage.removeItem(`tempQuestionnaire_saved_${destinationId}`);
-        sessionStorage.removeItem(`tempQuestionnaire_saved_${destinationId}_time`);
-        shouldShowFullView = false;
-      }
-    } else {
-      console.log('ℹ️ No valid saved destination questionnaire completion - showing basic view with questionnaire button');
-      shouldShowFullView = false;
-
-      // Clear any stale questionnaire data to ensure clean state for saved destinations
-      const allKeys = Object.keys(sessionStorage);
-      allKeys.forEach(key => {
-        // Only clear keys that are NOT for other contexts but could interfere
-        if ((key.startsWith('tempQuestionnaireDestinationData_') && !key.includes('_saved_')) ||
-            (key.startsWith('tempQuestionnaireParams_') && !key.includes('_saved_')) ||
-            (key.startsWith('tempDestinationData_') && !key.includes('_saved_'))) {
-          console.log(`🧹 Clearing non-saved questionnaire cache: ${key}`);
-          sessionStorage.removeItem(key);
-        }
-      });
     }
+    // Priority 3: Check for stored completion flag for this destination
+    else {
+      const savedDestinationSpecificFlag = sessionStorage.getItem(`tempQuestionnaire_saved_${destinationId}`);
+
+      if (savedDestinationSpecificFlag === 'completed') {
+        // Check if this saved destination completion is recent (within 1 hour)
+        const completionTime = sessionStorage.getItem(`tempQuestionnaire_saved_${destinationId}_time`);
+        const now = Date.now();
+        const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
+
+        if (completionTime && (now - parseInt(completionTime)) < oneHour) {
+          console.log('✅ Found recent saved destination completion');
+          shouldShowFullView = true;
+        } else {
+          console.log('ℹ️ Found expired saved destination completion - resetting to basic view');
+          sessionStorage.removeItem(`tempQuestionnaire_saved_${destinationId}`);
+          sessionStorage.removeItem(`tempQuestionnaire_saved_${destinationId}_time`);
+          shouldShowFullView = false;
+        }
+      } else {
+        console.log('ℹ️ No valid saved destination questionnaire completion - showing basic view with questionnaire button');
+        shouldShowFullView = false;
+
+        // Clear any stale questionnaire data to ensure clean state for saved destinations
+        const allKeys = Object.keys(sessionStorage);
+        allKeys.forEach(key => {
+          // Only clear keys that are NOT for other contexts but could interfere
+          if ((key.startsWith('tempQuestionnaireDestinationData_') && !key.includes('_saved_')) ||
+              (key.startsWith('tempQuestionnaireParams_') && !key.includes('_saved_')) ||
+              (key.startsWith('tempDestinationData_') && !key.includes('_saved_'))) {
+            console.log(`🧹 Clearing non-saved questionnaire cache: ${key}`);
+            sessionStorage.removeItem(key);
+          }
+        });
+      }
+    }
+
+    console.log('🔍 Saved destination final decision:', {
+      shouldShowFullView,
+      tempCompletedData: !!tempCompletedData,
+      tempQuestionnaireCompleted,
+      destinationId
+    });
 
     setShowFullDestination(shouldShowFullView);
   }, [destinationData?.destination_id]);

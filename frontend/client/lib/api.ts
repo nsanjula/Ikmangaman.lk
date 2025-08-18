@@ -1,6 +1,6 @@
 import { HotelData, Hotel } from '@shared/api';
 
-const API_BASE_URL = "https://ikmangamanlk-production.up.railway.app"; // Backend FastAPI server
+export const API_BASE_URL = "https://ikmangamanlk-production.up.railway.app"; // Backend FastAPI server
 
 // Helper function to check if response indicates database timeout
 const isDatabaseTimeout = (response: Response): boolean => {
@@ -19,6 +19,21 @@ const handleDatabaseTimeout = (response: Response): void => {
   if (isDatabaseTimeout(response) && globalTimeoutHandler) {
     const error = new Error(`Database timeout occurred (${response.status}). Please try again.`);
     globalTimeoutHandler(error);
+  }
+};
+
+// Helper function to safely read error response without consuming body stream multiple times
+const handleErrorResponse = async (response: Response, defaultMessage: string): Promise<string> => {
+  try {
+    const text = await response.text();
+    try {
+      const json = JSON.parse(text);
+      return json.detail || json.message || defaultMessage;
+    } catch {
+      return text || defaultMessage;
+    }
+  } catch {
+    return defaultMessage;
   }
 };
 
@@ -69,35 +84,38 @@ export const testConnection = async (): Promise<boolean> => {
   }
 };
 
-// Debug function to test API connectivity
-export const debugAPIConnection = async (): Promise<void> => {
-  console.log("=== API CONNECTION DEBUG ===");
-  console.log("Frontend URL:", window.location.origin);
-  console.log("Backend URL:", API_BASE_URL);
-
-  // Test basic connectivity
+// Utility function to detect if we're running in an iframe
+export const isInIframe = (): boolean => {
   try {
-    const response = await fetch(`${API_BASE_URL}/docs`);
-    console.log("Backend /docs status:", response.status);
-  } catch (error) {
-    console.error("Failed to reach backend:", error);
-  }
-
-  // Test starting-locations without auth
-  try {
-    const response = await fetch(`${API_BASE_URL}/starting-locations`);
-    console.log("Starting locations status:", response.status);
-    if (response.ok) {
-      const data = await response.json();
-      console.log("Starting locations data:", data);
-    } else {
-      const errorText = await response.text();
-      console.log("Starting locations error:", errorText);
-    }
-  } catch (error) {
-    console.error("Starting locations fetch failed:", error);
+    return window.self !== window.top;
+  } catch (e) {
+    return true; // If we can't access window.top due to security, we're likely in an iframe
   }
 };
+
+// Utility function to handle network errors with iframe-specific messaging
+export const handleNetworkError = (error: any, context: string): Error => {
+  if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+    const isIframe = isInIframe();
+    const baseMessage = `Network error in ${context}`;
+
+    if (isIframe) {
+      return new Error(
+        `${baseMessage}: Unable to connect due to browser security restrictions in embedded view. ` +
+        'Please try opening this page in a new tab for full functionality.'
+      );
+    } else {
+      return new Error(
+        `${baseMessage}: Please check your internet connection and try again. ` +
+        'If the problem persists, the server may be temporarily unavailable.'
+      );
+    }
+  }
+
+  return error instanceof Error ? error : new Error(`Unknown error in ${context}`);
+};
+
+
 
 export interface LoginRequest {
   username: string;
@@ -371,13 +389,7 @@ class AuthAPI {
 
       if (!response.ok) {
         handleDatabaseTimeout(response);
-        let errorMessage = "Login failed";
-        try {
-          const error: ApiError = await response.json();
-          errorMessage = error.detail || errorMessage;
-        } catch (jsonError) {
-          console.warn("Failed to parse login error response:", jsonError);
-        }
+        const errorMessage = await handleErrorResponse(response, "Login failed");
         throw new Error(errorMessage);
       }
 
@@ -403,13 +415,7 @@ class AuthAPI {
       });
 
       if (!response.ok) {
-        let errorMessage = "Registration failed";
-        try {
-          const error: ApiError = await response.json();
-          errorMessage = error.detail || errorMessage;
-        } catch (jsonError) {
-          console.warn("Failed to parse registration error response:", jsonError);
-        }
+        const errorMessage = await handleErrorResponse(response, "Registration failed");
         throw new Error(errorMessage);
       }
 
@@ -600,14 +606,8 @@ class AuthAPI {
           throw new Error("Authentication required. Please log in again.");
         }
 
-        let errorMessage = "Failed to fetch user profile";
-        try {
-          const error: ApiError = await response.json();
-          errorMessage = error.detail || errorMessage;
-          console.log("❌ User profile API error:", errorMessage);
-        } catch (jsonError) {
-          console.warn("Failed to parse user profile error response:", jsonError);
-        }
+        const errorMessage = await handleErrorResponse(response, "Failed to fetch user profile");
+        console.log("❌ User profile API error:", errorMessage);
         throw new Error(errorMessage);
       }
 
@@ -1051,22 +1051,15 @@ class AuthAPI {
           this.removeToken();
 
           // Get the detailed error from backend
-          let errorDetail = "Authentication failed";
-          try {
-            const errorText = await response.text();
-            console.log("Backend 401 error response:", errorText);
-            const errorData = JSON.parse(errorText);
-            errorDetail = errorData.detail || errorDetail;
-          } catch (e) {
-            console.log("Could not parse 401 error response:", e);
-          }
+          const errorDetail = await handleErrorResponse(response, "Authentication failed");
+          console.log("Backend 401 error response:", errorDetail);
 
           throw new Error(
             `Authentication failed: ${errorDetail}. Please log in again.`,
           );
         }
-        const errorText = await response.text();
-        throw new Error(`API error: ${errorText}`);
+        const errorMessage = await handleErrorResponse(response, "API error");
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
@@ -1090,7 +1083,7 @@ class AuthAPI {
   async getDestinationWithTempQuestionnaire(
     tempQuestionnaireData: TempQuestionnaire,
   ): Promise<DestinationDetails> {
-    console.log(`🔍 Getting destination details with temp questionnaire for ID: ${tempQuestionnaireData.destination_id}`);
+    console.log(`���� Getting destination details with temp questionnaire for ID: ${tempQuestionnaireData.destination_id}`);
     console.log('Temp questionnaire data:', tempQuestionnaireData);
 
     try {
@@ -1136,21 +1129,14 @@ class AuthAPI {
           this.removeToken();
 
           // Get the detailed error from backend
-          let errorDetail = "Authentication failed";
-          try {
-            const errorText = await response.text();
-            const errorData = JSON.parse(errorText);
-            errorDetail = errorData.detail || errorDetail;
-          } catch (e) {
-            // If we can't parse the error, use default message
-          }
+          const errorDetail = await handleErrorResponse(response, "Authentication failed");
 
           throw new Error(
             `Authentication failed: ${errorDetail}. Please log in again.`,
           );
         }
-        const errorText = await response.text();
-        throw new Error(`API error: ${errorText}`);
+        const errorMessage = await handleErrorResponse(response, "API error");
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
@@ -1657,8 +1643,8 @@ class AuthAPI {
           this.removeToken();
           throw new Error("Authentication required. Please log in again.");
         }
-        const errorText = await response.text();
-        throw new Error(`Failed to create itinerary: ${errorText}`);
+        const errorMessage = await handleErrorResponse(response, "Failed to create itinerary");
+        throw new Error(errorMessage);
       }
 
       return response.json();
@@ -1693,8 +1679,8 @@ class AuthAPI {
           this.removeToken();
           throw new Error("Authentication required. Please log in again.");
         }
-        const errorText = await response.text();
-        throw new Error(`Failed to get day recommendations: ${errorText}`);
+        const errorMessage = await handleErrorResponse(response, "Failed to get day recommendations");
+        throw new Error(`Failed to get day recommendations (${response.status}): ${errorMessage}`);
       }
 
       return response.json();
@@ -1814,6 +1800,80 @@ class AuthAPI {
       if (error instanceof TypeError && error.message.includes("fetch")) {
         throw new Error(
           `Unable to connect to backend server at ${API_BASE_URL}. Please check if the backend is running and CORS is configured correctly.`,
+        );
+      }
+      throw error;
+    }
+  }
+
+  async exportItineraryPDF(itineraryId: number): Promise<Blob> {
+    try {
+      const token = this.getToken();
+      if (!token) {
+        throw new Error("Authentication required");
+      }
+
+      console.log(`Exporting PDF for itinerary ${itineraryId}`);
+      console.log(`API_BASE_URL: ${API_BASE_URL}`);
+      console.log(`Current hostname: ${window.location.hostname}`);
+      console.log(`Is iframe: ${window.self !== window.top}`);
+
+      // First try with AbortController for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
+      const response = await fetch(`${API_BASE_URL}/itinerary/${itineraryId}/export`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        mode: 'cors',
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        handleDatabaseTimeout(response);
+        if (response.status === 401) {
+          this.removeToken();
+          throw new Error("Authentication required. Please log in again.");
+        }
+
+        // Handle specific PDF service errors
+        if (response.status === 404) {
+          throw new Error("PDF export feature is not available on this server. Please contact support.");
+        }
+
+        if (response.status === 502 || response.status === 503) {
+          throw new Error("PDF generation service is temporarily unavailable. Please try again later.");
+        }
+
+        const errorMessage = await handleErrorResponse(response, "PDF export failed");
+
+        // Check if it's a specific PDF service error
+        if (errorMessage.includes("PDFSHIFT") || errorMessage.includes("PDF") || errorMessage.includes("502")) {
+          throw new Error("PDF generation service is currently unavailable. This may be due to missing API keys or service configuration. Please contact support.");
+        }
+
+        throw new Error(errorMessage);
+      }
+
+      const blob = await response.blob();
+
+      // Verify that we actually got a PDF
+      if (blob.type !== 'application/pdf' && blob.size === 0) {
+        throw new Error("Invalid PDF response received from server.");
+      }
+
+      return blob;
+    } catch (error) {
+      console.error("PDF export error:", error);
+
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw new Error(
+          `Unable to connect to backend server at ${API_BASE_URL}. Please check your internet connection and try again.`,
         );
       }
       throw error;
