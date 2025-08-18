@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
+import logging
 
 from backend.database.db import engine, Base
 import backend.models  # keep this import so create_all sees your models
@@ -34,8 +35,6 @@ app.add_middleware(
 
 # --- DB tables (safe with SQLite: creates missing ones; won't drop) ---
 Base.metadata.create_all(bind=engine)
-# (Optional) use logging instead of print in prod:
-# import logging; logging.getLogger("uvicorn").info("DB tables ensured")
 
 # --- Routers ---
 app.include_router(user.router)
@@ -57,45 +56,18 @@ app.include_router(saved_places.router)
 def health():
     return {"ok": True}
 
-
-# from fastapi import FastAPI
-# from backend.database.db import engine, Base
-# import backend.models
-# from backend.routers import user, auth, questionnaire, recommend, destination, hotels, weather, locations, search, chat, \
-#     saved_places, itinerary, forgot_password
-# from fastapi.middleware.cors import CORSMiddleware
-#
-# app = FastAPI()
-# Base.metadata.create_all(bind=engine)
-# print("Tables created")
-#
-# app.include_router(user.router)
-# app.include_router(auth.router)
-# app.include_router(questionnaire.router)
-# app.include_router(recommend.router)
-# app.include_router(destination.router)
-# app.include_router(search.router)
-# app.include_router(hotels.router)
-# app.include_router(weather.router)
-# app.include_router(locations.router)
-# app.include_router(itinerary.router)
-# app.include_router(forgot_password.router)
-#
-# app.include_router(chat.router)
-# app.include_router(saved_places.router)
-#
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=[
-#         "http://localhost:8080",
-#         "http://localhost:8081",  # Common Vite alternative port
-#         "http://localhost:3000",  # Common React dev port
-#         "http://localhost:48752",
-#         "http://127.0.0.1:8080",
-#         "http://127.0.0.1:8081",
-#         "http://127.0.0.1:3000",
-#     ],
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
+# --- One-time WeasyPrint stack version log (to confirm deps on Railway) ---
+@app.on_event("startup")
+def log_pdf_stack_versions():
+    try:
+        import weasyprint, pydyf, tinycss2, cssselect2, PIL
+        logging.getLogger("pdfstack").info(
+            "WeasyPrint %s | pydyf %s | tinycss2 %s | cssselect2 %s | Pillow %s",
+            getattr(weasyprint, "__version__", "?"),
+            getattr(pydyf, "__version__", "?"),
+            getattr(tinycss2, "__version__", "?"),
+            getattr(cssselect2, "__version__", "?"),
+            getattr(PIL, "__version__", "?"),
+        )
+    except Exception as e:
+        logging.getLogger("pdfstack").warning("Could not log PDF stack versions: %r", e)
