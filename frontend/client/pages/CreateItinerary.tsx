@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus } from "lucide-react";
+import { FiChevronDown, FiChevronUp, FiFilter } from "react-icons/fi";
 import { useAuth } from "../contexts/AuthContext";
 import { useApiWithLoading } from "../contexts/LoadingContext";
 import { authAPI } from "../lib/api";
@@ -62,6 +63,7 @@ interface Destination {
   match_score: number;
   rating_label: string;
   estimated_budget: number;
+  filters: string[];
   distance: string;
   travel_time: string;
   thumbnail_img: string;
@@ -89,7 +91,7 @@ interface InterestData {
 
 const CreateItinerary: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, handleAuthError } = useAuth();
+  const { isAuthenticated, handleAuthError, loading: authLoading } = useAuth();
   const { callWithLoading } = useApiWithLoading();
   
   // State management
@@ -114,13 +116,20 @@ const CreateItinerary: React.FC = () => {
   const [showingInterestsForDay, setShowingInterestsForDay] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState<string>("distance");
   const [hasNavigatedToQuestionnaire, setHasNavigatedToQuestionnaire] = useState(false);
+  const [showFilters, setShowFilters] = useState(true);
+  const [selectedAreas, setSelectedAreas] = useState<string[]>([
+    "hill_country",
+    "coastal",
+    "dry_zone",
+    "urban",
+  ]);
 
-  // Check if user is authenticated
+  // Check if user is authenticated - wait for auth loading to complete
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!authLoading && !isAuthenticated) {
       navigate("/login");
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, authLoading]);
 
   // Handler for initial questionnaire (steps 2 & 3)
   const handleInitialQuestionnaire = () => {
@@ -454,22 +463,57 @@ const CreateItinerary: React.FC = () => {
     return null;
   };
 
-  // Sort recommendations
-  const sortedRecommendations = currentDayRecommendations.slice().sort((a, b) => {
-    switch (sortBy) {
-      case "distance":
-        return parseFloat(a.distance.split(' ')[0]) - parseFloat(b.distance.split(' ')[0]);
-      case "budget":
-        return a.estimated_budget - b.estimated_budget;
-      case "match_score":
-        return b.match_score - a.match_score;
-      default:
-        return 0;
-    }
-  });
+  // Filter and sort recommendations
+  const filteredAndSortedRecommendations = currentDayRecommendations
+    .filter((dest) => {
+      if (dest.filters && dest.filters.length > 0) {
+        return dest.filters.some(filter => selectedAreas.includes(filter));
+      }
+      return true;
+    })
+    .slice().sort((a, b) => {
+      switch (sortBy) {
+        case "distance":
+          return parseFloat(a.distance.split(' ')[0]) - parseFloat(b.distance.split(' ')[0]);
+        case "budget":
+          return a.estimated_budget - b.estimated_budget;
+        case "match_score":
+          return b.match_score - a.match_score;
+        default:
+          return 0;
+      }
+    });
+
+  const toggleFilters = () => setShowFilters(!showFilters);
+
+  const areas = [
+    { id: "hill_country", name: "Hill Country" },
+    { id: "coastal", name: "Coastal" },
+    { id: "dry_zone", name: "Dry Zone" },
+    { id: "urban", name: "Urban" },
+  ];
+
+  const toggleArea = (areaId: string) => {
+    setSelectedAreas((prev) =>
+      prev.includes(areaId)
+        ? prev.filter((a) => a !== areaId)
+        : [...prev, areaId],
+    );
+  };
 
   // Count selected destinations
   const selectedDestinationsCount = Object.values(itinerary.days).filter(day => day.destination_id).length;
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-600 mx-auto mb-4"></div>
+          <p className="text-gray-700">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return null; // Will redirect via useEffect
@@ -539,8 +583,8 @@ const CreateItinerary: React.FC = () => {
                   <div
                     key={dayNum}
                     className={`relative w-64 h-64 rounded-xl border-2 shadow-lg transition-all duration-300 ${
-                      isSelected 
-                        ? 'border-gray-300 bg-cover bg-center' 
+                      isSelected
+                        ? 'border-gray-300 bg-cover bg-center'
                         : 'border-gray-300 bg-gray-100 hover:border-cyan-400 hover:shadow-xl'
                     } ${isClickable ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}
                     style={isSelected && dayData.destination_image ? {
@@ -550,7 +594,7 @@ const CreateItinerary: React.FC = () => {
                     } : {}}
                     onClick={() => {
                       if (!isClickable || isLoading) return;
-                      
+
                       if (!isSelected && dayNum === nextDay) {
                         handleDayQuestionnaire(dayNum);
                       }
@@ -566,13 +610,15 @@ const CreateItinerary: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Plus icon for empty containers */}
+                    {/* Empty state for day containers */}
                     {!isSelected && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <Plus 
-                          size={48} 
-                          className={`${isClickable ? 'text-gray-400' : 'text-gray-300'} transition-colors duration-200`}
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
+                        <Plus
+                          size={48}
+                          className={`${isClickable ? 'text-gray-400' : 'text-gray-300'} transition-colors duration-200 mb-4`}
                         />
+                        <div className="text-2xl font-bold text-gray-600 mb-2">Day {dayNum}</div>
+                        <div className="text-sm text-gray-500">Click to Select Interests</div>
                       </div>
                     )}
                   </div>
@@ -584,151 +630,265 @@ const CreateItinerary: React.FC = () => {
 
         {/* Recommendations Section */}
         {!showingInterestsForDay && showingRecommendationsForDay && currentDayRecommendations.length > 0 && (
-          <div className="card p-8" style={{ background: 'var(--surface)' }}>
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-3xl font-bold" style={{ color: 'var(--text-900)' }}>
-                Day {showingRecommendationsForDay.toString().padStart(2, '0')}
-              </h2>
-              <div className="flex items-center gap-4">
-                <span className="text-lg font-semibold" style={{ color: 'var(--text-600)' }}>Sort By:</span>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg font-medium"
+          <div className="flex flex-col lg:flex-row gap-8">
+            {/* Filters Sidebar */}
+            <div className="lg:w-1/4 relative">
+              <div
+                className="card p-6"
+                style={{
+                  background: 'var(--surface)',
+                  zIndex: 30,
+                  position: 'sticky',
+                  top: '20px',
+                  width: '100%',
+                  maxHeight: 'calc(100vh - 40px)',
+                  overflowY: 'auto',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                  transition: 'transform 0.2s ease, opacity 0.2s ease'
+                }}
+              >
+                <div
+                  className="flex items-center justify-between cursor-pointer mb-4"
+                  onClick={toggleFilters}
                 >
-                  <option value="distance">Distance</option>
-                  <option value="budget">Budget</option>
-                  <option value="match_score">Match Score</option>
-                </select>
+                  <div className="flex items-center gap-2">
+                    <FiFilter className="text-xl" style={{ color: 'var(--text-900)' }} />
+                    <h2 className="text-lg font-semibold" style={{ color: 'var(--text-900)' }}>Filters</h2>
+                  </div>
+                  {showFilters ? (
+                    <FiChevronUp style={{ color: 'var(--text-600)' }} />
+                  ) : (
+                    <FiChevronDown style={{ color: 'var(--text-600)' }} />
+                  )}
+                </div>
+
+                {showFilters && (
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-900)' }}>
+                        Areas
+                      </label>
+                      <div className="space-y-2">
+                        {areas.map((area) => (
+                          <label
+                            key={area.id}
+                            className="flex items-center gap-2 cursor-pointer"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedAreas.includes(area.id)}
+                              onChange={() => toggleArea(area.id)}
+                              className="w-4 h-4 text-gray-600 bg-gray-300 border-gray-400 rounded focus:ring-gray-500 accent-gray-500"
+                            />
+                            <span className="text-sm" style={{ color: 'var(--text-600)' }}>
+                              {area.name}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-900)' }}>
+                        Sort by
+                      </label>
+                      <select
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value)}
+                        className="w-full px-4 py-3 text-sm text-left bg-white border border-gray-200 rounded-lg hover:border-cyan-400 hover:bg-cyan-50/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all duration-200"
+                        style={{
+                          color: 'var(--text-900)',
+                          backgroundColor: 'var(--surface)',
+                          borderColor: '#E2E8F0',
+                          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                        }}
+                      >
+                        <option value="distance">Distance</option>
+                        <option value="budget">Budget</option>
+                        <option value="match_score">Match Score</option>
+                      </select>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        setSelectedAreas(areas.map((a) => a.id));
+                        setSortBy("distance");
+                      }}
+                      className="w-full btn btn-secondary btn-sm"
+                    >
+                      Reset Filters
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {sortedRecommendations.map((destination) => (
-                <div
-                  key={destination.destination_id}
-                  className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300"
-                >
-                  {/* Destination Image */}
-                  <div className="h-52 bg-gray-200 relative">
-                    {destination.thumbnail_img ? (
-                      <img
-                        src={`https://ikmangamanlk-production.up.railway.app${destination.thumbnail_img}`}
-                        alt={destination.name}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.currentTarget.style.display = "none";
-                          e.currentTarget.parentElement
-                            ?.querySelector(".fallback-content")
-                            ?.classList.remove("hidden");
-                        }}
-                      />
-                    ) : null}
-                    <div
-                      className={`fallback-content absolute inset-0 flex flex-col items-center justify-center text-center p-4 bg-gray-200 ${
-                        destination.thumbnail_img ? "hidden" : ""
-                      }`}
-                    >
-                      <div className="text-4xl mb-2">🏞️</div>
-                      <div className="text-sm font-medium text-gray-600">
-                        {destination.name}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Content */}
-                  <div className="p-6">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">
-                      {destination.name}
-                    </h3>
-                    
-                    <div className="space-y-2 mb-4">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Budget:</span>
-                        <span className="font-semibold">LKR {destination.estimated_budget.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Rating:</span>
-                        <span className={`font-semibold ${
-                          destination.rating_label === 'Very Good' ? 'text-green-600' :
-                          destination.rating_label === 'Good' ? 'text-blue-600' : 'text-yellow-600'
-                        }`}>
-                          {destination.rating_label} ({destination.distance}, {destination.travel_time})
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Match Score:</span>
-                        <span className="font-semibold">{Math.round(destination.match_score * 100)}%</span>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                      <button
-                        onClick={() => selectDestination(destination)}
-                        disabled={isLoading}
-                        className="w-full bg-cyan-600 hover:bg-cyan-700 text-white py-2 px-4 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50"
-                      >
-                        Select
-                      </button>
-                      <button
-                        onClick={() => {
-                          // Determine start location based on the day
-                          let tempStartLocation = itinerary.start_location;
-
-                          // For days other than 1, use the previous day's destination name as start location
-                          if (showingRecommendationsForDay > 1) {
-                            const previousDay = showingRecommendationsForDay - 1;
-                            const previousDestinationName = itinerary.days[previousDay]?.destination_name;
-                            if (previousDestinationName) {
-                              tempStartLocation = previousDestinationName;
-                            }
-                          }
-
-                          // Prepare temp questionnaire data for the destination details API
-                          const tempQuestionnaireData = {
-                            destination_id: destination.destination_id,
-                            travel_month: itinerary.travel_month,
-                            no_of_people: itinerary.no_of_people,
-                            start_location: tempStartLocation
-                          };
-
-                          // Store temp questionnaire data for the destination context
-                          sessionStorage.setItem('tempDestinationData', JSON.stringify(tempQuestionnaireData));
-
-                          // Store state for navigation back
-                          const backData = {
-                            currentItineraryState: itinerary,
-                            currentDayRecommendations: currentDayRecommendations,
-                            showingRecommendationsForDay: showingRecommendationsForDay,
-                            questionnaireSaved: questionnaireSaved,
-                            sortBy: sortBy
-                          };
-                          sessionStorage.setItem('tempCreateItineraryData', JSON.stringify(backData));
-                          sessionStorage.setItem('tempCreateItineraryDataTimestamp', Date.now().toString());
-
-                          navigate(`/itinerary/${itinerary.itinerary_id}/day/${showingRecommendationsForDay}/destination/${destination.destination_id}`);
-                        }}
-                        className="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg font-medium transition-colors duration-200"
-                      >
-                        View Details
-                      </button>
-                    </div>
+            {/* Recommendations Content */}
+            <div className="lg:w-3/4">
+              <div className="card p-8" style={{ background: 'var(--surface)' }}>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-3xl font-bold" style={{ color: 'var(--text-900)' }}>
+                    Day {showingRecommendationsForDay.toString().padStart(2, '0')}
+                  </h2>
+                  <div className="text-sm" style={{ color: 'var(--text-600)' }}>
+                    Found {filteredAndSortedRecommendations.length} recommendations
                   </div>
                 </div>
-              ))}
-            </div>
 
-            {/* Cancel Selection */}
-            <div className="mt-6 text-center">
-              <button
-                onClick={() => {
-                  setCurrentDayRecommendations([]);
-                  setShowingRecommendationsForDay(null);
-                }}
-                className="text-gray-600 hover:text-gray-800 font-medium"
-              >
-                Cancel Selection
-              </button>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {filteredAndSortedRecommendations.map((destination) => (
+                    <div
+                      key={destination.destination_id}
+                      className="group card p-0 flex flex-col overflow-hidden cursor-pointer hover:scale-102 transition-all duration-300 hover:shadow-lg"
+                      style={{ background: 'var(--surface)' }}
+                    >
+                      <div className="relative h-48 overflow-hidden">
+                        {destination.thumbnail_img ? (
+                          <img
+                            src={`https://ikmangamanlk-production.up.railway.app${destination.thumbnail_img}`}
+                            alt={destination.name}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                            loading="lazy"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                              e.currentTarget.parentElement
+                                ?.querySelector(".fallback-content")
+                                ?.classList.remove("hidden");
+                            }}
+                          />
+                        ) : null}
+                        <div
+                          className={`fallback-content absolute inset-0 flex flex-col items-center justify-center text-center p-2 ${destination.thumbnail_img ? "hidden" : ""}`}
+                          style={{ background: 'var(--surface-alt)', color: 'var(--text-600)' }}
+                        >
+                          <div className="text-4xl mb-2">🏞️</div>
+                          <div className="text-sm font-medium">
+                            {destination.name}
+                          </div>
+                        </div>
+                        <div className="absolute top-3 right-3 px-2 py-1 rounded text-white text-sm font-semibold" style={{ background: 'var(--primary-700)' }}>
+                          LKR {destination.estimated_budget.toLocaleString()}
+                        </div>
+                      </div>
+
+                      <div className="flex-grow p-4">
+                        <h3 className="font-bold text-lg mb-2" style={{ color: 'var(--text-900)' }}>
+                          {destination.name}
+                        </h3>
+
+                        <p className="text-sm mb-3" style={{ color: 'var(--text-600)' }}>
+                          {destination.rating_label} match ({destination.distance}, {destination.travel_time})
+                        </p>
+
+                        {/* Show filter tags */}
+                        {destination.filters && destination.filters.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-3">
+                            {destination.filters.map((filter) => (
+                              <span
+                                key={filter}
+                                className="px-2 py-1 text-xs rounded-full text-white"
+                                style={{ background: 'var(--primary-600)' }}
+                              >
+                                {areas.find(a => a.id === filter)?.name || filter}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        <div className="mb-4">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-medium" style={{ color: 'var(--text-600)' }}>
+                              Match Score
+                            </span>
+                            <span className="text-xs font-semibold" style={{ color: 'var(--text-900)' }}>
+                              {Math.round(Math.min(destination.match_score * 100, 100))}%
+                            </span>
+                          </div>
+                          <div className="progress-bar">
+                            <div
+                              className={`progress-fill ${
+                                destination.match_score >= 0.85 ? 'progress-green' :
+                                destination.match_score >= 0.70 ? 'progress-sky' :
+                                'progress-amber'
+                              }`}
+                              style={{
+                                width: `${Math.min(destination.match_score * 100, 100)}%`,
+                              }}
+                            ></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="p-4 pt-0">
+                        <div className="flex flex-col gap-2">
+                          <button
+                            onClick={() => selectDestination(destination)}
+                            disabled={isLoading}
+                            className="btn btn-primary btn-md w-full"
+                          >
+                            Select
+                          </button>
+                          <button
+                            onClick={() => {
+                              // Determine start location based on the day
+                              let tempStartLocation = itinerary.start_location;
+
+                              // For days other than 1, use the previous day's destination name as start location
+                              if (showingRecommendationsForDay > 1) {
+                                const previousDay = showingRecommendationsForDay - 1;
+                                const previousDestinationName = itinerary.days[previousDay]?.destination_name;
+                                if (previousDestinationName) {
+                                  tempStartLocation = previousDestinationName;
+                                }
+                              }
+
+                              // Prepare temp questionnaire data for the destination details API
+                              const tempQuestionnaireData = {
+                                destination_id: destination.destination_id,
+                                travel_month: itinerary.travel_month,
+                                no_of_people: itinerary.no_of_people,
+                                start_location: tempStartLocation
+                              };
+
+                              // Store temp questionnaire data for the destination context
+                              sessionStorage.setItem('tempDestinationData', JSON.stringify(tempQuestionnaireData));
+
+                              // Store state for navigation back
+                              const backData = {
+                                currentItineraryState: itinerary,
+                                currentDayRecommendations: currentDayRecommendations,
+                                showingRecommendationsForDay: showingRecommendationsForDay,
+                                questionnaireSaved: questionnaireSaved,
+                                sortBy: sortBy
+                              };
+                              sessionStorage.setItem('tempCreateItineraryData', JSON.stringify(backData));
+                              sessionStorage.setItem('tempCreateItineraryDataTimestamp', Date.now().toString());
+
+                              navigate(`/itinerary/${itinerary.itinerary_id}/day/${showingRecommendationsForDay}/destination/${destination.destination_id}`);
+                            }}
+                            className="btn btn-secondary btn-md w-full"
+                          >
+                            View Details
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Cancel Selection */}
+                <div className="mt-6 text-center">
+                  <button
+                    onClick={() => {
+                      setCurrentDayRecommendations([]);
+                      setShowingRecommendationsForDay(null);
+                    }}
+                    className="text-gray-600 hover:text-gray-800 font-medium"
+                  >
+                    Cancel Selection
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}

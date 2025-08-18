@@ -49,11 +49,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     );
 
     if (existingToken) {
-      // Validate token by making a test API call
-      console.log("Token found, validating...");
+      // Set token immediately to avoid logout on refresh
+      setToken(existingToken);
+      console.log("Token found, setting authenticated state immediately");
 
-      // Make a simple authenticated API call to validate token
-              fetch('https://ikmangamanlk-production.up.railway.app/users/me', {
+      // Validate token in background (but don't logout if validation fails due to network issues)
+      fetch('https://ikmangamanlk-production.up.railway.app/users/me', {
         headers: {
           'Authorization': `Bearer ${existingToken}`,
           'Content-Type': 'application/json',
@@ -61,8 +62,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       })
       .then(async response => {
         if (response.ok) {
-          console.log("Token is valid, setting authenticated state");
-          setToken(existingToken);
+          console.log("Token validation successful");
           // Fetch user profile data
           try {
             const profile = await authAPI.getUserProfile();
@@ -70,16 +70,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           } catch (profileError) {
             console.log("Failed to fetch user profile:", profileError);
           }
-        } else {
-          console.log("Token is invalid, removing and staying logged out");
+        } else if (response.status === 401) {
+          // Only logout on explicit 401 Unauthorized
+          console.log("Token is invalid (401), removing and staying logged out");
           authAPI.removeToken();
           setToken(null);
+          setUserProfile(null);
+        } else {
+          // For other errors (network issues, server errors), keep user logged in
+          console.log("Token validation failed with non-401 error, keeping user logged in");
         }
       })
       .catch(error => {
-        console.log("Token validation failed, removing token:", error.message);
-        authAPI.removeToken();
-        setToken(null);
+        // For network errors, keep user logged in - only actual auth errors should log out
+        console.log("Token validation failed due to network/connection error, keeping user logged in:", error.message);
       })
       .finally(() => {
         setLoading(false);
@@ -113,30 +117,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const handleAuthError = (error: Error) => {
     console.log('🔐 Authentication error detected:', error.message);
 
-    // Check if it's a timeout error (including database timeouts)
-    const isTimeoutError = error.message.includes('timeout') ||
-                          error.message.includes('Request timeout') ||
-                          error.message.includes('network timeout') ||
-                          error.message.includes('database timeout') ||
-                          error.message.includes('connection timeout') ||
-                          error.message.includes('server timeout') ||
-                          error.message.includes('query timeout') ||
-                          error.message.includes('Database connection') ||
-                          error.message.includes('503') ||
-                          error.message.includes('502') ||
-                          error.message.includes('504');
+    // Check if it's a backend timeout (session expired)
+    const isBackendTimeout = error.message.includes('Database timeout') ||
+                            error.message.includes('session expired') ||
+                            error.message.includes('token expired') ||
+                            error.message.includes('session timeout');
 
-    // Check if it's an authentication-related error
-    if (error.message.includes('Authentication required') ||
-        error.message.includes('Please log in again') ||
-        error.message.includes('401') ||
-        error.message.includes('Authentication failed') ||
-        isTimeoutError) {
+    // Check if it's an explicit authentication failure (401 Unauthorized)
+    const isAuthFailure = error.message.includes('Authentication required') ||
+                         error.message.includes('Please log in again') ||
+                         error.message.includes('401') ||
+                         error.message.includes('Authentication failed') ||
+                         error.message.includes('Unauthorized');
 
+    // Only logout on explicit auth failures or backend session timeouts
+    if (isAuthFailure || isBackendTimeout) {
       console.log('🚨 Auto-logout due to authentication error');
 
       // Set timeout flag if this was a timeout error
-      if (isTimeoutError) {
+      if (isBackendTimeout) {
         setIsTimeout(true);
       }
 
@@ -160,6 +159,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }
         }
       }, 500); // Reduced delay for better UX
+    } else {
+      // For other errors (network issues, server errors), just log but don't logout
+      console.log('🔵 Non-auth error detected, not logging out user:', error.message);
     }
   };
 
