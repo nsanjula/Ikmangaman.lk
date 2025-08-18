@@ -1,20 +1,42 @@
 import React, { useState, useEffect } from "react";
 import { FiMapPin, FiStar, FiPhone, FiExternalLink } from "react-icons/fi";
 import { useDestination } from "../../contexts/DestinationContext";
-
-interface Hotel {
-  city: string;
-  hotel_name: string;
-  price: number;
-  availability: string;
-  rating: number;
-  id: string;
-  image_url: string;
-}
+import { HotelData, Hotel } from "@shared/api";
 
 const HotelsNearby: React.FC = () => {
   const { destinationData, loading, error } = useDestination();
   const [hotels, setHotels] = useState<Hotel[]>([]);
+
+  // Utility function to normalize hotel data from backend format to frontend format
+  const normalizeHotelData = (hotelData: HotelData[]): Hotel[] => {
+    const normalizedHotels: Hotel[] = [];
+
+    hotelData.forEach((data) => {
+      // Extract up to 5 hotels from each HotelData object
+      for (let i = 1; i <= 5; i++) {
+        const hotelName = data[`hotel_name${i}` as keyof HotelData] as string;
+        const price = data[`Price_per_night${i}` as keyof HotelData] as number;
+        const availability = data[`Availability${i}` as keyof HotelData] as string;
+        const rating = data[`Rating${i}` as keyof HotelData] as number;
+        const url = data[`URL${i}` as keyof HotelData] as string;
+
+        if (hotelName && price && availability && rating && url) {
+          normalizedHotels.push({
+            city: data.city,
+            hotel_name: hotelName,
+            price: price,
+            availability: availability,
+            rating: rating,
+            id: `${data.id}_${i}`,
+            image_url: url,
+            url: url,
+          });
+        }
+      }
+    });
+
+    return normalizedHotels;
+  };
 
   useEffect(() => {
     if (!destinationData) return;
@@ -22,14 +44,18 @@ const HotelsNearby: React.FC = () => {
     // Extract hotel data from destination data
     try {
       const hotelData = destinationData["hotel data"];
+      
       if (hotelData && Array.isArray(hotelData)) {
-        setHotels(hotelData);
-      } else if (
-        hotelData &&
-        hotelData.hotels &&
-        Array.isArray(hotelData.hotels)
-      ) {
+        // New format: array of HotelData objects
+        const normalizedHotels = normalizeHotelData(hotelData);
+        setHotels(normalizedHotels);
+      } else if (hotelData && Array.isArray(hotelData.hotels)) {
+        // Legacy format: object with hotels array
         setHotels(hotelData.hotels);
+      } else if (hotelData && typeof hotelData === 'object' && !Array.isArray(hotelData)) {
+        // Single HotelData object
+        const normalizedHotels = normalizeHotelData([hotelData]);
+        setHotels(normalizedHotels);
       }
     } catch (error) {
       console.error("Error extracting hotel data:", error);
@@ -37,22 +63,24 @@ const HotelsNearby: React.FC = () => {
   }, [destinationData]);
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-LK", {
       style: "currency",
-      currency: "USD",
+      currency: "LKR",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
   };
 
   const getAvailabilityColor = (availability: string) => {
-    switch (availability) {
-      case "Available":
-        return { bg: "#DCFCE7", text: "#166534" };
-      case "Few Rooms Left":
-        return { bg: "#FEF3C7", text: "#92400E" };
-      default:
-        return { bg: "#FEE2E2", text: "#DC2626" };
+    const lowerAvailability = availability.toLowerCase();
+    if (lowerAvailability.includes("available")) {
+      return { bg: "#DCFCE7", text: "#166534" };
+    } else if (lowerAvailability.includes("limited") || lowerAvailability.includes("few")) {
+      return { bg: "#FEF3C7", text: "#92400E" };
+    } else if (lowerAvailability.includes("booked") || lowerAvailability.includes("full")) {
+      return { bg: "#FEE2E2", text: "#DC2626" };
+    } else {
+      return { bg: "#F3F4F6", text: "#374151" };
     }
   };
 
@@ -209,23 +237,14 @@ const HotelsNearby: React.FC = () => {
                   </span>
                 </div>
 
-                {/* Hotel Features */}
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <span className="chip text-xs">
-                    Free WiFi
-                  </span>
-                  <span className="chip text-xs">
-                    Parking
-                  </span>
-                  <span className="chip text-xs">
-                    Restaurant
-                  </span>
-                </div>
               </div>
 
               {/* Action Footer */}
               <div className="p-4 pt-0">
-                <button className="btn btn-primary btn-md w-full flex items-center justify-center gap-2">
+                <button 
+                  className="btn btn-primary btn-md w-full flex items-center justify-center gap-2"
+                  onClick={() => window.open(hotel.url, '_blank')}
+                >
                   <FiExternalLink className="w-4 h-4" />
                   View Details
                 </button>
@@ -249,6 +268,7 @@ const HotelsNearby: React.FC = () => {
             <p className="text-sm" style={{ color: 'var(--text-600)' }}>
               Hotel information is provided by our booking partners. 
               Prices and availability may vary based on season and demand.
+              Prices are displayed in Sri Lankan Rupees (LKR).
             </p>
           </div>
         </div>

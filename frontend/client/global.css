@@ -841,3 +841,59 @@
     border: none;
   }
 }
+
+/* Scroll-triggered animations */
+.scroll-animate {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.6s ease-out;
+}
+
+.scroll-animate.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Enhanced sticky positioning for filters */
+.sticky-filter {
+  position: sticky !important;
+  top: 1.5rem !important;
+  z-index: 30 !important;
+  max-height: calc(100vh - 3rem) !important;
+  overflow-y: auto !important;
+  transition: all 0.2s ease !important;
+  will-change: transform;
+}
+
+/* Ensure proper scrolling context */
+.filter-container {
+  position: relative;
+  height: auto;
+  overflow: visible;
+  contain: layout;
+}
+
+/* Fix for iframe environments - ensure sticky works */
+.iframe-safe .sticky-filter {
+  position: -webkit-sticky !important;
+  position: sticky !important;
+  top: 1.5rem !important;
+}
+
+/* Smooth filter behavior during scroll */
+@media (prefers-reduced-motion: no-preference) {
+  .sticky-filter {
+    transition: transform 0.1s ease-out;
+  }
+}
+
+/* Smooth scrolling for the page */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Ensure sticky elements work properly */
+.sticky-wrapper {
+  position: relative;
+  z-index: 1;
+}

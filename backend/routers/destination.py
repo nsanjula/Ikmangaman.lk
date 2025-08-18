@@ -58,19 +58,23 @@ async def get_destination(destination_id: int, db: Session = Depends(get_db), cu
     distance_f = float(distance)
     duration = trip_distance_and_duration["duration_text"]
 
-        # Try to get weather data, fallback to None if it fails
+        # Try to get weather data, fallback to empty array if it fails
     try:
         weather_data = await get_forecast(destination_obj.name)
+        if weather_data is None:
+            weather_data = []
     except Exception as e:
         print(f"Weather API failed for {destination_obj.name}: {e}")
-        weather_data = None
+        weather_data = []
 
-    # Try to get hotel data, fallback to None if it fails
+    # Try to get hotel data, fallback to empty array if it fails
     try:
         hotel_data = await get_hotel(destination_obj.name)
+        if hotel_data is None:
+            hotel_data = []
     except Exception as e:
         print(f"Hotel API failed for {destination_obj.name}: {e}")
-        hotel_data = None
+        hotel_data = []
 
     response = {
         "destination_name" : destination_obj.name,
@@ -171,19 +175,23 @@ async def get_destination_from_temp_questionnaire(
     distance_f = float(distance)
     duration = trip_distance_and_duration["duration_text"]
 
-    # Try to get weather data, fallback to None if it fails
+    # Try to get weather data, fallback to empty array if it fails
     try:
         weather_data = await get_forecast(destination_obj.name)
+        if weather_data is None:
+            weather_data = []
     except Exception as e:
         print(f"Weather API failed for {destination_obj.name}: {e}")
-        weather_data = None
+        weather_data = []
 
-    # Try to get hotel data, fallback to None if it fails
+    # Try to get hotel data, fallback to empty array if it fails
     try:
         hotel_data = await get_hotel(destination_obj.name)
+        if hotel_data is None:
+            hotel_data = []
     except Exception as e:
         print(f"Hotel API failed for {destination_obj.name}: {e}")
-        hotel_data = None
+        hotel_data = []
 
     response = {
         "destination_name": destination_obj.name,

@@ -717,7 +717,7 @@ const QuestionnaireMetrics: React.FC = () => {
                   navigate('/create-itinerary');
                 } else if (isItineraryMode || backToRecommendations) {
                   // Always go back to recommendations for itinerary mode
-                  navigate('/recommendation', { replace: true });
+                  navigate('/recommendation');
                 } else {
                   navigate(-1);
                 }

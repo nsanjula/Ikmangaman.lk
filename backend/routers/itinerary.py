@@ -304,19 +304,23 @@ async def get_destination(
     distance = trip_distance_and_duration["distance_text"].split()[0]
     distance_f = float(distance)
     duration = trip_distance_and_duration["duration_text"]
-    # Try to get weather data, fallback to None if it fails
+    # Try to get weather data, fallback to empty array if it fails
     try:
         weather_data = await get_forecast(destination_obj.name)
+        if weather_data is None:
+            weather_data = []
     except Exception as e:
         print(f"Weather API failed for {destination_obj.name}: {e}")
-        weather_data = None
+        weather_data = []
 
-    # Try to get hotel data, fallback to None if it fails
+    # Try to get hotel data, fallback to empty array if it fails
     try:
         hotel_data = await get_hotel(destination_obj.name)
+        if hotel_data is None:
+            hotel_data = []
     except Exception as e:
         print(f"Hotel API failed for {destination_obj.name}: {e}")
-        hotel_data = None
+        hotel_data = []
 
     response = {
         "destination_name": destination_obj.name,
@@ -324,16 +328,16 @@ async def get_destination(
         "latitude": destination_obj.latitude,
         "longitude": destination_obj.longitude,
         "description": destination_obj.description,
-        "things_to_do": destination_obj.things_to_do.split("/"),
+        "things to do": destination_obj.things_to_do.split("/"),
         "distance": distance,
         "duration": duration,
-        "weather_data": weather_data,
-        "hotel_data": hotel_data,
-        "cost_for_bicycle": round(cost_for_bicycle(distance_f, itinerary_obj.no_of_people)),
-        "cost_for_car": round(cost_for_car(distance_f, itinerary_obj.no_of_people)),
-        "cost_for_private bus": round(cost_for_p_bus(distance_f, itinerary_obj.no_of_people)),
-        "cost_for_transit": round(cost_for_transit(distance_f, itinerary_obj.no_of_people, db)),
-        "guide_details": [
+        "weather data": weather_data,
+        "hotel data": hotel_data,
+        "cost for bicycle": round(cost_for_bicycle(distance_f, itinerary_obj.no_of_people)),
+        "cost for car": round(cost_for_car(distance_f, itinerary_obj.no_of_people)),
+        "cost for private bus": round(cost_for_p_bus(distance_f, itinerary_obj.no_of_people)),
+        "cost for transit": round(cost_for_transit(distance_f, itinerary_obj.no_of_people, db)),
+        "guide details": [
             {
                 "guide_id": guide.guide_id,
                 "name": guide.name,
@@ -343,8 +347,7 @@ async def get_destination(
             }
             for guide in destination_obj.guides
         ],
-        "destination_image": f"/destination-image/{destination_obj.destination_id}"
+        "destination image": f"/destination-image/{destination_obj.destination_id}"
     }
 
     return response
-
