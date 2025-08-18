@@ -1,3 +1,5 @@
+import { HotelData, Hotel } from '@shared/api';
+
 const API_BASE_URL = "https://ikmangamanlk-production.up.railway.app"; // Backend FastAPI server
 
 // Helper function to check if response indicates database timeout
@@ -175,7 +177,7 @@ export interface DestinationDetails {
   distance: string;
   duration: string;
   "weather data": any;
-  "hotel data": any;
+  "hotel data": HotelData[];
   "cost for bicycle": number;
   "cost for car": number;
   "cost for private bus": number;
@@ -207,7 +209,7 @@ export interface BackendRecommendation {
   distance: string;
   travel_time: string;
   thumbnail_img: string;
-  filters: string[]; // Backend filter data: ["hill_country", "coastal", "dry_zone", "urban"]
+  filters: string[]; // Backend filter data: ["coastal", "dry_zone", "urban", "hill_country"]
 }
 
 export type RecommendationsResponse = BackendRecommendation[];
@@ -227,7 +229,7 @@ export interface SearchByNameResponse {
     longitude: number | null;
     description: string | null;
     things_to_do: string[];
-    hotel_data: any;
+    hotel_data: HotelData[];
     guide_details: GuideDetails[];
     "destination image": string;
     filters?: string[]; // Backend filter data when available
@@ -242,7 +244,7 @@ export interface ImageSearchResponse {
     longitude: number | null;
     description: string | null;
     things_to_do: string[];
-    hotel_data: any;
+    hotel_data: HotelData[];
     guide_details: GuideDetails[];
     "destination image": string;
     visual_match_score: number;
@@ -491,6 +493,28 @@ class AuthAPI {
         travel_time: "2 hours",
         thumbnail_img: "/destination-image/3",
         filters: ["coastal"],
+      },
+      {
+        destination_id: 4,
+        name: "Jaffna",
+        match_score: 0.81,
+        rating_label: "Very Good",
+        estimated_budget: 9200,
+        distance: "400 km",
+        travel_time: "7.5 hours",
+        thumbnail_img: "/destination-image/4",
+        filters: ["coastal", "dry_zone", "urban"],
+      },
+      {
+        destination_id: 5,
+        name: "Colombo",
+        match_score: 0.79,
+        rating_label: "Good",
+        estimated_budget: 8800,
+        distance: "50 km",
+        travel_time: "1 hour",
+        thumbnail_img: "/destination-image/5",
+        filters: ["urban", "coastal"],
       },
     ];
   }
@@ -827,10 +851,38 @@ class AuthAPI {
           icon_url: "",
         },
       ],
-      "hotel data": {
-        message: "Hotel information temporarily unavailable",
-        hotels: [],
-      },
+      "hotel data": [
+        {
+          city: destination.name,
+          hotel_name1: "Hotel Royal",
+          Price_per_night1: 15000,
+          Availability1: "Available",
+          Rating1: 4.2,
+          URL1: "https://images.unsplash.com/photo-1564501049412-61c2a3083791?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+          hotel_name2: "Grand Palace",
+          Price_per_night2: 22000,
+          Availability2: "Limited rooms",
+          Rating2: 4.5,
+          URL2: "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+          hotel_name3: "City Resort",
+          Price_per_night3: 18000,
+          Availability3: "Available",
+          Rating3: 4.1,
+          URL3: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+          hotel_name4: "Luxury Inn",
+          Price_per_night4: 25000,
+          Availability4: "Available",
+          Rating4: 4.6,
+          URL4: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+          hotel_name5: "Budget Stay",
+          Price_per_night5: 8000,
+          Availability5: "Fully booked",
+          Rating5: 3.8,
+          URL5: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+          id: `hotel_${destinationId}`,
+          image_url: "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+        },
+      ],
       "cost for bicycle": 1500,
       "cost for car": 6000,
       "cost for private bus": 3500,

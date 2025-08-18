@@ -31,23 +31,39 @@ export const useDestination = () => {
 // Helper function to get coordinates for location names
 const getLocationCoordinates = (locationName: string) => {
   const locationCoords: Record<string, { lat: number; lng: number }> = {
-    "Colombo": { lat: 6.9271, lng: 79.8612 },
+    "Ella": { lat: 6.8667, lng: 81.0467 },
     "Kandy": { lat: 7.2906, lng: 80.6337 },
-    "Galle": { lat: 6.0535, lng: 80.2210 },
-    "Jaffna": { lat: 9.6615, lng: 80.0255 },
-    "Trincomalee": { lat: 8.5874, lng: 81.2152 },
-    "Anuradhapura": { lat: 8.3114, lng: 80.4037 },
-    "Pollonaruwa": { lat: 7.9403, lng: 81.0188 },
+    "Mirissa": { lat: 5.9485, lng: 80.4714 },
+    "Sigiriya": { lat: 7.957, lng: 80.7603 },
     "Nuwara Eliya": { lat: 6.9497, lng: 80.7891 },
-    "Ella": { lat: 6.8667, lng: 81.0667 },
+    "Anuradhapura": { lat: 8.3114, lng: 80.4037 },
+    "Galle": { lat: 6.032, lng: 80.217 },
+    "Trincomalee": { lat: 8.5874, lng: 81.2152 },
+    "Polonnaruwa": { lat: 7.9403, lng: 81.0188 },
+    "Jaffna": { lat: 9.6615, lng: 80.0255 },
+    "Arugam Bay": { lat: 6.8433, lng: 81.8339 },
+    "Haputale": { lat: 6.7652, lng: 80.9512 },
+    "Negombo": { lat: 7.2083, lng: 79.8358 },
+    "Matale": { lat: 7.4659, lng: 80.6234 },
+    "Kalpitiya": { lat: 8.2294, lng: 79.7168 },
+    "Kitulgala": { lat: 6.9883, lng: 80.422 },
+    "Dambulla": { lat: 7.8567, lng: 80.6492 },
+    "Bentota": { lat: 6.4214, lng: 80.0041 },
+    "Udawalawe": { lat: 6.4241, lng: 80.888 },
+    "Colombo": { lat: 6.9271, lng: 79.8612 },
+    "Yala": { lat: 6.4014, lng: 81.5194 },
+    "Badulla": { lat: 6.9934, lng: 81.055 },
+    "Mannar": { lat: 8.9775, lng: 79.9044 },
+    "Ratnapura": { lat: 6.6828, lng: 80.3994 },
+    "Puttalam": { lat: 8.035, lng: 79.8428 },
+    "Hambantota": { lat: 6.1243, lng: 81.1185 },
+    "Pasikuda": { lat: 7.9252, lng: 81.5612 },
+    "Katharagama": { lat: 6.4211, lng: 81.3312 },
+    // Legacy entries for backward compatibility
+    "Pollonaruwa": { lat: 7.9403, lng: 81.0188 }, // Alternative spelling
     "Matara": { lat: 5.9485, lng: 80.5353 },
-    "Negombo": { lat: 7.2084, lng: 79.8380 },
     "Batticaloa": { lat: 7.7102, lng: 81.6924 },
-    "Badulla": { lat: 6.9934, lng: 81.0550 },
     "Kurunegala": { lat: 7.4818, lng: 80.3609 },
-    "Ratnapura": { lat: 6.6828, lng: 80.4037 },
-    "Hambantota": { lat: 6.1241, lng: 81.1185 },
-    "Puttalam": { lat: 8.0362, lng: 79.8283 },
     "Vavniya": { lat: 8.7514, lng: 80.4971 },
     "Kalutara": { lat: 6.5854, lng: 79.9607 },
     "Ampara": { lat: 7.2981, lng: 81.6821 },
@@ -131,38 +147,80 @@ export const DestinationProvider: React.FC<DestinationProviderProps> = ({
           const parsedTempDestData = JSON.parse(tempDestinationData);
           console.log('Using itinerary temp destination data:', parsedTempDestData);
 
-          // Make API call to get destination details with temp questionnaire
-          setProgress(50);
-          const tempQuestionnairePayload = {
-            destination_id: destinationId,
-            travel_month: parsedTempDestData.travel_month,
-            no_of_people: parsedTempDestData.no_of_people,
-            start_location: parsedTempDestData.start_location
-          };
+          // Check if this data contains the new questionnaire structure (destination_id, travel_month, etc.)
+          if (parsedTempDestData.destination_id && parsedTempDestData.travel_month &&
+              parsedTempDestData.no_of_people && parsedTempDestData.start_location) {
 
-          const destinationDetailsWithTemp = await authAPI.getDestinationWithTempQuestionnaire(tempQuestionnairePayload);
+            // Make API call to get destination details with temp questionnaire
+            setProgress(50);
+            const tempQuestionnairePayload = {
+              destination_id: parsedTempDestData.destination_id,
+              travel_month: parsedTempDestData.travel_month,
+              no_of_people: parsedTempDestData.no_of_people,
+              start_location: parsedTempDestData.start_location
+            };
 
-          // Create questionnaire data for map
-          const locationCoords = getLocationCoordinates(parsedTempDestData.start_location);
-          const questionnaireDataForMap = {
-            starting_location_latitudes: locationCoords.lat,
-            starting_location_longitudes: locationCoords.lng,
-            travel_month: parsedTempDestData.travel_month,
-            no_of_people: parsedTempDestData.no_of_people,
-            start_location: parsedTempDestData.start_location
-          };
+            console.log('Making temp questionnaire API call with payload:', tempQuestionnairePayload);
+            const destinationDetailsWithTemp = await authAPI.getDestinationWithTempQuestionnaire(tempQuestionnairePayload);
 
-          setDestinationData(destinationDetailsWithTemp);
-          setQuestionnaireData(questionnaireDataForMap);
-          setIsFallbackData(false);
-          setLoading(false);
-          setError(null);
-          setProgress(100);
-          finishLoading();
+            // Create questionnaire data for map
+            const locationCoords = getLocationCoordinates(parsedTempDestData.start_location);
+            const questionnaireDataForMap = {
+              starting_location_latitudes: locationCoords.lat,
+              starting_location_longitudes: locationCoords.lng,
+              travel_month: parsedTempDestData.travel_month,
+              no_of_people: parsedTempDestData.no_of_people,
+              start_location: parsedTempDestData.start_location
+            };
 
-          // Set a flag to indicate we've successfully used this temp data
-          sessionStorage.setItem('tempDataUsedSuccessfully', 'true');
-          return;
+            setDestinationData(destinationDetailsWithTemp);
+            setQuestionnaireData(questionnaireDataForMap);
+            setIsFallbackData(false);
+            setLoading(false);
+            setError(null);
+            setProgress(100);
+            finishLoading();
+
+            // Clean up the temp data after successful use
+            sessionStorage.removeItem('tempDestinationData');
+            console.log('✅ Successfully loaded destination with temp questionnaire data');
+            return;
+
+          } else if (parsedTempDestData.travel_month && parsedTempDestData.no_of_people && parsedTempDestData.start_location) {
+            // Handle legacy temp destination data structure (for backward compatibility)
+            setProgress(50);
+            const tempQuestionnairePayload = {
+              destination_id: destinationId,
+              travel_month: parsedTempDestData.travel_month,
+              no_of_people: parsedTempDestData.no_of_people,
+              start_location: parsedTempDestData.start_location
+            };
+
+            const destinationDetailsWithTemp = await authAPI.getDestinationWithTempQuestionnaire(tempQuestionnairePayload);
+
+            // Create questionnaire data for map
+            const locationCoords = getLocationCoordinates(parsedTempDestData.start_location);
+            const questionnaireDataForMap = {
+              starting_location_latitudes: locationCoords.lat,
+              starting_location_longitudes: locationCoords.lng,
+              travel_month: parsedTempDestData.travel_month,
+              no_of_people: parsedTempDestData.no_of_people,
+              start_location: parsedTempDestData.start_location
+            };
+
+            setDestinationData(destinationDetailsWithTemp);
+            setQuestionnaireData(questionnaireDataForMap);
+            setIsFallbackData(false);
+            setLoading(false);
+            setError(null);
+            setProgress(100);
+            finishLoading();
+
+            // Clean up the temp data after successful use
+            sessionStorage.removeItem('tempDestinationData');
+            console.log('✅ Successfully loaded destination with legacy temp data');
+            return;
+          }
         } catch (e) {
           console.warn('Failed to use itinerary temp destination data:', e);
           // Fall through to other methods

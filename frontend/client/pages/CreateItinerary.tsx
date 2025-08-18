@@ -1,14 +1,44 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus } from "lucide-react";
-import { FiChevronDown, FiChevronUp, FiFilter } from "react-icons/fi";
-import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { useAuth } from "../contexts/AuthContext";
 import { useApiWithLoading } from "../contexts/LoadingContext";
 import { authAPI } from "../lib/api";
 import DayInterestsQuestionnaire from "../components/DayInterestsQuestionnaire";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+
+// Hardcoded destination coordinates for recognizing start locations
+const DESTINATION_COORDINATES = {
+  "Ella": { lat: 6.8667, lng: 81.0467 },
+  "Kandy": { lat: 7.2906, lng: 80.6337 },
+  "Mirissa": { lat: 5.9485, lng: 80.4714 },
+  "Sigiriya": { lat: 7.957, lng: 80.7603 },
+  "Nuwara Eliya": { lat: 6.9497, lng: 80.7891 },
+  "Anuradhapura": { lat: 8.3114, lng: 80.4037 },
+  "Galle": { lat: 6.032, lng: 80.217 },
+  "Trincomalee": { lat: 8.5874, lng: 81.2152 },
+  "Polonnaruwa": { lat: 7.9403, lng: 81.0188 },
+  "Jaffna": { lat: 9.6615, lng: 80.0255 },
+  "Arugam Bay": { lat: 6.8433, lng: 81.8339 },
+  "Haputale": { lat: 6.7652, lng: 80.9512 },
+  "Negombo": { lat: 7.2083, lng: 79.8358 },
+  "Matale": { lat: 7.4659, lng: 80.6234 },
+  "Kalpitiya": { lat: 8.2294, lng: 79.7168 },
+  "Kitulgala": { lat: 6.9883, lng: 80.422 },
+  "Dambulla": { lat: 7.8567, lng: 80.6492 },
+  "Bentota": { lat: 6.4214, lng: 80.0041 },
+  "Udawalawe": { lat: 6.4241, lng: 80.888 },
+  "Colombo": { lat: 6.9271, lng: 79.8612 },
+  "Yala": { lat: 6.4014, lng: 81.5194 },
+  "Badulla": { lat: 6.9934, lng: 81.055 },
+  "Mannar": { lat: 8.9775, lng: 79.9044 },
+  "Ratnapura": { lat: 6.6828, lng: 80.3994 },
+  "Puttalam": { lat: 8.035, lng: 79.8428 },
+  "Hambantota": { lat: 6.1243, lng: 81.1185 },
+  "Pasikuda": { lat: 7.9252, lng: 81.5612 },
+  "Katharagama": { lat: 6.4211, lng: 81.3312 }
+};
 
 // Types for the itinerary system
 interface ItineraryState {
@@ -57,15 +87,6 @@ interface InterestData {
   eco_tourism: boolean;
 }
 
-interface PendingBackendCall {
-  type: 'assign_destination' | 'day_recommendations';
-  itinerary_id: number;
-  day_number: number;
-  destination_id?: number;
-  estimated_budget?: number;
-  interests?: InterestData;
-}
-
 const CreateItinerary: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated, handleAuthError } = useAuth();
@@ -93,36 +114,6 @@ const CreateItinerary: React.FC = () => {
   const [showingInterestsForDay, setShowingInterestsForDay] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState<string>("distance");
   const [hasNavigatedToQuestionnaire, setHasNavigatedToQuestionnaire] = useState(false);
-  const [hasInitializedFromSessionData, setHasInitializedFromSessionData] = useState(false);
-  
-  // New state for optimized loading management
-  const [pendingBackendCalls, setPendingBackendCalls] = useState<PendingBackendCall[]>([]);
-  const [selectedDestinationForDay, setSelectedDestinationForDay] = useState<{[key: number]: Destination | null}>({});
-  const [latestSelectedDay, setLatestSelectedDay] = useState<number | null>(null);
-  const [lockedDays, setLockedDays] = useState<Set<number>>(new Set());
-  const [completedQuestionnaireDays, setCompletedQuestionnaireDays] = useState<Set<number>>(new Set());
-  const [showFilters, setShowFilters] = useState(true);
-  const [budgetFilter, setBudgetFilter] = useState(500000);
-  const [scrollY, setScrollY] = useState(0);
-  const [showCancelSelection, setShowCancelSelection] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-
-  // Immediate early check for temp data to prevent empty state flash
-  useEffect(() => {
-    const tempData = sessionStorage.getItem('tempDestinationData');
-    if (tempData && isAuthenticated) {
-      try {
-        const data = JSON.parse(tempData);
-        if (data.currentItineraryState && data.currentItineraryState.itinerary_id) {
-          console.log('Early restoration: setting questionnaireSaved immediately');
-          setQuestionnaireSaved(true);
-          setHasInitializedFromSessionData(true);
-        }
-      } catch (error) {
-        console.error('Error in early restoration check:', error);
-      }
-    }
-  }, [isAuthenticated]);
 
   // Check if user is authenticated
   useEffect(() => {
@@ -131,77 +122,136 @@ const CreateItinerary: React.FC = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  // Cleanup temp destination data when starting a new itinerary session
-  useEffect(() => {
-    // Only cleanup if we're starting fresh (no itinerary_id and no questionnaire saved)
-    if (!questionnaireSaved && itinerary.itinerary_id === null) {
-      // Clean up any old temp destination data from previous sessions
-      sessionStorage.removeItem('tempDestinationData');
-      sessionStorage.removeItem('tempDataUsedSuccessfully');
-    }
-  }, [questionnaireSaved, itinerary.itinerary_id]);
-
   // Handler for initial questionnaire (steps 2 & 3)
   const handleInitialQuestionnaire = () => {
-    if (hasNavigatedToQuestionnaire) return; // Prevent multiple navigations
-
-    setHasNavigatedToQuestionnaire(true);
-    // Store flag to indicate this is the first questionnaire access
-    sessionStorage.setItem('questionnaire_from_create_itinerary', 'true');
-    // Use replace to prevent back button issues
-    navigate("/questionnaire-metrics?mode=create-itinerary", {
-      replace: true,
-      state: { fromCreateItinerary: true, backToRecommendations: true }
-    });
+    // Navigate to questionnaire metrics page for initial setup
+    navigate("/questionnaire-metrics?mode=create-itinerary");
   };
 
   // Check if user should be redirected to initial questionnaire
   useEffect(() => {
-    if (isAuthenticated && !questionnaireSaved && itinerary.itinerary_id === null && !hasInitializedFromSessionData) {
-      // Check if we came from recommendations page (create itinerary button)
-      const fromCreateItineraryBtn = sessionStorage.getItem('navigate_from_recommendations');
+    if (isAuthenticated && !questionnaireSaved && itinerary.itinerary_id === null) {
+      // Check if we came from recommendations page and don't have questionnaire data
       const savedData = sessionStorage.getItem('itinerary_questionnaire_data');
+      const tempData = sessionStorage.getItem('tempDestinationData');
+      
+      // Check for temp create itinerary data first (from destination detail navigation back)
+      const tempCreateItineraryData = sessionStorage.getItem('tempCreateItineraryData');
+      if (tempCreateItineraryData && !savedData) {
+        try {
+          const data = JSON.parse(tempCreateItineraryData);
+          if (data.currentItineraryState?.itinerary_id) {
+            console.log('Restoring from temp create itinerary data...');
+            setItinerary(data.currentItineraryState);
+            setQuestionnaireSaved(true);
 
-      if (!savedData && fromCreateItineraryBtn === 'true') {
-        // Clear the flag after using it
+            // Restore recommendations if available
+            if (data.currentDayRecommendations && data.showingRecommendationsForDay) {
+              setCurrentDayRecommendations(data.currentDayRecommendations);
+              setShowingRecommendationsForDay(data.showingRecommendationsForDay);
+            }
+
+            // Restore sort preference
+            if (data.sortBy) {
+              setSortBy(data.sortBy);
+            }
+
+            // Clean up temp data
+            sessionStorage.removeItem('tempCreateItineraryData');
+            sessionStorage.removeItem('tempCreateItineraryDataTimestamp');
+            return;
+          }
+        } catch (error) {
+          console.error('Error restoring from temp create itinerary data:', error);
+          sessionStorage.removeItem('tempCreateItineraryData');
+          sessionStorage.removeItem('tempCreateItineraryDataTimestamp');
+        }
+      }
+
+      // If we have old temp data, try to restore from it (backward compatibility)
+      if (tempData && !savedData) {
+        try {
+          const data = JSON.parse(tempData);
+          if (data.currentItineraryState?.itinerary_id) {
+            console.log('Restoring from legacy temp data...');
+            setItinerary(data.currentItineraryState);
+            setQuestionnaireSaved(true);
+
+            // Restore recommendations if available
+            if (data.currentDayRecommendations && data.showingRecommendationsForDay) {
+              setCurrentDayRecommendations(data.currentDayRecommendations);
+              setShowingRecommendationsForDay(data.showingRecommendationsForDay);
+            }
+
+            // Restore sort preference
+            if (data.sortBy) {
+              setSortBy(data.sortBy);
+            }
+
+            // Clean up temp data
+            sessionStorage.removeItem('tempDestinationData');
+            sessionStorage.removeItem('tempDestinationDataTimestamp');
+            return;
+          }
+        } catch (error) {
+          console.error('Error restoring from legacy temp data:', error);
+          sessionStorage.removeItem('tempDestinationData');
+          sessionStorage.removeItem('tempDestinationDataTimestamp');
+        }
+      }
+
+      // Check if we're coming from recommendations and have existing questionnaire data
+      const fromRecommendations = sessionStorage.getItem('navigate_from_recommendations');
+
+      if (fromRecommendations) {
+        // Clean up the flag
         sessionStorage.removeItem('navigate_from_recommendations');
-        // Use immediate navigation without delay
+
+        // Try to get existing questionnaire data from the API instead of forcing temp questionnaire
+        authAPI.getQuestionnaire().then(existingData => {
+          if (existingData && existingData.travel_month && existingData.start_location) {
+            // Create itinerary data from existing questionnaire
+            const questionnaireData = {
+              travel_month: existingData.travel_month,
+              no_of_people: existingData.no_of_people,
+              start_location: existingData.start_location
+            };
+
+            // Store as if it came from questionnaire-metrics
+            sessionStorage.setItem('itinerary_questionnaire_data', JSON.stringify(questionnaireData));
+
+            console.log('Using existing questionnaire data for itinerary creation:', questionnaireData);
+
+            // Trigger the itinerary creation directly
+            setItinerary(prev => ({
+              ...prev,
+              travel_month: questionnaireData.travel_month,
+              no_of_people: questionnaireData.no_of_people,
+              start_location: questionnaireData.start_location
+            }));
+
+            createItinerary(questionnaireData);
+            setQuestionnaireSaved(true);
+            sessionStorage.removeItem('itinerary_questionnaire_data');
+          } else if (!hasNavigatedToQuestionnaire) {
+            // Only redirect to questionnaire if we don't have existing data
+            setHasNavigatedToQuestionnaire(true);
+            handleInitialQuestionnaire();
+          }
+        }).catch(error => {
+          console.log('No existing questionnaire data found, will need to redirect to questionnaire');
+          if (!hasNavigatedToQuestionnaire) {
+            setHasNavigatedToQuestionnaire(true);
+            handleInitialQuestionnaire();
+          }
+        });
+      } else if (!savedData && !hasNavigatedToQuestionnaire) {
+        // Normal flow for users not coming from recommendations
+        setHasNavigatedToQuestionnaire(true);
         handleInitialQuestionnaire();
-      } else {
-        // If we have existing data or didn't come from recommendations, don't show questionnaire
-        setHasInitializedFromSessionData(true);
       }
     }
-  }, [isAuthenticated, questionnaireSaved, itinerary.itinerary_id, hasInitializedFromSessionData]);
-
-  // Handle browser back button - simplified to prevent navigation loops
-  useEffect(() => {
-    const handlePopState = () => {
-      // Handle browser back button navigation
-      // Check if we have temp data to restore state
-      const tempData = sessionStorage.getItem('tempDestinationData');
-      if (tempData && questionnaireSaved) {
-        console.log('Back button pressed, attempting to restore state from temp data');
-        // State will be restored by existing useEffect
-      }
-    };
-
-    const handleBeforeUnload = () => {
-      // Clean up session storage when leaving the page
-      if (!questionnaireSaved && itinerary.itinerary_id === null) {
-        sessionStorage.removeItem('tempQuestionnaireData');
-        sessionStorage.removeItem('itinerary_questionnaire_data');
-      }
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, [questionnaireSaved, itinerary.itinerary_id]);
+  }, [isAuthenticated, questionnaireSaved, itinerary.itinerary_id, hasNavigatedToQuestionnaire]);
 
   // Handler for day-specific questionnaire (step 1 - interests)
   const handleDayQuestionnaire = (dayNumber: number) => {
@@ -217,15 +267,9 @@ const CreateItinerary: React.FC = () => {
 
   // Handler for interests questionnaire completion
   const handleInterestsComplete = (recommendations: Destination[]) => {
-    if (showingInterestsForDay) {
-      // Mark this day as having completed the questionnaire
-      setCompletedQuestionnaireDays(prev => new Set([...prev, showingInterestsForDay]));
-    }
     setCurrentDayRecommendations(recommendations);
     setShowingRecommendationsForDay(showingInterestsForDay);
     setShowingInterestsForDay(null);
-    // Show cancel selection button after returning from questionnaire
-    setShowCancelSelection(true);
   };
 
   // Handler for interests questionnaire cancellation
@@ -250,233 +294,15 @@ const CreateItinerary: React.FC = () => {
           // Create itinerary in backend
           createItinerary(data);
           setQuestionnaireSaved(true);
-          setHasInitializedFromSessionData(true);
           sessionStorage.removeItem('itinerary_questionnaire_data');
         } catch (error) {
           console.error('Error parsing questionnaire data:', error);
         }
-      } else {
-        // Mark as initialized even if no data found
-        setHasInitializedFromSessionData(true);
       }
     };
 
     checkQuestionnaireCompletion();
-  }, [questionnaireSaved]);
-
-  // Restore detailed itinerary state when returning from destination details
-  useEffect(() => {
-    const restoreItineraryState = () => {
-      const tempData = sessionStorage.getItem('tempDestinationData');
-      const cacheTimestamp = sessionStorage.getItem('tempDestinationDataTimestamp');
-
-      if (tempData && questionnaireSaved) {
-        try {
-          const data = JSON.parse(tempData);
-          const timestamp = cacheTimestamp ? parseInt(cacheTimestamp) : 0;
-          const now = Date.now();
-          const maxAge = 30 * 60 * 1000; // 30 minutes cache
-
-          // Check if cache is still valid
-          if (now - timestamp > maxAge) {
-            console.log('Cache expired, not restoring state');
-            sessionStorage.removeItem('tempDestinationData');
-            sessionStorage.removeItem('tempDestinationDataTimestamp');
-            return;
-          }
-
-          console.log('Restoring itinerary state from cache...');
-
-          // Restore the full itinerary state
-          if (data.currentItineraryState && data.currentItineraryState.itinerary_id) {
-            setItinerary(data.currentItineraryState);
-            console.log('Restored itinerary state');
-          }
-
-          // Restore recommendations and UI state
-          if (data.currentDayRecommendations && data.currentDayRecommendations.length > 0) {
-            setCurrentDayRecommendations(data.currentDayRecommendations);
-            if (data.showingRecommendationsForDay) {
-              setShowingRecommendationsForDay(data.showingRecommendationsForDay);
-            }
-            console.log('Restored recommendations state');
-          }
-
-          // Restore selection state
-          if (data.selectedDestinationForDay && Object.keys(data.selectedDestinationForDay).length > 0) {
-            setSelectedDestinationForDay(data.selectedDestinationForDay);
-
-            // Find the latest selected day
-            const selectedDays = Object.keys(data.selectedDestinationForDay).map(Number);
-            if (selectedDays.length > 0) {
-              setLatestSelectedDay(Math.max(...selectedDays));
-            }
-            console.log('Restored selection state');
-          }
-
-          // Restore questionnaire completion state
-          if (data.completedQuestionnaireDays && Array.isArray(data.completedQuestionnaireDays)) {
-            setCompletedQuestionnaireDays(new Set(data.completedQuestionnaireDays));
-            console.log('Restored questionnaire completion state');
-          }
-
-          // Restore filter state
-          if (data.sortBy) {
-            setSortBy(data.sortBy);
-          }
-          if (data.budgetFilter) {
-            setBudgetFilter(data.budgetFilter);
-          }
-
-          // Clean up the temp data after using it
-          sessionStorage.removeItem('tempDestinationData');
-          sessionStorage.removeItem('tempDestinationDataTimestamp');
-          console.log('State restoration completed and cache cleared');
-
-        } catch (error) {
-          console.error('Error restoring itinerary state:', error);
-          sessionStorage.removeItem('tempDestinationData');
-          sessionStorage.removeItem('tempDestinationDataTimestamp');
-        }
-      }
-    };
-
-    // Only restore state if questionnaire is saved (itinerary is active)
-    if (questionnaireSaved && hasInitializedFromSessionData) {
-      // Delay restoration to ensure all other state is properly initialized
-      setTimeout(restoreItineraryState, 100);
-    }
-
-    // Also try to restore on mount if we have temp data
-    if (!questionnaireSaved && !hasInitializedFromSessionData) {
-      const tempData = sessionStorage.getItem('tempDestinationData');
-      if (tempData) {
-        // Try immediate restoration for mount-time scenarios
-        setTimeout(restoreItineraryState, 500);
-      }
-    }
-  }, [questionnaireSaved, hasInitializedFromSessionData]);
-
-  // Handle immediate state restoration on component mount and navigation
-  useEffect(() => {
-    const immediateRestore = () => {
-      const tempData = sessionStorage.getItem('tempDestinationData');
-      if (tempData && isAuthenticated) {
-        console.log('Attempting immediate state restoration on mount...', tempData.substring(0, 100));
-
-        try {
-          const data = JSON.parse(tempData);
-
-          // If we have itinerary data, restore it immediately
-          if (data.currentItineraryState && data.currentItineraryState.itinerary_id) {
-            console.log('Restoring itinerary state on mount - ID:', data.currentItineraryState.itinerary_id);
-
-            // Set questionnaireSaved FIRST to prevent showing empty state
-            setQuestionnaireSaved(true);
-            setHasInitializedFromSessionData(true);
-
-            // Then restore all other states
-            setItinerary(data.currentItineraryState);
-
-            // Restore selection state
-            if (data.selectedDestinationForDay) {
-              setSelectedDestinationForDay(data.selectedDestinationForDay);
-              const selectedDays = Object.keys(data.selectedDestinationForDay).map(Number);
-              if (selectedDays.length > 0) {
-                setLatestSelectedDay(Math.max(...selectedDays));
-              }
-            }
-
-            // Restore questionnaire completion state
-            if (data.completedQuestionnaireDays) {
-              setCompletedQuestionnaireDays(new Set(data.completedQuestionnaireDays));
-            }
-
-            // Restore recommendations and UI state
-            if (data.currentDayRecommendations && data.currentDayRecommendations.length > 0) {
-              setCurrentDayRecommendations(data.currentDayRecommendations);
-              if (data.showingRecommendationsForDay) {
-                setShowingRecommendationsForDay(data.showingRecommendationsForDay);
-              }
-            }
-
-            // Restore filter state
-            if (data.sortBy) {
-              setSortBy(data.sortBy);
-            }
-            if (data.budgetFilter) {
-              setBudgetFilter(data.budgetFilter);
-            }
-
-            // Clean up after successful restoration
-            sessionStorage.removeItem('tempDestinationData');
-            sessionStorage.removeItem('tempDestinationDataTimestamp');
-            console.log('Complete state restoration finished and cache cleared');
-          }
-        } catch (error) {
-          console.error('Error in immediate restoration:', error);
-          // Clean up corrupted data
-          sessionStorage.removeItem('tempDestinationData');
-          sessionStorage.removeItem('tempDestinationDataTimestamp');
-        }
-      }
-    };
-
-    // Try immediate restoration on component mount
-    if (isAuthenticated) {
-      immediateRestore();
-    }
-  }, [isAuthenticated]);
-
-  // Also try restoration when the page becomes visible (for browser back button)
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        const tempData = sessionStorage.getItem('tempDestinationData');
-        if (tempData && isAuthenticated) {
-          console.log('Page became visible, attempting restoration...');
-          try {
-            const data = JSON.parse(tempData);
-            if (data.currentItineraryState && data.currentItineraryState.itinerary_id) {
-              console.log('Visibility restoration: restoring state');
-              setQuestionnaireSaved(true);
-              setHasInitializedFromSessionData(true);
-              setItinerary(data.currentItineraryState);
-
-              // Restore other states if available
-              if (data.selectedDestinationForDay) {
-                setSelectedDestinationForDay(data.selectedDestinationForDay);
-              }
-              if (data.completedQuestionnaireDays) {
-                setCompletedQuestionnaireDays(new Set(data.completedQuestionnaireDays));
-              }
-              if (data.currentDayRecommendations && data.currentDayRecommendations.length > 0) {
-                setCurrentDayRecommendations(data.currentDayRecommendations);
-                if (data.showingRecommendationsForDay) {
-                  setShowingRecommendationsForDay(data.showingRecommendationsForDay);
-                }
-              }
-            }
-          } catch (error) {
-            console.error('Error in visibility restoration:', error);
-          }
-        }
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [isAuthenticated]);
-
-  // Track scroll position for floating filter
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrollY(window.scrollY);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [questionnaireSaved, isAuthenticated]); // Add isAuthenticated to trigger when auth state changes
 
   // Create itinerary in backend
   const createItinerary = async (data: QuestionnaireSaveData) => {
@@ -517,37 +343,48 @@ const CreateItinerary: React.FC = () => {
     }
   };
 
-  // Process pending backend calls when user navigates to next day or generates plan
-  const processPendingBackendCalls = async () => {
-    if (pendingBackendCalls.length === 0) return;
+  // Select destination for a day
+  const selectDestination = async (destination: Destination) => {
+    if (!itinerary.itinerary_id || !showingRecommendationsForDay) return;
 
     try {
       setIsLoading(true);
       
-      for (const call of pendingBackendCalls) {
-        if (call.type === 'assign_destination') {
-          await callWithLoading(
-            async () => {
-              return await authAPI.assignDestinationToDay(
-                call.itinerary_id,
-                call.day_number,
-                {
-                  destination_id: call.destination_id!,
-                  estimated_budget: call.estimated_budget!
-                }
-              );
-            },
-            'assign-destination',
-            `Adding destination to Day ${call.day_number}...`
+      await callWithLoading(
+        async () => {
+          return await authAPI.assignDestinationToDay(
+            itinerary.itinerary_id!,
+            showingRecommendationsForDay,
+            {
+              destination_id: destination.destination_id,
+              estimated_budget: destination.estimated_budget
+            }
           );
-        }
-      }
+        },
+        'assign-destination',
+        'Adding destination to your itinerary...'
+      );
 
-      // Clear pending calls after successful processing
-      setPendingBackendCalls([]);
+      // Update local state
+      setItinerary(prev => ({
+        ...prev,
+        days: {
+          ...prev.days,
+          [showingRecommendationsForDay]: {
+            destination_id: destination.destination_id,
+            destination_name: destination.name,
+            destination_image: destination.thumbnail_img,
+            estimated_budget: destination.estimated_budget
+          }
+        }
+      }));
+
+      // Clear recommendations view
+      setCurrentDayRecommendations([]);
+      setShowingRecommendationsForDay(null);
 
     } catch (error) {
-      console.error('Error processing pending backend calls:', error);
+      console.error('Error assigning destination:', error);
       if (error instanceof Error) {
         setError(error.message);
       }
@@ -556,147 +393,7 @@ const CreateItinerary: React.FC = () => {
     }
   };
 
-  // Handle drag end for destination cards
-  const handleDragEnd = (result: DropResult) => {
-    try {
-      const { source, destination, draggableId } = result;
-
-      // If dropped outside a valid droppable area, do nothing
-      if (!destination) {
-        return;
-      }
-
-      // If dropped in the same place, do nothing
-      if (source.droppableId === destination.droppableId && source.index === destination.index) {
-        return;
-      }
-
-      // If dropped on a day container
-      if (destination.droppableId.startsWith('day-')) {
-        const dayNumber = parseInt(destination.droppableId.split('-')[1]);
-        const destinationCardId = parseInt(draggableId.split('-')[1]);
-        const destinationCard = currentDayRecommendations.find(d => d.destination_id === destinationCardId);
-
-        if (destinationCard && itinerary.itinerary_id) {
-          // Update local state immediately for better UX
-          setItinerary(prev => ({
-            ...prev,
-            days: {
-              ...prev.days,
-              [dayNumber]: {
-                destination_id: destinationCard.destination_id,
-                destination_name: destinationCard.name,
-                destination_image: destinationCard.thumbnail_img,
-                estimated_budget: destinationCard.estimated_budget
-              }
-            }
-          }));
-
-          // Store selected destination for this day
-          setSelectedDestinationForDay(prev => ({
-            ...prev,
-            [dayNumber]: destinationCard
-          }));
-
-          // Track this as the latest selected day
-          setLatestSelectedDay(dayNumber);
-
-          // Hide cancel selection button when destination is selected
-          setShowCancelSelection(false);
-
-          // Add to pending backend calls instead of calling immediately
-          setPendingBackendCalls(prev => [
-            ...prev.filter(call => !(call.type === 'assign_destination' && call.day_number === dayNumber)),
-            {
-              type: 'assign_destination',
-              itinerary_id: itinerary.itinerary_id!,
-              day_number: dayNumber,
-              destination_id: destinationCard.destination_id,
-              estimated_budget: destinationCard.estimated_budget
-            }
-          ]);
-
-          // Keep the original recommendations but mark this one as selected
-          // Don't modify currentDayRecommendations to preserve the list for retraction
-        }
-      }
-    } catch (error) {
-      console.error('Error in drag and drop handling:', error);
-      // Gracefully handle any drag and drop errors to prevent invariant violations
-    }
-  };
-
-  // Handle container click for retraction
-  const handleContainerRetraction = (dayNumber: number) => {
-    const dayData = itinerary.days[dayNumber];
-    if (!dayData.destination_id) return;
-
-    // Check if this day can be retracted based on user requirements
-    // Only allow retraction if:
-    // 1. It's the latest selected day, OR
-    // 2. It's Day 1 and no other days are locked, OR  
-    // 3. It's Day 4 and we're in cancel selection mode
-    const isLatestSelected = latestSelectedDay === dayNumber;
-    const isDay1 = dayNumber === 1;
-    const isDay4 = dayNumber === 4;
-    const hasLockedDays = completedQuestionnaireDays.size > 0;
-    
-    // Determine if retraction is allowed
-    const canRetract = isLatestSelected || 
-                      (isDay1 && !hasLockedDays) || 
-                      (isDay4 && showCancelSelection);
-
-    if (!canRetract) {
-      // Show error or just return silently
-      return;
-    }
-
-    // Find the selected destination
-    const selectedDestination = selectedDestinationForDay[dayNumber];
-    if (!selectedDestination) return;
-
-    // Clear the day's selection
-    setItinerary(prev => ({
-      ...prev,
-      days: {
-        ...prev.days,
-        [dayNumber]: {
-          destination_id: null,
-          destination_name: null,
-          destination_image: null,
-          estimated_budget: null
-        }
-      }
-    }));
-
-    // Remove from selected destinations
-    setSelectedDestinationForDay(prev => {
-      const updated = { ...prev };
-      delete updated[dayNumber];
-      return updated;
-    });
-
-    // Update latest selected day to the previous one
-    const remainingDays = Object.keys(selectedDestinationForDay)
-      .map(Number)
-      .filter(day => day !== dayNumber);
-    setLatestSelectedDay(remainingDays.length > 0 ? Math.max(...remainingDays) : null);
-
-    // Remove from pending backend calls
-    setPendingBackendCalls(prev =>
-      prev.filter(call => !(call.type === 'assign_destination' && call.day_number === dayNumber))
-    );
-
-    // After retraction, show the recommendations for this day if they exist
-    if (currentDayRecommendations.length > 0) {
-      setShowingRecommendationsForDay(dayNumber);
-    } else {
-      // If no recommendations exist, trigger the questionnaire to get new ones
-      handleDayQuestionnaire(dayNumber);
-    }
-  };
-
-  // Generate PDF with pending backend calls processing
+  // Generate PDF
   const generatePlan = async () => {
     if (!itinerary.itinerary_id) {
       setError("No itinerary to export");
@@ -704,9 +401,6 @@ const CreateItinerary: React.FC = () => {
     }
 
     try {
-      // Process any pending backend calls first
-      await processPendingBackendCalls();
-
       setIsLoading(true);
       
       const response = await callWithLoading(
@@ -760,45 +454,19 @@ const CreateItinerary: React.FC = () => {
     return null;
   };
 
-  // Handle next day access - process pending calls before showing questionnaire
-  const handleNextDayAccess = async (dayNumber: number) => {
-    if (!itinerary.itinerary_id) {
-      setError("Please complete the initial questionnaire first");
-      return;
+  // Sort recommendations
+  const sortedRecommendations = currentDayRecommendations.slice().sort((a, b) => {
+    switch (sortBy) {
+      case "distance":
+        return parseFloat(a.distance.split(' ')[0]) - parseFloat(b.distance.split(' ')[0]);
+      case "budget":
+        return a.estimated_budget - b.estimated_budget;
+      case "match_score":
+        return b.match_score - a.match_score;
+      default:
+        return 0;
     }
-
-    // Check if this day can be accessed based on user requirements
-    if (dayNumber > 1) {
-      // For days 2-4, check if the previous day is filled
-      const previousDay = dayNumber - 1;
-      if (!itinerary.days[previousDay]?.destination_id) {
-        setError(`Please complete Day ${previousDay} first`);
-        return;
-      }
-    }
-
-    // Process any pending backend calls before proceeding
-    await processPendingBackendCalls();
-
-    // Show the interests questionnaire for this day
-    handleDayQuestionnaire(dayNumber);
-  };
-
-  // Sort and filter recommendations
-  const sortedRecommendations = currentDayRecommendations
-    .filter(dest => dest.estimated_budget <= budgetFilter)
-    .slice().sort((a, b) => {
-      switch (sortBy) {
-        case "distance":
-          return parseFloat(a.distance.split(' ')[0]) - parseFloat(b.distance.split(' ')[0]);
-        case "budget":
-          return a.estimated_budget - b.estimated_budget;
-        case "match_score":
-          return b.match_score - a.match_score;
-        default:
-          return 0;
-      }
-    });
+  });
 
   // Count selected destinations
   const selectedDestinationsCount = Object.values(itinerary.days).filter(day => day.destination_id).length;
@@ -813,11 +481,11 @@ const CreateItinerary: React.FC = () => {
 
       {/* Main Content */}
       <main className="container iframe-container py-12">
-        {/* Title and Generate Plan Button */}
+        {/* Title */}
         <div className="mb-12">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
             <h1 className="text-4xl font-bold mb-2" style={{ color: 'var(--text-900)' }}>Create Your Travel Plan</h1>
-            <button
+            <button 
               onClick={generatePlan}
               disabled={selectedDestinationsCount === 0 || isLoading}
               className="btn btn-primary btn-lg disabled:opacity-50 disabled:cursor-not-allowed"
@@ -850,469 +518,220 @@ const CreateItinerary: React.FC = () => {
           </div>
         )}
 
-        {/* Drag and Drop Context */}
-        <DragDropContext
-          onDragStart={() => setIsDragging(true)}
-          onDragEnd={(result) => {
-            setIsDragging(false);
-            handleDragEnd(result);
-          }}
-          key={`dnd-context-${itinerary.itinerary_id || 'new'}`}
-        >
-          {/* Travel Plan Containers */}
-          {!showingInterestsForDay && (
-            <div className="mb-12">
-              <div className="flex gap-6 flex-wrap justify-center">
-                {/* Day containers */}
-                {[1, 2, 3, 4].map((dayNum) => {
-                  const dayData = itinerary.days[dayNum];
-                  const isSelected = dayData.destination_id !== null;
-                  const nextDay = getNextAvailableDay();
-                  const hasCompletedQuestionnaire = completedQuestionnaireDays.has(dayNum);
-                  
+        {/* Travel Plan Containers */}
+        {!showingInterestsForDay && (
+          <div className="mb-12">
+            <div className="flex gap-6 flex-wrap justify-center">
+              {/* Day containers */}
+              {[1, 2, 3, 4].map((dayNum) => {
+                const dayData = itinerary.days[dayNum];
+                const isSelected = dayData.destination_id !== null;
+                const nextDay = getNextAvailableDay();
+                const isClickable = questionnaireSaved && (dayNum === nextDay || isSelected);
+                const shouldShow = questionnaireSaved && (dayNum === 1 || itinerary.days[dayNum - 1]?.destination_id !== null);
 
-
-                  // Per user requirements:
-                  // 1. Day 1: Always clickable when empty, locked after questionnaire completion until cancel selection
-                  // 2. Day 2: Appears when Day 1 is filled, clickable when empty, locked after questionnaire completion
-                  // 3. Day 3: Appears when Day 2 is filled, clickable when empty, locked after questionnaire completion  
-                  // 4. Day 4: Appears when Day 3 is filled, clickable when empty, locked after questionnaire completion
-                  // 5. Filled containers: Always clickable for retraction unless previous days are locked
-                  
-                  // Determine if this day should be shown
-                  const shouldShow = questionnaireSaved && (
-                    dayNum === 1 || // Day 1 always shows
-                    (dayNum === 2 && itinerary.days[1]?.destination_id !== null) || // Day 2 shows when Day 1 is filled
-                    (dayNum === 3 && itinerary.days[2]?.destination_id !== null) || // Day 3 shows when Day 2 is filled
-                    (dayNum === 4 && itinerary.days[3]?.destination_id !== null) // Day 4 shows when Day 3 is filled
-                  );
-
-                  // Determine if this day is clickable
-                  const isClickable = questionnaireSaved && shouldShow && (
-                    (isSelected && (
-                      // Allow retraction only for latest selected day, Day 1 (if no locks), or Day 4 (in cancel mode)
-                      latestSelectedDay === dayNum || 
-                      (dayNum === 1 && completedQuestionnaireDays.size === 0) ||
-                      (dayNum === 4 && showCancelSelection)
-                    )) || 
-                    (!isSelected && !hasCompletedQuestionnaire) // Allow empty containers only if questionnaire not completed
-                  );
-                  
-
-
-                  // Don't render containers that shouldn't be shown yet
-                  if (!shouldShow) {
-                    return null;
-                  }
-
-                  return (
-                    <Droppable
-                      key={dayNum}
-                      droppableId={`day-${dayNum}`}
-                      type="DESTINATION"
-                      isDropDisabled={isSelected || !showingRecommendationsForDay}
-                    >
-                      {(provided, snapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.droppableProps}
-                          className={`relative w-64 h-64 rounded-xl border-2 shadow-lg transition-all duration-300 ${
-                            isSelected
-                              ? 'border-gray-300 bg-cover bg-center'
-                              : `border-gray-300 bg-gray-100 hover:border-cyan-400 hover:shadow-xl ${
-                                  snapshot.isDraggingOver ? 'border-cyan-500 bg-cyan-50' : ''
-                                }`
-                          } ${(
-                            (isSelected && !showingRecommendationsForDay) ||
-                            (!isSelected && isClickable && !showingRecommendationsForDay)
-                          ) ? 'cursor-pointer' : (shouldShow ? 'cursor-not-allowed' : 'hidden')}`}
-                          style={isSelected && dayData.destination_image ? {
-                            backgroundImage: `url(https://ikmangamanlk-production.up.railway.app${dayData.destination_image})`,
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'center'
-                          } : {}}
-                          onClick={() => {
-                            if (isLoading || isDragging) return;
-
-                            // Disable clicking on containers when recommendations are showing
-                            if (showingRecommendationsForDay) return;
-
-                            if (isSelected) {
-                              // Allow retraction of any selected destination
-                              handleContainerRetraction(dayNum);
-                            } else if (!isSelected && isClickable) {
-                              // Show questionnaire for this day
-                              handleNextDayAccess(dayNum);
-                            }
-                          }}
-                        >
-                          {/* Day overlay for selected destinations */}
-                          {isSelected && (
-                            <div className="absolute inset-0 bg-black bg-opacity-40 rounded-xl flex flex-col justify-end p-6">
-                              <div className="text-white">
-                                <div className="text-xl font-medium mb-1">Day {dayNum}</div>
-                                <div className="text-2xl font-bold">{dayData.destination_name}</div>
-                                {!showingRecommendationsForDay && (
-                                  <div className="text-sm text-gray-300 mt-2">Tap to unselect</div>
-                                )}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Content for empty containers */}
-                          {!isSelected && (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center">
-                              <Plus
-                                size={48}
-                                className={`${isClickable ? 'text-gray-400' : 'text-gray-300'} transition-colors duration-200 mb-3 ${
-                                  snapshot.isDraggingOver ? 'text-cyan-500' : ''
-                                }`}
-                              />
-                              <div className="text-xl font-bold text-gray-600 mb-2">
-                                Day {dayNum}
-                              </div>
-                              <div className={`text-sm font-medium ${
-                                isClickable ? 'text-gray-500' : 'text-gray-400'
-                              } transition-colors duration-200`}>
-                                {showingRecommendationsForDay
-                                  ? "Drag Your Destination Here"
-                                  : !shouldShow
-                                    ? "Complete previous day first"
-                                    : hasCompletedQuestionnaire
-                                      ? "Selection locked"
-                                      : "Click to Select Interests"
-                                }
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Drop indicator - Enhanced for better visibility */}
-                          {snapshot.isDraggingOver && !isSelected && showingRecommendationsForDay && (
-                            <div className="absolute inset-0 border-4 border-dashed border-cyan-500 rounded-xl bg-cyan-100 bg-opacity-80 flex items-center justify-center z-10">
-                              <div className="text-cyan-700 font-bold text-lg bg-white px-4 py-2 rounded-lg shadow-lg">
-                                Drop here for Day {dayNum}
-                              </div>
-                            </div>
-                          )}
-
-                          {provided.placeholder}
-                        </div>
-                      )}
-                    </Droppable>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Recommendations Section */}
-          {!showingInterestsForDay && showingRecommendationsForDay && currentDayRecommendations.length > 0 && (
-            <div className="flex flex-col lg:flex-row gap-8">
-              {/* Sidebar Filter */}
-              <div className="lg:w-1/4 filter-container">
-                <div 
-                  className="card p-6 sticky-filter" 
-                  style={{
-                    background: 'var(--surface)'
-                  }}
-                >
-                  <div
-                    className="flex items-center justify-between cursor-pointer mb-4"
-                    onClick={() => setShowFilters(!showFilters)}
-                  >
-                    <div className="flex items-center gap-2">
-                      <FiFilter className="text-xl" style={{ color: 'var(--text-900)' }} />
-                      <h2 className="text-lg font-semibold" style={{ color: 'var(--text-900)' }}>Filters</h2>
-                    </div>
-                    {showFilters ? (
-                      <FiChevronUp style={{ color: 'var(--text-600)' }} />
-                    ) : (
-                      <FiChevronDown style={{ color: 'var(--text-600)' }} />
-                    )}
-                  </div>
-
-                  {showFilters && (
-                    <div className="space-y-6">
-                      {/* Budget Filter */}
-                      <div>
-                        <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-900)' }}>
-                          Budget: LKR {budgetFilter.toLocaleString()}
-                        </label>
-                        <input
-                          type="range"
-                          min="5000"
-                          max="500000"
-                          step="5000"
-                          value={budgetFilter}
-                          onChange={(e) => setBudgetFilter(Number(e.target.value))}
-                          className="w-full h-2 bg-gray-400 rounded-lg appearance-none cursor-pointer slider"
-                          style={{
-                            background: `linear-gradient(to right, #6b7280 0%, #6b7280 ${((budgetFilter - 5000) / (500000 - 5000)) * 100}%, #d1d5db ${((budgetFilter - 5000) / (500000 - 5000)) * 100}%, #d1d5db 100%)`,
-                          }}
-                        />
-                        <div className="flex justify-between text-xs mt-1" style={{ color: 'var(--text-600)' }}>
-                          <span>LKR 5,000</span>
-                          <span>LKR 500,000</span>
-                        </div>
-                      </div>
-
-                      {/* Sort Order Filter */}
-                      <div>
-                        <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-900)' }}>
-                          Sort by
-                        </label>
-                        <select
-                          value={sortBy}
-                          onChange={(e) => setSortBy(e.target.value)}
-                          className="w-full px-4 py-3 text-sm bg-white border border-gray-200 rounded-lg hover:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all duration-200"
-                          style={{
-                            color: 'var(--text-900)',
-                            backgroundColor: 'var(--surface)',
-                            borderColor: '#E2E8F0',
-                            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-                          }}
-                        >
-                          <option value="distance">Distance: Nearest first</option>
-                          <option value="budget">Budget: Low → High</option>
-                          <option value="match_score">Best Match</option>
-                        </select>
-                        {/* Sort indicator */}
-                        <div className="mt-2 text-xs" style={{ color: 'var(--text-600)' }}>
-                          {sortBy === 'match_score' && 'Showing most relevant destinations first'}
-                          {sortBy === 'budget' && 'Showing cheapest destinations first'}
-                          {sortBy === 'distance' && 'Showing nearest destinations first'}
-                        </div>
-                      </div>
-
-                      {/* Reset Button */}
-                      <button
-                        onClick={() => {
-                          setBudgetFilter(500000);
-                          setSortBy("distance");
-                        }}
-                        className="w-full btn btn-secondary btn-sm"
-                      >
-                        Reset Filters
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Content Section */}
-              <div className="lg:w-3/4">
-                <div className="card p-8" style={{ background: 'var(--surface)' }}>
-                  <div className="mb-6">
-                    <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                      Available Destinations
-                    </h2>
-                    <p className="text-gray-600">
-                      Found {currentDayRecommendations.filter(dest => dest.estimated_budget <= budgetFilter).length} destinations for Day {showingRecommendationsForDay}
-                    </p>
-                  </div>
-
-              {/* Check if any destination from current recommendations is selected */}
-              {(() => {
-                const selectedFromCurrent = sortedRecommendations.find(dest =>
-                  Object.values(selectedDestinationForDay).some(
-                    selected => selected?.destination_id === dest.destination_id
-                  )
-                );
-
-                if (selectedFromCurrent) {
-                  // Show "Already Selected" message in a container-like display
-                  return (
-                    <div className="flex justify-center">
-                      <div className="w-64 h-64 rounded-xl border-2 border-gray-300 bg-gray-100 flex flex-col items-center justify-center shadow-lg">
-                        <div className="text-gray-500 text-xl font-bold mb-4">Already Selected</div>
-                        <div className="text-gray-600 text-lg">{selectedFromCurrent.name}</div>
-                        <div className="text-sm text-gray-500 mt-2 text-center px-4">
-                          You can unselect by tapping the latest filled day container above
-                        </div>
-                      </div>
-                    </div>
-                  );
+                // Don't render containers that shouldn't be shown yet
+                if (!shouldShow) {
+                  return null;
                 }
 
-                // Show all available destinations
                 return (
-                  <Droppable droppableId={`recommendations-list-day-${showingRecommendationsForDay}`} type="DESTINATION">
-                    {(provided) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8"
-                      >
-                        {sortedRecommendations.map((destination, index) => (
-                          <Draggable
-                            key={destination.destination_id}
-                            draggableId={`destination-${destination.destination_id}`}
-                            index={index}
-                          >
-                            {(provided, snapshot) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                className={`bg-white rounded-xl overflow-hidden shadow-lg transition-all duration-300 ${
-                                  snapshot.isDragging
-                                    ? 'shadow-2xl ring-2 ring-cyan-500 transform scale-105'
-                                    : 'hover:shadow-xl hover:transform hover:scale-102'
-                                }`}
-                              >
-                                {/* Destination Image with Price Tag */}
-                                <div className="h-48 bg-gray-200 relative">
-                                  {destination.thumbnail_img ? (
-                                    <img
-                                      src={`https://ikmangamanlk-production.up.railway.app${destination.thumbnail_img}`}
-                                      alt={destination.name}
-                                      className="w-full h-full object-cover"
-                                      onError={(e) => {
-                                        e.currentTarget.style.display = "none";
-                                        e.currentTarget.parentElement
-                                          ?.querySelector(".fallback-content")
-                                          ?.classList.remove("hidden");
-                                      }}
-                                    />
-                                  ) : null}
-                                  <div
-                                    className={`fallback-content absolute inset-0 flex flex-col items-center justify-center text-center p-4 bg-gray-200 ${
-                                      destination.thumbnail_img ? "hidden" : ""
-                                    }`}
-                                  >
-                                    <div className="text-4xl mb-2">🏞️</div>
-                                    <div className="text-sm font-medium text-gray-600">
-                                      {destination.name}
-                                    </div>
-                                  </div>
-
-                                  {/* Price Tag */}
-                                  <div className="absolute top-4 right-4 bg-cyan-600 text-white px-3 py-1 rounded-lg font-bold">
-                                    LKR {destination.estimated_budget.toLocaleString()}
-                                  </div>
-
-                                  {/* Drag indicator */}
-                                  {snapshot.isDragging && (
-                                    <div className="absolute inset-0 bg-cyan-500 bg-opacity-20 flex items-center justify-center">
-                                      <div className="text-white font-bold text-lg drop-shadow-lg">
-                                        Drag me to a day!
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-
-                                {/* Content */}
-                                <div className="p-6">
-                                  <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                                    {destination.name}
-                                  </h3>
-
-                                  <div className="text-gray-600 mb-4">
-                                    {destination.rating_label} ({destination.distance}, {destination.travel_time})
-                                  </div>
-
-                                  <div className="mb-6">
-                                    <div className="flex justify-between items-center mb-2">
-                                      <span className="text-gray-600">Match Score</span>
-                                      <span className="font-bold text-lg">{Math.round(destination.match_score * 100)}%</span>
-                                    </div>
-                                    <div className="w-full bg-gray-200 rounded-full h-2">
-                                      <div
-                                        className="bg-cyan-500 h-2 rounded-full transition-all duration-300"
-                                        style={{ width: `${destination.match_score * 100}%` }}
-                                      ></div>
-                                    </div>
-                                  </div>
-
-                                  <button
-                                    onClick={() => {
-                                      // Store comprehensive itinerary state for destination details
-                                      const tempData = {
-                                        itinerary_id: itinerary.itinerary_id,
-                                        day_number: showingRecommendationsForDay,
-                                        travel_month: itinerary.travel_month,
-                                        no_of_people: itinerary.no_of_people,
-                                        start_location: itinerary.start_location,
-                                        currentItineraryState: itinerary,
-                                        currentDayRecommendations: currentDayRecommendations,
-                                        showingRecommendationsForDay: showingRecommendationsForDay,
-                                        selectedDestinationForDay: selectedDestinationForDay,
-                                        completedQuestionnaireDays: Array.from(completedQuestionnaireDays),
-                                        questionnaireSaved: questionnaireSaved,
-                                        sortBy: sortBy,
-                                        budgetFilter: budgetFilter
-                                      };
-                                      sessionStorage.setItem('tempDestinationData', JSON.stringify(tempData));
-                                      sessionStorage.setItem('tempDestinationDataTimestamp', Date.now().toString());
-                                      console.log('Stored itinerary state for destination details navigation');
-                                      navigate(`/itinerary/${itinerary.itinerary_id}/day/${showingRecommendationsForDay}/destination/${destination.destination_id}`);
-                                    }}
-                                    className="w-full bg-cyan-600 hover:bg-cyan-700 text-white py-3 px-4 rounded-lg font-bold text-lg transition-colors duration-200"
-                                  >
-                                    View Details
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-                          </Draggable>
-                        ))}
-                        {provided.placeholder}
+                  <div
+                    key={dayNum}
+                    className={`relative w-64 h-64 rounded-xl border-2 shadow-lg transition-all duration-300 ${
+                      isSelected 
+                        ? 'border-gray-300 bg-cover bg-center' 
+                        : 'border-gray-300 bg-gray-100 hover:border-cyan-400 hover:shadow-xl'
+                    } ${isClickable ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}
+                    style={isSelected && dayData.destination_image ? {
+                      backgroundImage: `url(https://ikmangamanlk-production.up.railway.app${dayData.destination_image})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center'
+                    } : {}}
+                    onClick={() => {
+                      if (!isClickable || isLoading) return;
+                      
+                      if (!isSelected && dayNum === nextDay) {
+                        handleDayQuestionnaire(dayNum);
+                      }
+                    }}
+                  >
+                    {/* Day overlay for selected destinations */}
+                    {isSelected && (
+                      <div className="absolute inset-0 bg-black bg-opacity-40 rounded-xl flex flex-col justify-end p-6">
+                        <div className="text-white">
+                          <div className="text-xl font-medium mb-1">Day {dayNum}</div>
+                          <div className="text-2xl font-bold">{dayData.destination_name}</div>
+                        </div>
                       </div>
                     )}
-                  </Droppable>
+
+                    {/* Plus icon for empty containers */}
+                    {!isSelected && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Plus 
+                          size={48} 
+                          className={`${isClickable ? 'text-gray-400' : 'text-gray-300'} transition-colors duration-200`}
+                        />
+                      </div>
+                    )}
+                  </div>
                 );
-              })()}
+              })}
+            </div>
+          </div>
+        )}
 
-                  {/* Cancel Selection - Only show when returning from questionnaire */}
-                  {showCancelSelection && (
-                    <div className="mt-6 text-center">
-                      <button
-                        onClick={() => {
-                          setCurrentDayRecommendations([]);
-                          setShowingRecommendationsForDay(null);
-                          setShowCancelSelection(false);
-
-                          // Per user requirements: Only unlock the current day's questionnaire
-                          // Previous days remain locked
-                          if (showingRecommendationsForDay) {
-                            setCompletedQuestionnaireDays(prev => {
-                              const updated = new Set(prev);
-                              updated.delete(showingRecommendationsForDay);
-                              return updated;
-                            });
-
-                            // Update day container state to allow retaking questionnaire
-                            setDayContainerStates(prev => ({
-                              ...prev,
-                              [showingRecommendationsForDay]: 'unlocked'
-                            }));
-                          }
-                        }}
-                        className="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-3 rounded-lg font-bold text-lg transition-colors duration-200 shadow-lg"
-                      >
-                        Cancel Selection
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Drag Instructions */}
-                  {!sortedRecommendations.some(dest =>
-                    Object.values(selectedDestinationForDay).some(
-                      selected => selected?.destination_id === dest.destination_id
-                    )
-                  ) && (
-                    <div className="mt-6 p-4 bg-cyan-50 rounded-lg border border-cyan-200">
-                      <p className="text-cyan-700 text-center">
-                        <strong>How to select:</strong> Drag destination cards and drop them on day containers above.
-                        Cards will automatically rearrange when you make a selection.
-                      </p>
-                    </div>
-                  )}
-                </div>
+        {/* Recommendations Section */}
+        {!showingInterestsForDay && showingRecommendationsForDay && currentDayRecommendations.length > 0 && (
+          <div className="card p-8" style={{ background: 'var(--surface)' }}>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-3xl font-bold" style={{ color: 'var(--text-900)' }}>
+                Day {showingRecommendationsForDay.toString().padStart(2, '0')}
+              </h2>
+              <div className="flex items-center gap-4">
+                <span className="text-lg font-semibold" style={{ color: 'var(--text-600)' }}>Sort By:</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg font-medium"
+                >
+                  <option value="distance">Distance</option>
+                  <option value="budget">Budget</option>
+                  <option value="match_score">Match Score</option>
+                </select>
               </div>
             </div>
-          )}
-        </DragDropContext>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {sortedRecommendations.map((destination) => (
+                <div
+                  key={destination.destination_id}
+                  className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300"
+                >
+                  {/* Destination Image */}
+                  <div className="h-52 bg-gray-200 relative">
+                    {destination.thumbnail_img ? (
+                      <img
+                        src={`https://ikmangamanlk-production.up.railway.app${destination.thumbnail_img}`}
+                        alt={destination.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                          e.currentTarget.parentElement
+                            ?.querySelector(".fallback-content")
+                            ?.classList.remove("hidden");
+                        }}
+                      />
+                    ) : null}
+                    <div
+                      className={`fallback-content absolute inset-0 flex flex-col items-center justify-center text-center p-4 bg-gray-200 ${
+                        destination.thumbnail_img ? "hidden" : ""
+                      }`}
+                    >
+                      <div className="text-4xl mb-2">🏞️</div>
+                      <div className="text-sm font-medium text-gray-600">
+                        {destination.name}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">
+                      {destination.name}
+                    </h3>
+                    
+                    <div className="space-y-2 mb-4">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Budget:</span>
+                        <span className="font-semibold">LKR {destination.estimated_budget.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Rating:</span>
+                        <span className={`font-semibold ${
+                          destination.rating_label === 'Very Good' ? 'text-green-600' :
+                          destination.rating_label === 'Good' ? 'text-blue-600' : 'text-yellow-600'
+                        }`}>
+                          {destination.rating_label} ({destination.distance}, {destination.travel_time})
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Match Score:</span>
+                        <span className="font-semibold">{Math.round(destination.match_score * 100)}%</span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <button
+                        onClick={() => selectDestination(destination)}
+                        disabled={isLoading}
+                        className="w-full bg-cyan-600 hover:bg-cyan-700 text-white py-2 px-4 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50"
+                      >
+                        Select
+                      </button>
+                      <button
+                        onClick={() => {
+                          // Determine start location based on the day
+                          let tempStartLocation = itinerary.start_location;
+
+                          // For days other than 1, use the previous day's destination name as start location
+                          if (showingRecommendationsForDay > 1) {
+                            const previousDay = showingRecommendationsForDay - 1;
+                            const previousDestinationName = itinerary.days[previousDay]?.destination_name;
+                            if (previousDestinationName) {
+                              tempStartLocation = previousDestinationName;
+                            }
+                          }
+
+                          // Prepare temp questionnaire data for the destination details API
+                          const tempQuestionnaireData = {
+                            destination_id: destination.destination_id,
+                            travel_month: itinerary.travel_month,
+                            no_of_people: itinerary.no_of_people,
+                            start_location: tempStartLocation
+                          };
+
+                          // Store temp questionnaire data for the destination context
+                          sessionStorage.setItem('tempDestinationData', JSON.stringify(tempQuestionnaireData));
+
+                          // Store state for navigation back
+                          const backData = {
+                            currentItineraryState: itinerary,
+                            currentDayRecommendations: currentDayRecommendations,
+                            showingRecommendationsForDay: showingRecommendationsForDay,
+                            questionnaireSaved: questionnaireSaved,
+                            sortBy: sortBy
+                          };
+                          sessionStorage.setItem('tempCreateItineraryData', JSON.stringify(backData));
+                          sessionStorage.setItem('tempCreateItineraryDataTimestamp', Date.now().toString());
+
+                          navigate(`/itinerary/${itinerary.itinerary_id}/day/${showingRecommendationsForDay}/destination/${destination.destination_id}`);
+                        }}
+                        className="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg font-medium transition-colors duration-200"
+                      >
+                        View Details
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Cancel Selection */}
+            <div className="mt-6 text-center">
+              <button
+                onClick={() => {
+                  setCurrentDayRecommendations([]);
+                  setShowingRecommendationsForDay(null);
+                }}
+                className="text-gray-600 hover:text-gray-800 font-medium"
+              >
+                Cancel Selection
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Initial state message */}
         {!showingInterestsForDay && !questionnaireSaved && (
