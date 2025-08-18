@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { FiChevronDown, FiChevronUp, FiFilter } from "react-icons/fi";
 import { useAuth } from "../contexts/AuthContext";
-import { useApiWithLoading, useRouteLoading } from "../contexts/LoadingContext";
+import { useApiWithLoading } from "../contexts/LoadingContext";
 import { authAPI } from "../lib/api";
 import BookmarkButton from "./BookmarkButton";
 
@@ -123,7 +123,6 @@ const SearchResultsForm = () => {
   const [searchParams] = useSearchParams();
   const { isAuthenticated, handleAuthError } = useAuth();
   const { callWithLoading } = useApiWithLoading();
-  const { startRouteTransition } = useRouteLoading();
   
   const [showFilters, setShowFilters] = useState(true);
   const [selectedAreas, setSelectedAreas] = useState<string[]>([
@@ -203,6 +202,27 @@ const SearchResultsForm = () => {
     // Use the first filter as primary, or fallback to "coastal" for display
     return filters && filters.length > 0 ? filters[0] : "coastal";
   };
+
+  // If a new image is provided for image search, clear any previous image-search caches
+  useEffect(() => {
+    if (searchType === 'image' && imageFile) {
+      try {
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < sessionStorage.length; i++) {
+          const key = sessionStorage.key(i);
+          if (key && (key === 'searchResults_image_latest' || key.startsWith('searchResults_image_'))) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach((k) => sessionStorage.removeItem(k));
+        setCacheRestored(false);
+        setSearchResultsCache(null);
+        setCards([]);
+        setIsLoading(true);
+        setError(null);
+      } catch {}
+    }
+  }, [searchType, imageFile]);
 
   const performSearch = async () => {
     try {
@@ -315,7 +335,7 @@ const SearchResultsForm = () => {
 
   // Immediate cache check for image searches on component mount
   useEffect(() => {
-    if (searchType === 'image' && !cacheRestored) {
+    if (searchType === 'image' && !cacheRestored && !imageFile) {
       const immediateCache = sessionStorage.getItem('searchResults_image_latest');
       if (immediateCache) {
         try {
@@ -339,7 +359,7 @@ const SearchResultsForm = () => {
         }
       }
     }
-  }, [searchType, cacheRestored]);
+  }, [searchType, cacheRestored, imageFile]);
 
   // Try to restore cached results on component mount
   useEffect(() => {
@@ -348,7 +368,7 @@ const SearchResultsForm = () => {
     let cacheKey = '';
 
     // For image searches, always try to find the most recent image search cache
-    if (searchType === 'image') {
+    if (searchType === 'image' && !imageFile) {
       // First, try the generic latest cache key
       const genericKey = 'searchResults_image_latest';
       cachedData = sessionStorage.getItem(genericKey);
@@ -846,8 +866,9 @@ const SearchResultsForm = () => {
                           <button
                             onClick={() => {
                               // Clear temporary questionnaire data when navigating to a different destination
-                              // This ensures each destination starts fresh unless user explicitly uses "Use Questionnaire Metrics"
                               sessionStorage.removeItem('tempQuestionnaireData');
+                              sessionStorage.removeItem('tempQuestionnaireDestinationData');
+                              sessionStorage.removeItem('tempQuestionnaireParams');
                               console.log('Cleared temporary questionnaire data - navigating to new destination');
 
                               // Store current search state for easy back navigation
@@ -860,7 +881,6 @@ const SearchResultsForm = () => {
                               };
                               sessionStorage.setItem('searchBackState', JSON.stringify(backState));
 
-                              startRouteTransition('search-destination');
                               navigate(`/search/destination/${card.id}`, {
                                 state: { fromSearch: true, backState }
                               });

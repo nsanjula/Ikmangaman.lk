@@ -179,7 +179,7 @@ export const DestinationProvider: React.FC<DestinationProviderProps> = ({
             setLoading(false);
             setError(null);
             setProgress(100);
-            finishLoading();
+            finishLoading('destination-data');
 
             // Clean up the temp data after successful use
             sessionStorage.removeItem('tempDestinationData');
@@ -214,7 +214,7 @@ export const DestinationProvider: React.FC<DestinationProviderProps> = ({
             setLoading(false);
             setError(null);
             setProgress(100);
-            finishLoading();
+            finishLoading('destination-data');
 
             // Clean up the temp data after successful use
             sessionStorage.removeItem('tempDestinationData');

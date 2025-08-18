@@ -387,12 +387,11 @@ const QuestionnaireMetrics: React.FC = () => {
 
       console.log('Received temp questionnaire destination data:', destinationWithTempData);
 
-      // Store temp questionnaire completion flag and data for DestinationContext
+      // Navigate based on origin, carrying completion state in navigation state instead of global flags
       if (isSavedPlace) {
-        sessionStorage.setItem('tempQuestionnaireCompleted', 'true');
-        sessionStorage.setItem('tempQuestionnaireDestinationData', JSON.stringify(destinationWithTempData));
-        // Navigate back to saved place destination page which will now show full details
-        navigate(`/saved-destination/${destinationId}`);
+        navigate(`/saved-destination/${destinationId}`, {
+          state: { fromQuestionnaire: true, questionnaireCompleted: true }
+        });
       } else {
         // For search results, store both the API result and the questionnaire data for compatibility
         sessionStorage.setItem('tempQuestionnaireDestinationData', JSON.stringify(destinationWithTempData));

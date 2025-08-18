@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import HeroSection from "../components/sections/HeroSection";
@@ -14,15 +14,21 @@ import { FiSettings } from "react-icons/fi";
 const SearchDestinationDetailContent: React.FC = () => {
   const { destinationData } = useDestination();
   const navigate = useNavigate();
+  const location = useLocation();
   const [showQuestionnaireMetrics, setShowQuestionnaireMetrics] = useState(true);
 
-  // Check if we already completed questionnaire for this destination
+  // On entry to this page (typically via back navigation), clear any temporary questionnaire state
+  // so the basic destination view loads cleanly without getting stuck in loading.
   useEffect(() => {
-    const tempQuestionnaireCompleted = sessionStorage.getItem('tempQuestionnaireData');
-    if (tempQuestionnaireCompleted) {
-      setShowQuestionnaireMetrics(false);
+    const nav = (window.history.state && (window.history.state as any).usr) || location.state || {};
+    if (!nav || !nav.fromQuestionnaire) {
+      sessionStorage.removeItem('tempQuestionnaireData');
+      sessionStorage.removeItem('tempQuestionnaireDestinationData');
+      sessionStorage.removeItem('tempQuestionnaireParams');
     }
-  }, []);
+    // Always allow using questionnaire metrics again from this page
+    setShowQuestionnaireMetrics(true);
+  }, [location.state, destinationData?.destination_id]);
 
   useEffect(() => {
     if (destinationData?.destination_name) {
@@ -91,7 +97,7 @@ const SearchDestinationDetail: React.FC = () => {
 
   return (
     <GoogleMapsProvider>
-      <DestinationProvider destinationId={id}>
+      <DestinationProvider destinationId={parseInt(id || '0', 10)}>
         <SearchDestinationDetailContent />
       </DestinationProvider>
     </GoogleMapsProvider>

@@ -7,7 +7,7 @@ import {
   BackendRecommendation,
 } from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
-import { useApiWithLoading, useRouteLoading } from "../contexts/LoadingContext";
+import { useApiWithLoading } from "../contexts/LoadingContext";
 import BookmarkButton from "./BookmarkButton";
 
 interface RecommendationCard {
@@ -126,7 +126,6 @@ const RecommendationForm = () => {
   const navigate = useNavigate();
   const { isAuthenticated, logout, handleAuthError } = useAuth();
   const { callWithLoading } = useApiWithLoading();
-  const { startRouteTransition } = useRouteLoading();
   const [showFilters, setShowFilters] = useState(true);
   const [budget, setBudget] = useState(500000);
   const [selectedAreas, setSelectedAreas] = useState<string[]>([
@@ -675,7 +674,10 @@ const RecommendationForm = () => {
                         <div className="p-4 pt-0">
                           <button
                             onClick={() => {
-                              startRouteTransition('destination');
+                              // Clear any temporary questionnaire state so destination opens in basic mode
+                              sessionStorage.removeItem('tempQuestionnaireData');
+                              sessionStorage.removeItem('tempQuestionnaireDestinationData');
+                              sessionStorage.removeItem('tempQuestionnaireParams');
                               navigate(`/destination/${card.id}`);
                             }}
                             className="btn btn-primary btn-md w-full"

@@ -15,20 +15,16 @@ const MapSection: React.FC = () => {
   // Check if we're in saved places basic view (before questionnaire metrics)
   const isInSavedPlacesBasicView = useMemo(() => {
     if (!location.pathname.includes('/saved-destination/')) return false;
-    if (location.state?.fromQuestionnaireMetrics) return false;
 
-    // Check if temp questionnaire is currently in progress
-    if (sessionStorage.getItem('tempQuestionnaireCompleted')) return false;
-
-    // Check if this specific destination has completed questionnaire before
-    const destinationId = destinationData?.destination_id;
-    if (destinationId) {
-      const destinationQuestionnaireStatus = sessionStorage.getItem(`tempQuestionnaire_${destinationId}`);
-      return destinationQuestionnaireStatus !== 'completed';
+    // Prefer router state to determine if we arrived here right after completing questionnaire
+    const navState: any = (window.history.state && (window.history.state as any).usr) || location.state || {};
+    if (navState && (navState.fromQuestionnaire || navState.questionnaireCompleted)) {
+      return false; // show full view
     }
 
-    return true; // Default to basic view if no destination ID yet
-  }, [location.pathname, location.state?.fromQuestionnaireMetrics, destinationData?.destination_id]);
+    // Default to basic view when no explicit completion state is present
+    return true;
+  }, [location.pathname, location.state]);
 
   // Memoize starting location calculation
   const startingLocation = useMemo(() => {

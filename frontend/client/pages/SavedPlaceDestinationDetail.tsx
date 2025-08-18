@@ -20,23 +20,14 @@ const SavedPlaceDestinationDetailContent: React.FC = () => {
   // State to track if we're showing the full destination page (with questionnaire metrics) or the basic view
   const [showFullDestination, setShowFullDestination] = useState(false);
 
-  // Check if we're coming from questionnaire metrics (temp questionnaire completed)
+  // Show full destination only when navigated with completion state
   useEffect(() => {
-    const tempQuestionnaireCompleted = sessionStorage.getItem('tempQuestionnaireCompleted');
-    const destinationId = destinationData?.destination_id;
-
-    if (tempQuestionnaireCompleted === 'true' && destinationId) {
+    // React Router state is preferred to detect questionnaire completion for this navigation
+    const nav = (window.history.state && (window.history.state as any).usr) || {};
+    if (nav && nav.fromQuestionnaire && nav.questionnaireCompleted) {
       setShowFullDestination(true);
-      // Store the completion for this specific destination
-      sessionStorage.setItem(`tempQuestionnaire_${destinationId}`, 'completed');
-      // Clear the general flag
-      sessionStorage.removeItem('tempQuestionnaireCompleted');
-    } else if (destinationId) {
-      // Check if this destination has had its questionnaire completed before
-      const destinationQuestionnaireStatus = sessionStorage.getItem(`tempQuestionnaire_${destinationId}`);
-      if (destinationQuestionnaireStatus === 'completed') {
-        setShowFullDestination(true);
-      }
+    } else {
+      setShowFullDestination(false);
     }
   }, [destinationData?.destination_id]);
 
@@ -128,7 +119,7 @@ const SavedPlaceDestinationDetail: React.FC = () => {
 
   return (
     <GoogleMapsProvider>
-      <DestinationProvider destinationId={id}>
+      <DestinationProvider destinationId={parseInt(id || '0', 10)}>
         <SavedPlaceDestinationDetailContent />
       </DestinationProvider>
     </GoogleMapsProvider>
