@@ -26,6 +26,32 @@ export default function SearchBar({ onSearch, className = "" }: SearchBarProps) 
   };
 
   const handleImageSearch = (file: File) => {
+    // Clear any previous image search results when starting a new image search
+    // This ensures fresh results for the new image
+    const clearPreviousImageCaches = () => {
+      // Remove the generic latest cache to prevent loading old results
+      sessionStorage.removeItem('searchResults_image_latest');
+
+      // Optional: Clear very old image-specific caches (keep only recent ones)
+      const keysToRemove = [];
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const key = sessionStorage.key(i);
+        if (key && key.startsWith('searchResults_image_') && key !== 'searchResults_image_latest') {
+          // Check if it's an old timestamped cache (older than 1 hour)
+          const parts = key.split('_');
+          const timestamp = parseInt(parts[parts.length - 1]);
+          if (!isNaN(timestamp) && (Date.now() - timestamp) > 3600000) { // 1 hour
+            keysToRemove.push(key);
+          }
+        }
+      }
+      keysToRemove.forEach(key => sessionStorage.removeItem(key));
+
+      console.log('Cleared previous image search caches for new search');
+    };
+
+    clearPreviousImageCaches();
+
     if (onSearch) {
       onSearch('', 'image', file);
     } else {
