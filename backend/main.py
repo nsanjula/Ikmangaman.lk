@@ -56,18 +56,15 @@ app.include_router(saved_places.router)
 def health():
     return {"ok": True}
 
-# --- One-time WeasyPrint stack version log (to confirm deps on Railway) ---
-@app.on_event("startup")
-def log_pdf_stack_versions():
-    try:
-        import weasyprint, pydyf, tinycss2, cssselect2, PIL
-        logging.getLogger("pdfstack").info(
-            "WeasyPrint %s | pydyf %s | tinycss2 %s | cssselect2 %s | Pillow %s",
-            getattr(weasyprint, "__version__", "?"),
-            getattr(pydyf, "__version__", "?"),
-            getattr(tinycss2, "__version__", "?"),
-            getattr(cssselect2, "__version__", "?"),
-            getattr(PIL, "__version__", "?"),
-        )
-    except Exception as e:
-        logging.getLogger("pdfstack").warning("Could not log PDF stack versions: %r", e)
+# --- Diagnostics: PDF stack versions (hide from /docs) ---
+# @app.get("/__pdf_versions", include_in_schema=False)
+# def pdf_versions():
+#     import weasyprint, pydyf, tinycss2, cssselect2, PIL
+#     return {
+#         "weasyprint": getattr(weasyprint, "__version__", "?"),
+#         "pydyf": getattr(pydyf, "__version__", "?"),
+#         "tinycss2": getattr(tinycss2, "__version__", "?"),
+#         "cssselect2": getattr(cssselect2, "__version__", "?"),
+#         "Pillow": getattr(PIL, "__version__", "?"),
+#     }
+

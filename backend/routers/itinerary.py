@@ -195,10 +195,12 @@ def export_itinerary(
     db: Session = Depends(get_db),
     current_user: user.User = Depends(get_current_user)
 ):
+    print("Inside the export itinerary end point")
     # Fetch itinerary
     itinerary = db.query(Itinerary).filter(Itinerary.id == itinerary_id).first()
     if not itinerary:
         raise HTTPException(status_code=404, detail="Itinerary not found")
+    print("Itinerary object fetched", itinerary.username)
 
     # Get start location coordinates
     start_location_obj = db.query(LocationCoordinates).filter(
