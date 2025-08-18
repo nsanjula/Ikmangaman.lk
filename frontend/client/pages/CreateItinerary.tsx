@@ -1044,8 +1044,9 @@ const CreateItinerary: React.FC = () => {
                                 start_location: tempStartLocation
                               };
 
-                              // Store temp questionnaire data for the destination context
-                              sessionStorage.setItem('tempDestinationData', JSON.stringify(tempQuestionnaireData));
+                              // Store temp questionnaire data for the destination context with itinerary-specific key
+                              const tempDestinationKey = `tempDestinationData_itinerary_${itinerary.itinerary_id}_${showingRecommendationsForDay}_${destination.destination_id}`;
+                              sessionStorage.setItem(tempDestinationKey, JSON.stringify(tempQuestionnaireData));
 
                               // Store state for navigation back
                               const backData = {

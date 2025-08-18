@@ -254,7 +254,7 @@ const HeroSection: React.FC = () => {
                 variant="page"
                 size="md"
               />
-              {/* Questionnaire Metrics CTA is intentionally omitted here for search destinations to avoid duplication */}
+
             </div>
           </div>
 

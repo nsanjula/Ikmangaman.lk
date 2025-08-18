@@ -374,7 +374,9 @@ const QuestionnaireMetrics: React.FC = () => {
         no_of_people: groupSize,
         start_location: startLocation,
       };
-      sessionStorage.setItem('tempQuestionnaireParams', JSON.stringify(tempQuestionnaireParams));
+      const contextPrefix = isSavedPlace ? 'saved' : 'search';
+      const tempQuestionnaireParamsKey = `tempQuestionnaireParams_${contextPrefix}_${destinationId}`;
+      sessionStorage.setItem(tempQuestionnaireParamsKey, JSON.stringify(tempQuestionnaireParams));
 
       // Call the temp questionnaire API to get destination data with personalized metrics
       const destinationWithTempData = await callWithLoading(
@@ -387,14 +389,16 @@ const QuestionnaireMetrics: React.FC = () => {
 
       console.log('Received temp questionnaire destination data:', destinationWithTempData);
 
-      // Navigate based on origin, carrying completion state in navigation state instead of global flags
+      // Store temp questionnaire completion flag and data for DestinationContext
+      const tempCompletedKey = `tempQuestionnaireDestinationData_${contextPrefix}_${destinationId}`;
       if (isSavedPlace) {
-        navigate(`/saved-destination/${destinationId}`, {
-          state: { fromQuestionnaire: true, questionnaireCompleted: true }
-        });
+        sessionStorage.setItem('tempQuestionnaireCompleted', 'true');
+        sessionStorage.setItem(tempCompletedKey, JSON.stringify(destinationWithTempData));
+        // Navigate back to saved place destination page which will now show full details
+        navigate(`/saved-destination/${destinationId}`);
       } else {
         // For search results, store both the API result and the questionnaire data for compatibility
-        sessionStorage.setItem('tempQuestionnaireDestinationData', JSON.stringify(destinationWithTempData));
+        sessionStorage.setItem(tempCompletedKey, JSON.stringify(destinationWithTempData));
 
         const questionnaireData: QuestionnaireRequest = {
           ...existingInterests,
@@ -403,7 +407,7 @@ const QuestionnaireMetrics: React.FC = () => {
           start_location: startLocation,
         };
 
-        const tempQuestionnaireKey = 'tempQuestionnaireData';
+        const tempQuestionnaireKey = `tempQuestionnaireData_${contextPrefix}_${destinationId}`;
         sessionStorage.setItem(tempQuestionnaireKey, JSON.stringify(questionnaireData));
 
         console.log('Stored temporary questionnaire data for search results:', questionnaireData);

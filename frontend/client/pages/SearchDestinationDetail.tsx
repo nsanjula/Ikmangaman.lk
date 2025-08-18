@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import HeroSection from "../components/sections/HeroSection";
@@ -14,21 +14,15 @@ import { FiSettings } from "react-icons/fi";
 const SearchDestinationDetailContent: React.FC = () => {
   const { destinationData } = useDestination();
   const navigate = useNavigate();
-  const location = useLocation();
   const [showQuestionnaireMetrics, setShowQuestionnaireMetrics] = useState(true);
 
-  // On entry to this page (typically via back navigation), clear any temporary questionnaire state
-  // so the basic destination view loads cleanly without getting stuck in loading.
+  // Check if we already completed questionnaire for this destination
   useEffect(() => {
-    const nav = (window.history.state && (window.history.state as any).usr) || location.state || {};
-    if (!nav || !nav.fromQuestionnaire) {
-      sessionStorage.removeItem('tempQuestionnaireData');
-      sessionStorage.removeItem('tempQuestionnaireDestinationData');
-      sessionStorage.removeItem('tempQuestionnaireParams');
+    const tempQuestionnaireCompleted = sessionStorage.getItem('tempQuestionnaireData');
+    if (tempQuestionnaireCompleted) {
+      setShowQuestionnaireMetrics(false);
     }
-    // Always allow using questionnaire metrics again from this page
-    setShowQuestionnaireMetrics(true);
-  }, [location.state, destinationData?.destination_id]);
+  }, []);
 
   useEffect(() => {
     if (destinationData?.destination_name) {
@@ -61,7 +55,7 @@ const SearchDestinationDetailContent: React.FC = () => {
             <h2 className="text-2xl font-bold mb-4" style={{ color: 'var(--text-900)' }}>
               Get Personalized Travel Details
             </h2>
-            <p className="text-lg mb-6" style={{ color: 'var(--text-600)' }}>
+            <p className="text-lg mb-6 max-w-2xl mx-auto" style={{ color: 'var(--text-600)' }}>
               Complete a quick questionnaire to get budget breakdown, best route, and 5-day weather forecast for {destinationData?.destination_name}.
             </p>
             <button
@@ -97,7 +91,7 @@ const SearchDestinationDetail: React.FC = () => {
 
   return (
     <GoogleMapsProvider>
-      <DestinationProvider destinationId={parseInt(id || '0', 10)}>
+      <DestinationProvider destinationId={parseInt(id || '0')} contextType="search">
         <SearchDestinationDetailContent />
       </DestinationProvider>
     </GoogleMapsProvider>

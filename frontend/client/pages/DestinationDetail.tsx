@@ -70,7 +70,7 @@ const DestinationDetail: React.FC = () => {
 
   return (
     <GoogleMapsProvider>
-      <DestinationProvider destinationId={parseInt(id || '0', 10)}>
+      <DestinationProvider destinationId={parseInt(id)}>
         <DestinationDetailContent />
       </DestinationProvider>
     </GoogleMapsProvider>
