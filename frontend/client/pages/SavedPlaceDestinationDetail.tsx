@@ -12,12 +12,14 @@ import LocalGuides from "../components/sections/LocalGuides";
 import { DestinationProvider, useDestination } from "../contexts/DestinationContext";
 import { GoogleMapsProvider } from "../contexts/GoogleMapsContext";
 import { FiSettings } from "react-icons/fi";
+import { clearSavedPlaceQuestionnaireStorage, debugSessionStorage } from "../utils/debugSessionStorage";
 
 const SavedPlaceDestinationDetailContent: React.FC = () => {
   const { destinationData } = useDestination();
   const navigate = useNavigate();
 
   // State to track if we're showing the full destination page (with questionnaire metrics) or the basic view
+  // Default to false for saved places to ensure the questionnaire button shows
   const [showFullDestination, setShowFullDestination] = useState(false);
 
   // Check URL parameters to see if we should force basic view
@@ -33,6 +35,7 @@ const SavedPlaceDestinationDetailContent: React.FC = () => {
     // Check for destination-specific completed questionnaire data using new cache key format
     const tempCompletedKey = `tempQuestionnaireDestinationData_saved_${destinationId}`;
     const tempCompletedData = sessionStorage.getItem(tempCompletedKey);
+    const tempQuestionnaireParamsKey = `tempQuestionnaireParams_saved_${destinationId}`;
 
     // Check for old-style completion flag (for backward compatibility)
     const tempQuestionnaireCompleted = sessionStorage.getItem('tempQuestionnaireCompleted');
@@ -58,59 +61,58 @@ const SavedPlaceDestinationDetailContent: React.FC = () => {
       return;
     }
 
-    // Always start with basic view for saved places unless we have explicit completion
+    // Always start with basic view for saved places unless we have EXPLICIT completion for THIS destination
     // This ensures saved places show the questionnaire button by default
     let shouldShowFullView = false;
 
-    // Only show full view if we have fresh questionnaire completion
-    // Check for the fresh completion flag first (just returned from questionnaire)
-    if (tempQuestionnaireCompleted === 'true' && destinationId) {
-      console.log('✅ Fresh questionnaire completion detected');
+    // For saved places, ONLY show full view if we have a very specific completion flag
+    // Check ONLY for the specific saved destination completion flag (just returned from questionnaire)
+    const savedDestinationQuestionnaireFlag = sessionStorage.getItem('tempQuestionnaireCompleted');
+    const isComingFromQuestionnaire = savedDestinationQuestionnaireFlag === 'true';
+    const savedDestinationSpecificFlag = sessionStorage.getItem(`tempQuestionnaire_saved_${destinationId}`);
+
+    console.log('🔍 Saved destination specific checks:', {
+      isComingFromQuestionnaire,
+      savedDestinationSpecificFlag,
+      tempCompletedData: !!tempCompletedData,
+      destinationId
+    });
+
+    if (isComingFromQuestionnaire && destinationId) {
+      console.log('✅ Fresh questionnaire completion detected for saved destination');
       shouldShowFullView = true;
-      // Store the completion for this specific destination with timestamp
-      sessionStorage.setItem(`tempQuestionnaire_${destinationId}`, 'completed');
-      sessionStorage.setItem(`tempQuestionnaire_${destinationId}_time`, Date.now().toString());
+      // Store the completion for this specific SAVED destination with timestamp
+      sessionStorage.setItem(`tempQuestionnaire_saved_${destinationId}`, 'completed');
+      sessionStorage.setItem(`tempQuestionnaire_saved_${destinationId}_time`, Date.now().toString());
       // Clear the general flag after processing
       sessionStorage.removeItem('tempQuestionnaireCompleted');
-    } else if (tempCompletedData) {
-      // Check if we have valid completed data AND a recent completion flag
-      const recentCompletion = sessionStorage.getItem(`tempQuestionnaire_${destinationId}`) === 'completed';
-      if (recentCompletion) {
-        console.log('✅ Found valid questionnaire data with recent completion');
-        shouldShowFullView = true;
-      } else {
-        console.log('ℹ️ Found stale questionnaire data without recent completion - clearing');
-        // Clear stale data
-        sessionStorage.removeItem(tempCompletedKey);
-        sessionStorage.removeItem(tempQuestionnaireParamsKey);
-        shouldShowFullView = false;
-      }
-    } else if (oldCompletionKey === 'completed') {
-      // Check if this completion is recent (within 1 hour)
-      const completionTime = sessionStorage.getItem(`tempQuestionnaire_${destinationId}_time`);
+    } else if (savedDestinationSpecificFlag === 'completed') {
+      // Check if this saved destination completion is recent (within 1 hour)
+      const completionTime = sessionStorage.getItem(`tempQuestionnaire_saved_${destinationId}_time`);
       const now = Date.now();
       const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
 
       if (completionTime && (now - parseInt(completionTime)) < oneHour) {
-        console.log('✅ Found recent legacy completion key');
+        console.log('✅ Found recent saved destination completion');
         shouldShowFullView = true;
       } else {
-        console.log('ℹ️ Found expired completion key - resetting to basic view');
-        sessionStorage.removeItem(`tempQuestionnaire_${destinationId}`);
-        sessionStorage.removeItem(`tempQuestionnaire_${destinationId}_time`);
+        console.log('ℹ️ Found expired saved destination completion - resetting to basic view');
+        sessionStorage.removeItem(`tempQuestionnaire_saved_${destinationId}`);
+        sessionStorage.removeItem(`tempQuestionnaire_saved_${destinationId}_time`);
         shouldShowFullView = false;
       }
     } else {
-      console.log('ℹ️ No valid questionnaire completion found - showing basic view with questionnaire button');
+      console.log('ℹ️ No valid saved destination questionnaire completion - showing basic view with questionnaire button');
       shouldShowFullView = false;
 
-      // Clear any stale questionnaire data to ensure clean state
+      // Clear any stale questionnaire data to ensure clean state for saved destinations
       const allKeys = Object.keys(sessionStorage);
       allKeys.forEach(key => {
-        if (key.startsWith('tempQuestionnaireDestinationData_') ||
-            key.startsWith('tempQuestionnaireParams_') ||
-            key.startsWith('tempDestinationData_')) {
-          console.log(`🧹 Clearing stale questionnaire cache: ${key}`);
+        // Only clear keys that are NOT for other contexts but could interfere
+        if ((key.startsWith('tempQuestionnaireDestinationData_') && !key.includes('_saved_')) ||
+            (key.startsWith('tempQuestionnaireParams_') && !key.includes('_saved_')) ||
+            (key.startsWith('tempDestinationData_') && !key.includes('_saved_'))) {
+          console.log(`🧹 Clearing non-saved questionnaire cache: ${key}`);
           sessionStorage.removeItem(key);
         }
       });
@@ -205,22 +207,28 @@ const SavedPlaceDestinationDetail: React.FC = () => {
     const destinationId = id;
     if (!destinationId) return;
 
-    // Clear any questionnaire data from search or itinerary contexts
-    const allKeys = Object.keys(sessionStorage);
-    const keysToRemove = allKeys.filter(key =>
-      (key.startsWith('tempQuestionnaireDestinationData_') ||
-       key.startsWith('tempQuestionnaireParams_') ||
-       key.startsWith('tempDestinationData_')) &&
-      !key.includes(`_saved_${destinationId}`)
-    );
+    // IMMEDIATE cleanup - use debug utility for thorough cleanup
+    console.log('🔍 Before cleanup - current session storage state:');
+    debugSessionStorage();
 
-    if (keysToRemove.length > 0) {
-      console.log('🧹 Saved place: Clearing stale questionnaire data from other contexts:', keysToRemove);
-      keysToRemove.forEach(key => sessionStorage.removeItem(key));
-    }
+    // Clear any questionnaire data that doesn't belong to this saved destination
+    const clearedCount = clearSavedPlaceQuestionnaireStorage(destinationId);
+    console.log(`🧹 Cleared ${clearedCount} interfering questionnaire keys`);
+
+    // Clear general questionnaire flags that might interfere (except the ones for this saved place)
+    const generalFlags = ['tempQuestionnaireData', 'questionnaire_from_create_itinerary', 'itinerary_questionnaire_data'];
+    generalFlags.forEach(flag => {
+      if (sessionStorage.getItem(flag)) {
+        console.log(`🧹 Clearing general questionnaire flag: ${flag}`);
+        sessionStorage.removeItem(flag);
+      }
+    });
+
+    console.log('🔍 After cleanup - remaining session storage:');
+    debugSessionStorage();
 
     // Only keep saved-place specific questionnaire data
-    console.log('ℹ️ Saved place initialized for destination:', destinationId);
+    console.log('ℹ️ Saved place initialized for destination:', destinationId, '- cleaned up interfering data');
   }, [id]);
 
   // Immediately scroll to top when the destination page loads
@@ -231,7 +239,7 @@ const SavedPlaceDestinationDetail: React.FC = () => {
 
   return (
     <GoogleMapsProvider>
-      <DestinationProvider destinationId={id} contextType="saved">
+      <DestinationProvider destinationId={parseInt(id || '0')} contextType="saved">
         <SavedPlaceDestinationDetailContent />
       </DestinationProvider>
     </GoogleMapsProvider>

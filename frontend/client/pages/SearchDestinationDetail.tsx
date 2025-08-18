@@ -91,7 +91,7 @@ const SearchDestinationDetail: React.FC = () => {
 
   return (
     <GoogleMapsProvider>
-      <DestinationProvider destinationId={id} contextType="search">
+      <DestinationProvider destinationId={parseInt(id || '0')} contextType="search">
         <SearchDestinationDetailContent />
       </DestinationProvider>
     </GoogleMapsProvider>
