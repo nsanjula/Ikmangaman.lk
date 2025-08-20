@@ -93,7 +93,7 @@ const CreateItinerary: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated, handleAuthError, loading: authLoading } = useAuth();
   const { callWithLoading } = useApiWithLoading();
-  
+
   // State management
   const [itinerary, setItinerary] = useState<ItineraryState>(() => {
     // Try to restore from localStorage on initial load
@@ -491,7 +491,7 @@ const CreateItinerary: React.FC = () => {
 
     try {
       setIsLoading(true);
-      
+
       await callWithLoading(
         async () => {
           return await authAPI.assignDestinationToDay(
@@ -544,7 +544,7 @@ const CreateItinerary: React.FC = () => {
 
     try {
       setIsLoading(true);
-      
+
       const response = await callWithLoading(
         async () => {
           // Create a blob URL for PDF download
@@ -555,11 +555,11 @@ const CreateItinerary: React.FC = () => {
               'Content-Type': 'application/json'
             }
           });
-          
+
           if (!response.ok) {
             throw new Error('Failed to generate PDF');
           }
-          
+
           return response.blob();
         },
         'generate-pdf',
@@ -776,11 +776,10 @@ const CreateItinerary: React.FC = () => {
                 return (
                   <div
                     key={dayNum}
-                    className={`relative w-64 h-64 rounded-xl border-2 shadow-lg transition-all duration-300 ${
-                      isSelected
-                        ? 'border-gray-300 bg-cover bg-center'
-                        : 'border-gray-300 bg-gray-100 hover:border-cyan-400 hover:shadow-xl'
-                    } ${isClickable ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}
+                    className={`relative w-64 h-64 rounded-xl border-2 shadow-lg transition-all duration-300 ${isSelected
+                      ? 'border-gray-300 bg-cover bg-center'
+                      : 'border-gray-300 bg-gray-100 hover:border-cyan-400 hover:shadow-xl'
+                      } ${isClickable ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}
                     style={isSelected && dayData.destination_image ? {
                       backgroundImage: `url(https://ikmangamanlk-production.up.railway.app${dayData.destination_image})`,
                       backgroundSize: 'cover',
@@ -1000,11 +999,10 @@ const CreateItinerary: React.FC = () => {
                           </div>
                           <div className="progress-bar">
                             <div
-                              className={`progress-fill ${
-                                destination.match_score >= 0.85 ? 'progress-green' :
+                              className={`progress-fill ${destination.match_score >= 0.85 ? 'progress-green' :
                                 destination.match_score >= 0.70 ? 'progress-sky' :
-                                'progress-amber'
-                              }`}
+                                  'progress-amber'
+                                }`}
                               style={{
                                 width: `${Math.min(destination.match_score * 100, 100)}%`,
                               }}
@@ -1094,8 +1092,8 @@ const CreateItinerary: React.FC = () => {
             <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--primary-700)' }}>
               Ready to Plan Your Adventure?
             </h3>
-            <p className="mb-6" style={{ color: 'var(--primary-700)' }}>
-              Click on the first container to start creating your personalized travel itinerary.
+            <p className="mb-6 mx-auto text-center " style={{ color: 'var(--primary-700)' }}>
+              Click on "New Itinerary" to start creating your personalized travel itinerary.
               We'll ask you a few questions to get started.
             </p>
           </div>

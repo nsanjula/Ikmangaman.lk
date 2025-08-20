@@ -1,7 +1,9 @@
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function HeroSection() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   return (
     <section className="relative iframe-hero overflow-hidden min-h-screen h-screen">
@@ -93,7 +95,7 @@ export default function HeroSection() {
           {/* Animated CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-up" style={{ animationDelay: '1.2s' }}>
             <button
-              onClick={() => navigate("/register")}
+              onClick={() => isAuthenticated ? navigate("/recommendation") : navigate("/register")}
               className="bg-[#159CAF] hover:bg-[#0d7a8a] text-white px-8 py-3 rounded-lg font-semibold transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
             >
               Start planning
