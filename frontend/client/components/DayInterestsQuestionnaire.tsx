@@ -113,6 +113,13 @@ const DayInterestsQuestionnaire: React.FC<DayInterestsQuestionnaireProps> = ({
 
     } catch (error) {
       console.error('Error getting day recommendations:', error);
+      console.error('Error details:', {
+        error,
+        type: typeof error,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack trace'
+      });
+
       if (error instanceof Error) {
         setError(error.message);
       } else {

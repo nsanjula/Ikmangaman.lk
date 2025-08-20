@@ -467,6 +467,51 @@
     padding: 0 !important;
   }
 
+  /* Responsive chatbot styles */
+  @media (max-width: 768px) {
+    .chatbot-popup {
+      max-width: calc(100vw - 32px) !important;
+      min-width: 280px !important;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .chatbot-popup {
+      left: 16px !important;
+      right: 16px !important;
+      width: auto !important;
+      max-width: none !important;
+      min-width: auto !important;
+    }
+
+    .chatbot-floating-button {
+      width: 48px !important;
+      height: 48px !important;
+    }
+  }
+
+  @media (max-height: 600px) {
+    .chatbot-popup {
+      max-height: calc(100vh - 32px) !important;
+      height: auto !important;
+    }
+  }
+
+  /* Handle landscape orientation on mobile */
+  @media (max-width: 768px) and (orientation: landscape) {
+    .chatbot-popup {
+      max-height: calc(100vh - 24px) !important;
+      height: min(400px, calc(100vh - 24px)) !important;
+    }
+  }
+
+  @media (max-width: 480px) and (orientation: landscape) {
+    .chatbot-popup {
+      max-height: calc(100vh - 16px) !important;
+      height: min(350px, calc(100vh - 16px)) !important;
+    }
+  }
+
   /* Modern animations for dynamic elements */
   @keyframes fade-in-up {
     from {
