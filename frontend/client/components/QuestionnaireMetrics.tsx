@@ -702,11 +702,11 @@ const QuestionnaireMetrics: React.FC = () => {
         </div>
 
         {/* Navigation */}
-        <div className="flex justify-between items-center max-w-4xl mx-auto mt-12">
+        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 sm:gap-0 max-w-4xl mx-auto mt-12 mb-8 sm:mb-12 px-4 sm:px-0">
           {currentStep > 1 ? (
             <button
               onClick={prevStep}
-              className="flex items-center px-6 py-3 text-cyan-600 border border-cyan-600 rounded-lg hover:bg-cyan-50 transition-colors"
+              className="flex items-center justify-center px-6 py-3 text-cyan-600 border border-cyan-600 rounded-lg hover:bg-cyan-50 transition-colors font-medium text-center"
             >
               ← Previous
             </button>
@@ -722,9 +722,10 @@ const QuestionnaireMetrics: React.FC = () => {
                   navigate(-1);
                 }
               }}
-              className="flex items-center px-6 py-3 text-gray-600 border border-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex items-center justify-center px-6 py-3 text-gray-600 border border-gray-600 rounded-lg hover:bg-gray-50 transition-colors font-medium text-center"
             >
-              {isDayInterestsMode || isItineraryMode ? '← Back to Recommendations' : '← Back to Destination'}
+              <span className="hidden sm:inline">{isDayInterestsMode || isItineraryMode ? '← Back to Recommendations' : '← Back to Destination'}</span>
+              <span className="sm:hidden">← Back to Recommendations</span>
             </button>
           )}
 
@@ -732,7 +733,7 @@ const QuestionnaireMetrics: React.FC = () => {
             <button
               onClick={nextStep}
               disabled={!canProceed()}
-              className="flex items-center px-6 py-3 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center justify-center px-6 py-3 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-center"
             >
               Next →
             </button>
@@ -740,17 +741,19 @@ const QuestionnaireMetrics: React.FC = () => {
             <button
               onClick={handleSubmit}
               disabled={!canProceed() || isSubmitting}
-              className="flex items-center px-6 py-3 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center justify-center px-6 py-3 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-center"
             >
               {isSubmitting ? (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                  {isDayInterestsMode ? 'Getting Recommendations...' : 'Creating Plan...'}
+                  <span className="hidden sm:inline">{isDayInterestsMode ? 'Getting Recommendations...' : 'Creating Plan...'}</span>
+                  <span className="sm:hidden">Loading...</span>
                 </>
               ) : (
-                isDayInterestsMode ? 'Get Recommendations →' :
-                  isItineraryMode ? 'Continue →' :
-                    'Create Travel Plan →'
+                <>
+                  <span className="hidden sm:inline">{isDayInterestsMode ? 'Get Recommendations →' : isItineraryMode ? 'Continue →' : 'Create Travel Plan →'}</span>
+                  <span className="sm:hidden">{isDayInterestsMode ? 'Get Recommendations →' : 'Next →'}</span>
+                </>
               )}
             </button>
           )}

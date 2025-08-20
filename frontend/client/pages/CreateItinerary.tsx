@@ -712,20 +712,20 @@ const CreateItinerary: React.FC = () => {
       <main className="container iframe-container py-12">
         {/* Title */}
         <div className="mb-12">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-            <h1 className="text-4xl font-bold mb-2" style={{ color: 'var(--text-900)' }}>Create Your Travel Plan</h1>
-            <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-6">
+            <h1 className="text-3xl md:text-4xl font-bold" style={{ color: 'var(--text-900)' }}>Create Your Travel Plan</h1>
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               <button
                 onClick={startNewItinerary}
                 disabled={isLoading}
-                className="btn btn-secondary btn-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn btn-secondary btn-lg disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto justify-center"
               >
                 New Itinerary
               </button>
               <button
                 onClick={generatePlan}
                 disabled={selectedDestinationsCount === 0 || isLoading}
-                className="btn btn-primary btn-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn btn-primary btn-lg disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto justify-center"
               >
                 Generate Plan
               </button>

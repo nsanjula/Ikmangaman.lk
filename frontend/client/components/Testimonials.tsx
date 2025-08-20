@@ -29,43 +29,43 @@ export default function Testimonials() {
   ];
 
   return (
-    <section className="bg-[#e6f7f9] py-20">
-      <div className="container">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+    <section className="bg-[#e6f7f9] py-12 sm:py-16 lg:py-20">
+      <div className="container iframe-container px-4">
+        <div className="text-center mb-10 sm:mb-16">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
             What Our Clients Say
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto px-2">
             Join thousands of satisfied travelers who have discovered Sri Lanka
             with our personalized recommendations and expert planning.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           {testimonials.map((testimonial, index) => (
             <div
               key={index}
-              className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300"
+              className="bg-white rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition-shadow duration-300"
             >
-              <div className="flex items-center mb-6">
-                <div className="w-12 h-12 bg-[#159CAF] rounded-full flex items-center justify-center text-white font-bold mr-4">
-                  {testimonial.avatar}
+              <div className="flex items-center mb-4 sm:mb-6">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#159CAF] rounded-full flex items-center justify-center text-white font-bold mr-3 sm:mr-4 flex-shrink-0">
+                  <span className="text-sm sm:text-base">{testimonial.avatar}</span>
                 </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900">
+                <div className="min-w-0">
+                  <h4 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
                     {testimonial.name}
                   </h4>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-xs sm:text-sm text-gray-600 truncate">
                     {testimonial.location}
                   </p>
                 </div>
               </div>
 
-              <div className="flex mb-4">
+              <div className="flex mb-3 sm:mb-4">
                 {[...Array(testimonial.rating)].map((_, i) => (
                   <svg
                     key={i}
-                    className="w-5 h-5 text-yellow-400"
+                    className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -74,7 +74,7 @@ export default function Testimonials() {
                 ))}
               </div>
 
-              <p className="text-gray-700 leading-relaxed">
+              <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
                 "{testimonial.text}"
               </p>
             </div>

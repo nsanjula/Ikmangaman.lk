@@ -214,11 +214,11 @@ const DayInterestsQuestionnaire: React.FC<DayInterestsQuestionnaireProps> = ({
       </div>
 
       {/* Action Buttons */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 sm:gap-0 mb-4 sm:mb-0">
         <button
           onClick={onCancel}
           disabled={isSubmitting}
-          className="px-6 py-3 text-gray-600 border border-gray-600 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center justify-center px-6 py-3 text-gray-600 border border-gray-600 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
         >
           Cancel
         </button>
@@ -226,12 +226,13 @@ const DayInterestsQuestionnaire: React.FC<DayInterestsQuestionnaireProps> = ({
         <button
           onClick={handleSubmit}
           disabled={selectedInterests.length === 0 || isSubmitting}
-          className="px-6 py-3 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center justify-center px-6 py-3 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
         >
           {isSubmitting ? (
             <>
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2 inline-block"></div>
-              Getting Recommendations...
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+              <span className="hidden sm:inline">Getting Recommendations...</span>
+              <span className="sm:hidden">Loading...</span>
             </>
           ) : (
             'Get Recommendations'

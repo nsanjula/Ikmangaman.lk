@@ -8,27 +8,27 @@ export default function FeatureSections() {
   return (
     <div className="space-y-0">
       {/* Personalized Travel Recommendations */}
-      <section className="bg-white py-20">
-        <div className="container iframe-container">
+      <section className="bg-white py-12 sm:py-16 lg:py-20" id="features">
+        <div className="container iframe-container px-4">
           <div
             ref={ref1}
-            className={`grid lg:grid-cols-2 gap-12 items-center scroll-animate-slide-up ${isVisible1 ? 'animate' : ''}`}
+            className={`grid lg:grid-cols-2 gap-8 lg:gap-12 items-center scroll-animate-slide-up ${isVisible1 ? 'animate' : ''}`}
           >
-            <div className="text-gray-900">
-              <h2 className="text-4xl lg:text-5xl font-bold mb-6">
+            <div className="text-gray-900 text-center lg:text-left">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6">
                 Personalized Travel
                 <br />
                 Recommendations
               </h2>
-              <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+              <p className="text-base sm:text-lg lg:text-xl text-gray-600 mb-6 sm:mb-8 leading-relaxed max-w-xl mx-auto lg:mx-0">
                 Get customized itineraries based on your preferences, budget,
                 and travel style. Our AI-powered system creates unique
                 experiences tailored just for you.
               </p>
-              <ul className="space-y-4 text-gray-600">
-                <li className="flex items-center">
+              <ul className="space-y-3 sm:space-y-4 text-gray-600 max-w-lg mx-auto lg:mx-0">
+                <li className="flex items-center justify-center lg:justify-start">
                   <svg
-                    className="w-6 h-6 mr-3 text-[#159CAF]"
+                    className="w-5 h-5 sm:w-6 sm:h-6 mr-3 text-[#159CAF] flex-shrink-0"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -38,11 +38,11 @@ export default function FeatureSections() {
                       clipRule="evenodd"
                     />
                   </svg>
-                  Smart destination matching
+                  <span className="text-sm sm:text-base">Smart destination matching</span>
                 </li>
-                <li className="flex items-center">
+                <li className="flex items-center justify-center lg:justify-start">
                   <svg
-                    className="w-6 h-6 mr-3 text-[#159CAF]"
+                    className="w-5 h-5 sm:w-6 sm:h-6 mr-3 text-[#159CAF] flex-shrink-0"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -52,11 +52,11 @@ export default function FeatureSections() {
                       clipRule="evenodd"
                     />
                   </svg>
-                  Personalized activity suggestions
+                  <span className="text-sm sm:text-base">Personalized activity suggestions</span>
                 </li>
-                <li className="flex items-center">
+                <li className="flex items-center justify-center lg:justify-start">
                   <svg
-                    className="w-6 h-6 mr-3 text-[#159CAF]"
+                    className="w-5 h-5 sm:w-6 sm:h-6 mr-3 text-[#159CAF] flex-shrink-0"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -66,20 +66,20 @@ export default function FeatureSections() {
                       clipRule="evenodd"
                     />
                   </svg>
-                  Local insights and hidden gems
+                  <span className="text-sm sm:text-base">Local insights and hidden gems</span>
                 </li>
               </ul>
             </div>
-            <div className="relative">
-              <div className="bg-[#e6f7f9] border-2 border-[#a8e1ea] rounded-2xl shadow-2xl p-8 transform rotate-3">
-                <div className="space-y-4">
-                  <div className="h-4 bg-gradient-to-r from-[#159CAF] to-[#0d7a8a] rounded w-3/4"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                  <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-                  <div className="h-32 bg-gradient-to-r from-[#d4f1f5] to-[#b3e8f0] rounded-lg"></div>
+            <div className="relative mt-8 lg:mt-0">
+              <div className="bg-[#e6f7f9] border-2 border-[#a8e1ea] rounded-2xl shadow-2xl p-4 sm:p-6 lg:p-8 transform rotate-1 lg:rotate-3">
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="h-3 sm:h-4 bg-gradient-to-r from-[#159CAF] to-[#0d7a8a] rounded w-3/4"></div>
+                  <div className="h-3 sm:h-4 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-3 sm:h-4 bg-gray-200 rounded w-5/6"></div>
+                  <div className="h-24 sm:h-32 bg-gradient-to-r from-[#d4f1f5] to-[#b3e8f0] rounded-lg"></div>
                   <div className="flex space-x-2">
-                    <div className="h-8 bg-[#159CAF] rounded flex-1"></div>
-                    <div className="h-8 bg-[#0d7a8a] rounded flex-1"></div>
+                    <div className="h-6 sm:h-8 bg-[#159CAF] rounded flex-1"></div>
+                    <div className="h-6 sm:h-8 bg-[#0d7a8a] rounded flex-1"></div>
                   </div>
                 </div>
               </div>

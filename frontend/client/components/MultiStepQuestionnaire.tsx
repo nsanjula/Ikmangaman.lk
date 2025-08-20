@@ -522,23 +522,23 @@ const MultiStepQuestionnaire: React.FC = () => {
         </div>
 
         {/* Navigation */}
-        <div className="flex justify-between items-center max-w-4xl mx-auto mt-12">
+        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 sm:gap-0 max-w-4xl mx-auto mt-12 mb-8 sm:mb-0 px-4 sm:px-0">
           {currentStep > 1 ? (
             <button
               onClick={prevStep}
-              className="flex items-center px-6 py-3 text-cyan-600 border border-cyan-600 rounded-lg hover:bg-cyan-50 transition-colors"
+              className="flex items-center justify-center px-6 py-3 text-cyan-600 border border-cyan-600 rounded-lg hover:bg-cyan-50 transition-colors font-medium"
             >
               ← Previous
             </button>
           ) : (
-            <div></div>
+            <div className="hidden sm:block"></div>
           )}
 
           {currentStep < totalSteps ? (
             <button
               onClick={nextStep}
               disabled={!canProceed()}
-              className="flex items-center px-6 py-3 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center justify-center px-6 py-3 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
             >
               Next →
             </button>
@@ -546,17 +546,24 @@ const MultiStepQuestionnaire: React.FC = () => {
             <button
               onClick={handleSubmit}
               disabled={!canProceed() || isSubmitting}
-              className="flex items-center px-6 py-3 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center justify-center px-6 py-3 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
             >
               {isSubmitting ? (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                  Submitting...
+                  <span className="hidden sm:inline">Submitting...</span>
+                  <span className="sm:hidden">Loading...</span>
                 </>
               ) : hasExistingQuestionnaire ? (
-                "Update Plan →"
+                <>
+                  <span className="hidden sm:inline">Update Plan →</span>
+                  <span className="sm:hidden">Update →</span>
+                </>
               ) : (
-                "Create Plan →"
+                <>
+                  <span className="hidden sm:inline">Create Plan →</span>
+                  <span className="sm:hidden">Create →</span>
+                </>
               )}
             </button>
           )}
