@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiChevronDown, FiChevronUp, FiFilter } from "react-icons/fi";
 import {
@@ -40,6 +40,7 @@ interface CustomDropdownProps {
 const CustomDropdown: React.FC<CustomDropdownProps> = ({ value, onChange, options }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [hoveredOption, setHoveredOption] = useState<string | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const selectedOption = options.find(option => option.value === value);
 
@@ -48,8 +49,22 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({ value, onChange, option
     setIsOpen(false);
   };
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   return (
-    <div className="relative">
+    <div className="relative" ref={dropdownRef}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -77,11 +92,15 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({ value, onChange, option
 
       {isOpen && (
         <div
-          className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden"
+          className="fixed z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden"
           style={{
             backgroundColor: 'var(--surface)',
             borderColor: '#E2E8F0',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+            // Calculate position based on the button's location
+            width: dropdownRef.current?.querySelector('button')?.clientWidth,
+            top: (dropdownRef.current?.getBoundingClientRect().bottom || 0) + window.scrollY,
+            left: dropdownRef.current?.getBoundingClientRect().left,
           }}
         >
           {options.map((option) => (
@@ -110,13 +129,6 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({ value, onChange, option
             </button>
           ))}
         </div>
-      )}
-
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => setIsOpen(false)}
-        />
       )}
     </div>
   );
