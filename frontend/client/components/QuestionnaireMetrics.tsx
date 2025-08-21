@@ -1,10 +1,104 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { authAPI, QuestionnaireRequest, TempQuestionnaire } from "../lib/api";
 import { useApiWithLoading } from "../contexts/LoadingContext";
 import SearchableDropdown from "./ui/searchable-dropdown";
 
+const CustomDropdown: React.FC<{
+  value: string;
+  onChange: (value: string) => void;
+  options: string[];
+}> = ({ value, onChange, options }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [hoveredOption, setHoveredOption] = useState<string | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const handleOptionClick = (optionValue: string) => {
+    onChange(optionValue);
+    setIsOpen(false);
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full px-4 py-3 text-sm text-left bg-white border border-gray-200 rounded-lg hover:border-cyan-400 hover:bg-cyan-50/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all duration-200 cursor-pointer"
+        style={{
+          color: 'var(--text-900)',
+          backgroundColor: 'var(--surface)',
+          borderColor: '#E2E8F0',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+        }}
+      >
+        <span>{value}</span>
+        <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+          <svg
+            className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+            style={{ color: '#64748B' }}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+      </button>
+
+      {isOpen && (
+        <div
+          className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden"
+          style={{
+            backgroundColor: 'var(--surface)',
+            borderColor: '#E2E8F0',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+          }}
+        >
+          {options.map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => handleOptionClick(option)}
+              onMouseEnter={() => setHoveredOption(option)}
+              onMouseLeave={() => setHoveredOption(null)}
+              className={`w-full px-4 py-2 text-sm text-left transition-all duration-150 ${option === value
+                ? 'bg-cyan-500 text-white'
+                : hoveredOption === option
+                  ? 'bg-cyan-50 text-cyan-700'
+                  : 'text-gray-900 hover:bg-cyan-50'
+                }`}
+              style={{
+                color: option === value ? 'white' : 'var(--text-900)',
+                backgroundColor: option === value
+                  ? '#06B6D4'
+                  : hoveredOption === option
+                    ? '#F0F9FF'
+                    : 'transparent'
+              }}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 const QuestionnaireMetrics: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -534,10 +628,10 @@ const QuestionnaireMetrics: React.FC = () => {
                   <div key={step} className="flex items-center">
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold ${step === currentStep
-                          ? 'bg-cyan-600'
-                          : step < currentStep
-                            ? 'bg-cyan-500'
-                            : 'bg-gray-300'
+                        ? 'bg-cyan-600'
+                        : step < currentStep
+                          ? 'bg-cyan-500'
+                          : 'bg-gray-300'
                         }`}
                     >
                       {step}
@@ -620,36 +714,11 @@ const QuestionnaireMetrics: React.FC = () => {
                   <label className="block text-lg font-semibold mb-4" style={{ color: 'var(--text-900)' }}>
                     What is your preferred travel month?
                   </label>
-                  <div className="relative">
-                    <select
-                      value={travelMonth}
-                      onChange={(e) => setTravelMonth(e.target.value)}
-                      className="w-full px-4 py-3 text-sm text-left bg-white border border-gray-200 rounded-lg hover:border-cyan-400 hover:bg-cyan-50/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all duration-200 cursor-pointer appearance-none"
-                      style={{
-                        color: 'var(--text-900)',
-                        backgroundColor: 'var(--surface)',
-                        borderColor: '#E2E8F0',
-                        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-                      }}
-                    >
-                      {months.map((month) => (
-                        <option key={month} value={month}>
-                          {month}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                      <svg
-                        className="w-4 h-4 transition-transform duration-200"
-                        style={{ color: '#64748B' }}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                  </div>
+                  <CustomDropdown
+                    value={travelMonth}
+                    onChange={setTravelMonth}
+                    options={months}
+                  />
                 </div>
 
                 <div>
