@@ -1,6 +1,8 @@
 import React from "react";
+import { useScrollToTop } from "../hooks/useScrollToTop";
 
 const AboutUs = () => {
+    useScrollToTop();
     return (
         <div className="min-h-screen w-full section" style={{ background: 'var(--bg)' }}>
             <div className="container py-12">
