@@ -42,21 +42,21 @@ It helps travelers discover destinations that match their unique profile, plan p
 
 ### Recommendations page  
 
-![Landing page Screenshot](assets/Recommendation page copy.png)  
+![Landing page Screenshot](assets/Recommendation_page_copy.png)  
 
 
 ### Destination Page  
 
-![Recommendation page Screenshot](assets/Destination page copy.png)  
+![Recommendation page Screenshot](assets/Destination_page_copy.png)  
 
 
 ### Itinerary page  
 
-![Destination page Screenshot](assets/Itinerary copy.png)  
+![Destination page Screenshot](assets/Itinerary_copy.png)  
 
 ### Search by image   
 
-![Destination page Screenshot](assets/Image search copy.png)
+![Destination page Screenshot](assets/Image_search_copy.png)
 
 ---
 
