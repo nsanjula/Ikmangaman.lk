@@ -30,6 +30,7 @@ import SavedPlaceDestinationDetail from "./pages/SavedPlaceDestinationDetail";
 import CreateItinerary from "./pages/CreateItinerary";
 import ItineraryDestinationDetail from "./pages/ItineraryDestinationDetail";
 import ChatBot from "./components/ChatBot";
+import HowItWorks from "./pages/HowItWorksPage";
 
 const queryClient = new QueryClient();
 
@@ -76,15 +77,15 @@ const App = () => {
       <QueryClientProvider client={queryClient}>
         <LoadingProvider>
           <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <OfflineNotice />
-              <BackendStartupBanner />
-              {/* <BackendConnectionDiagnostic /> */}
-              <LoadingOverlay />
-              <BrowserRouter>
-                <AuthProvider>
-                  <ChatBot />
+            <Toaster />
+            <Sonner />
+            <OfflineNotice />
+            <BackendStartupBanner />
+            {/* <BackendConnectionDiagnostic /> */}
+            <LoadingOverlay />
+            <BrowserRouter>
+              <AuthProvider>
+                <ChatBot />
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/login" element={<LoginPage />} />
@@ -105,12 +106,13 @@ const App = () => {
                   <Route path="/aboutus" element={<AboutUsPage />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/compass-loader" element={<CompassLoaderShowcase />} />
+                  <Route path="/how-it-works" element={<HowItWorks />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-                </AuthProvider>
-              </BrowserRouter>
-            </TooltipProvider>
+              </AuthProvider>
+            </BrowserRouter>
+          </TooltipProvider>
         </LoadingProvider>
       </QueryClientProvider>
     </div>
