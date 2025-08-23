@@ -62,7 +62,7 @@ export default function HeroSection() {
               style={{ animationDelay: '0.6s' }}>
               <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 sm:mb-4 bg-[#e6f7f9] rounded-full flex items-center justify-center">
                 <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#159CAF]" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                 </svg>
               </div>
               <h3 className="text-base sm:text-lg font-semibold mb-2 text-gray-900">Personalized</h3>
