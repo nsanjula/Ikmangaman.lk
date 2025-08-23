@@ -57,6 +57,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ className = '' }) => {
   const [hasShownWelcome, setHasShownWelcome] = useState(false);
   const [isShowingWelcome, setIsShowingWelcome] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { isAuthenticated, logout } = useAuth();
   const { loadingState } = useLoading();
@@ -69,6 +70,16 @@ const ChatBot: React.FC<ChatBotProps> = ({ className = '' }) => {
     !location.pathname.includes('/login') &&
     !location.pathname.includes('/register') &&
     !location.pathname.includes('/compass-loader');
+
+  // Handle window resize for responsive behavior
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Scroll to bottom when messages change
   const scrollToBottom = () => {
@@ -178,6 +189,11 @@ const ChatBot: React.FC<ChatBotProps> = ({ className = '' }) => {
     return null;
   }
 
+  // Responsive positioning based on screen size
+  const isMobile = windowSize.width <= 768;
+  const isVerySmall = windowSize.width <= 480;
+  const isLandscape = windowSize.width > windowSize.height;
+
   return (
     <>
       {/* Floating Chat Icon - Always fixed to viewport using Portal */}
@@ -187,10 +203,10 @@ const ChatBot: React.FC<ChatBotProps> = ({ className = '' }) => {
           className="chatbot-floating-button"
           style={{
             position: 'fixed',
-            bottom: '24px',
-            right: '24px',
-            width: '56px',
-            height: '56px',
+            bottom: isMobile ? '16px' : '24px',
+            right: isMobile ? '16px' : '24px',
+            width: isVerySmall ? '48px' : '56px',
+            height: isVerySmall ? '48px' : '56px',
             borderRadius: '50%',
             background: 'var(--primary-600)',
             border: 'none',
@@ -204,10 +220,10 @@ const ChatBot: React.FC<ChatBotProps> = ({ className = '' }) => {
             transform: 'scale(1)'
           }}
           onMouseEnter={(e) => {
-            e.target.style.transform = 'scale(1.05)';
+            (e.target as HTMLButtonElement).style.transform = 'scale(1.05)';
           }}
           onMouseLeave={(e) => {
-            e.target.style.transform = 'scale(1)';
+            (e.target as HTMLButtonElement).style.transform = 'scale(1)';
           }}
           onFocus={(e) => {
             e.target.style.outline = '4px solid rgba(6, 182, 212, 0.3)';
@@ -218,7 +234,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ className = '' }) => {
           }}
           aria-label="Open TripMate Chat"
         >
-          <MessageCircle className="w-6 h-6 text-white" />
+          <MessageCircle className={`${isVerySmall ? 'w-5 h-5' : 'w-6 h-6'} text-white`} />
         </button>,
         document.body
       )}
@@ -229,10 +245,21 @@ const ChatBot: React.FC<ChatBotProps> = ({ className = '' }) => {
           className="chatbot-popup"
           style={{
             position: 'fixed',
-            bottom: '24px',
-            right: '24px',
-            width: '360px',
-            height: '500px',
+            bottom: isMobile ? '16px' : '24px',
+            right: isMobile ? '16px' : '24px',
+            ...(isVerySmall ? {
+              // On very small screens, take most of the screen
+              left: '16px',
+              right: '16px',
+              width: 'auto',
+              height: 'min(500px, calc(100vh - 100px))'
+            } : {
+              // Normal responsive behavior
+              width: 'min(360px, calc(100vw - 48px))',
+              height: 'min(500px, calc(100vh - 48px))'
+            }),
+            maxWidth: isVerySmall ? 'none' : '360px',
+            maxHeight: '500px',
             backgroundColor: 'white',
             borderRadius: '12px',
             border: '1px solid var(--border)',
@@ -269,7 +296,14 @@ const ChatBot: React.FC<ChatBotProps> = ({ className = '' }) => {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 h-80" style={{ background: 'var(--bg)' }}>
+          <div
+            className="flex-1 overflow-y-auto p-4"
+            style={{
+              background: 'var(--bg)',
+              minHeight: isVerySmall ? '200px' : '300px',
+              maxHeight: isVerySmall && !isLandscape ? 'calc(100vh - 200px)' : '400px'
+            }}
+          >
             <div className="space-y-4">
               {messages.map((message) => (
                 <div
@@ -277,12 +311,14 @@ const ChatBot: React.FC<ChatBotProps> = ({ className = '' }) => {
                   className={`flex ${message.isBot ? 'justify-start' : 'justify-end'}`}
                 >
                   <div
-                    className={`max-w-[280px] p-3 rounded-2xl text-sm ${
+                    className={`p-3 rounded-2xl text-sm ${
                       message.isBot
                         ? 'rounded-bl-sm'
                         : 'rounded-br-sm'
                     }`}
                     style={{
+                      maxWidth: 'min(280px, calc(100% - 20px))',
+                      wordWrap: 'break-word',
                       background: message.isBot ? '#E6F6F7' : 'var(--surface)',
                       color: message.isBot ? 'var(--primary-700)' : 'var(--text-900)',
                       border: message.isBot ? 'none' : '1px solid var(--border)'
@@ -295,8 +331,9 @@ const ChatBot: React.FC<ChatBotProps> = ({ className = '' }) => {
               {(isLoading || isShowingWelcome) && (
                 <div className="flex justify-start">
                   <div
-                    className="max-w-[280px] rounded-2xl rounded-bl-sm"
+                    className="rounded-2xl rounded-bl-sm"
                     style={{
+                      maxWidth: 'min(280px, calc(100% - 20px))',
                       background: '#E6F6F7',
                       color: 'var(--primary-700)'
                     }}

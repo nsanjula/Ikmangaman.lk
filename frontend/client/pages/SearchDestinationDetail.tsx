@@ -55,7 +55,7 @@ const SearchDestinationDetailContent: React.FC = () => {
             <h2 className="text-2xl font-bold mb-4" style={{ color: 'var(--text-900)' }}>
               Get Personalized Travel Details
             </h2>
-            <p className="text-lg mb-6" style={{ color: 'var(--text-600)' }}>
+            <p className="text-lg mb-6 max-w-2xl mx-auto" style={{ color: 'var(--text-600)' }}>
               Complete a quick questionnaire to get budget breakdown, best route, and 5-day weather forecast for {destinationData?.destination_name}.
             </p>
             <button
@@ -91,7 +91,7 @@ const SearchDestinationDetail: React.FC = () => {
 
   return (
     <GoogleMapsProvider>
-      <DestinationProvider destinationId={id}>
+      <DestinationProvider destinationId={parseInt(id || '0')} contextType="search">
         <SearchDestinationDetailContent />
       </DestinationProvider>
     </GoogleMapsProvider>
