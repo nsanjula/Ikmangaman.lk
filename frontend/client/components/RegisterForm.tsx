@@ -7,6 +7,7 @@ import { CalendarWithYearSelector } from "./ui/calendar-with-year-selector";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Button } from "./ui/button";
 import { FiCalendar } from "react-icons/fi";
+import { useScrollToTop } from "../hooks/useScrollToTop";
 
 const EyeIcon = ({ isVisible }: { isVisible: boolean }) => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
@@ -27,6 +28,7 @@ const EyeIcon = ({ isVisible }: { isVisible: boolean }) => (
 );
 
 const RegisterForm = () => {
+  useScrollToTop();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -318,10 +320,10 @@ const RegisterForm = () => {
                   <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                     <PopoverTrigger asChild>
                       <Button
-                      variant="outline"
-                      className={`w-full p-3 h-auto justify-between text-left font-normal hover:bg-transparent hover:border-gray-300 ${errors.birthday ? 'border-red-300 bg-red-50' : 'border-gray-200'
-                        }`}
-                    >
+                        variant="outline"
+                        className={`w-full p-3 h-auto justify-between text-left font-normal hover:bg-transparent hover:border-gray-300 ${errors.birthday ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                          }`}
+                      >
                         <input
                           type="text"
                           name="birthday"

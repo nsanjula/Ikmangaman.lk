@@ -124,8 +124,8 @@ const SearchResultsForm = () => {
   const { isAuthenticated, handleAuthError } = useAuth();
   const { callWithLoading } = useApiWithLoading();
   const { startRouteTransition } = useRouteLoading();
-  
-  const [showFilters, setShowFilters] = useState(true);
+
+  const [showFilters, setShowFilters] = useState(window.innerWidth >= 1024);
   const [selectedAreas, setSelectedAreas] = useState<string[]>([
     "hill_country",
     "coastal",
@@ -168,6 +168,15 @@ const SearchResultsForm = () => {
 
   const searchType = getSearchType();
   const imageFile = location.state?.imageFile;
+
+  useEffect(() => {
+    const handleResize = () => {
+      setShowFilters(window.innerWidth >= 1024);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Debug logging for image search context
   useEffect(() => {
@@ -523,10 +532,10 @@ const SearchResultsForm = () => {
       // For image searches, ensure match_score is preserved
       const validatedCards = searchType === 'image'
         ? cards.map(card => ({
-            ...card,
-            match_score: card.match_score !== undefined ? card.match_score : 0,
-            score: card.score !== undefined ? card.score : card.match_score || 0
-          }))
+          ...card,
+          match_score: card.match_score !== undefined ? card.match_score : 0,
+          score: card.score !== undefined ? card.score : card.match_score || 0
+        }))
         : cards;
 
       const cacheData = {
@@ -567,8 +576,8 @@ const SearchResultsForm = () => {
         for (let i = 0; i < sessionStorage.length; i++) {
           const key = sessionStorage.key(i);
           if (key && key.startsWith('searchResults_image_') &&
-              key !== latestKey &&
-              !key.includes('_image_' + timestamp)) { // Don't remove the current timestamped cache
+            key !== latestKey &&
+            !key.includes('_image_' + timestamp)) { // Don't remove the current timestamped cache
             imageKeys.push(key);
           }
         }
@@ -661,6 +670,39 @@ const SearchResultsForm = () => {
   return (
     <div className="min-h-screen w-full section" style={{ background: 'var(--bg)' }}>
       <div className="container">
+        <div className="lg:hidden mb-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+            <div>
+              <h1 className="mb-2" style={{ color: 'var(--text-900)' }}>
+                Search Results
+              </h1>
+              <p style={{ color: 'var(--text-600)' }}>
+                {isLoading
+                  ? "Searching for matching destinations..."
+                  : `Found ${filteredCards.length} matching results`}
+              </p>
+              {searchType === 'text' && searchQuery && (
+                <p className="text-sm mt-1" style={{ color: 'var(--text-600)' }}>
+                  Searching for: "{searchQuery}"
+                </p>
+              )}
+              {searchType === 'image' && imageFile && (
+                <p className="text-sm mt-1" style={{ color: 'var(--text-600)' }}>
+                  Image search: {imageFile.name}
+                </p>
+              )}
+            </div>
+          </div>
+          {error && (
+            <div className="card p-4 border-l-4" style={{
+              background: 'var(--primary-100)',
+              borderLeftColor: 'var(--primary-600)',
+              borderColor: 'var(--primary-200)'
+            }}>
+              <p style={{ color: 'var(--primary-700)' }}>ℹ️ {error}</p>
+            </div>
+          )}
+        </div>
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Filters Sidebar - Remove Budget and Sort By */}
           <div className="lg:w-1/4">
@@ -740,7 +782,7 @@ const SearchResultsForm = () => {
           {/* Content Section */}
           <div className="lg:w-3/4">
             {/* Header - Modified text and removed Edit Questionnaire button */}
-            <div className="mb-6">
+            <div className="hidden lg:block mb-6">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                 <div>
                   <h1 className="mb-2" style={{ color: 'var(--text-900)' }}>
@@ -836,8 +878,8 @@ const SearchResultsForm = () => {
                           {actualSearchType === 'image' && card.match_score !== undefined && (
                             <p className="text-sm mb-3" style={{ color: 'var(--text-600)' }}>
                               {card.match_score >= 0.85 ? 'Good Match' :
-                               card.match_score >= 0.70 ? 'Average Match' :
-                               'Bad Match'}
+                                card.match_score >= 0.70 ? 'Average Match' :
+                                  'Bad Match'}
                             </p>
                           )}
 

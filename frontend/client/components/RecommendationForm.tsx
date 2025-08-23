@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiChevronDown, FiChevronUp, FiFilter } from "react-icons/fi";
 import {
@@ -40,6 +40,7 @@ interface CustomDropdownProps {
 const CustomDropdown: React.FC<CustomDropdownProps> = ({ value, onChange, options }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [hoveredOption, setHoveredOption] = useState<string | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const selectedOption = options.find(option => option.value === value);
 
@@ -48,8 +49,22 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({ value, onChange, option
     setIsOpen(false);
   };
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   return (
-    <div className="relative">
+    <div className="relative" ref={dropdownRef}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -77,11 +92,15 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({ value, onChange, option
 
       {isOpen && (
         <div
-          className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden"
+          className="fixed z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden"
           style={{
             backgroundColor: 'var(--surface)',
             borderColor: '#E2E8F0',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+            // Calculate position based on the button's location
+            width: dropdownRef.current?.querySelector('button')?.clientWidth,
+            top: (dropdownRef.current?.getBoundingClientRect().bottom || 0) + window.scrollY,
+            left: dropdownRef.current?.getBoundingClientRect().left,
           }}
         >
           {options.map((option) => (
@@ -111,13 +130,6 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({ value, onChange, option
           ))}
         </div>
       )}
-
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
     </div>
   );
 };
@@ -127,7 +139,6 @@ const RecommendationForm = () => {
   const { isAuthenticated, logout, handleAuthError } = useAuth();
   const { callWithLoading } = useApiWithLoading();
   const { startRouteTransition } = useRouteLoading();
-  const [showFilters, setShowFilters] = useState(true);
   const [budget, setBudget] = useState(500000);
   const [selectedAreas, setSelectedAreas] = useState<string[]>([
     "hill_country",
@@ -140,6 +151,36 @@ const RecommendationForm = () => {
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<string>("best_match");
   const [hasCachedData, setHasCachedData] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Set initial filter state based on device type
+  const [showFilters, setShowFilters] = useState(!isMobile);
+
+  // Check if device is mobile on component mount and resize
+  useEffect(() => {
+    const checkIfMobile = () => {
+      const mobile = window.innerWidth < 1024; // lg breakpoint
+      setIsMobile(mobile);
+      // Update filter visibility based on device
+      setShowFilters(!mobile);
+    };
+
+    // Initial check
+    checkIfMobile();
+
+    // Add event listener for window resize
+    window.addEventListener('resize', checkIfMobile);
+
+    // Cleanup
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
+
+  // Set initial filter state based on device type
+  useEffect(() => {
+    if (isMobile) {
+      setShowFilters(false);
+    }
+  }, [isMobile]);
 
   const parseDistance = (distanceStr: string): number => {
     const match = distanceStr.match(/(\d+(?:\.\d+)?)/);
@@ -418,11 +459,60 @@ const RecommendationForm = () => {
   return (
     <div className="min-h-screen w-full section" style={{ background: 'var(--bg)' }}>
       <div className="container">
+        <div className="lg:hidden mb-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+            <div>
+              <h1 className="mb-2" style={{ color: 'var(--text-900)' }}>
+                Travel Recommendations
+              </h1>
+              <p style={{ color: 'var(--text-600)' }}>
+                {isLoading
+                  ? "Loading your personalized recommendations..."
+                  : `Found ${filteredCards.length} personalized recommendations`}
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => {
+                  sessionStorage.removeItem('has_visited_create_itinerary');
+                  sessionStorage.setItem('navigate_from_recommendations', 'true');
+                  navigate("/create-itinerary");
+                }}
+                className="btn btn-primary btn-md flex items-center gap-2 whitespace-nowrap"
+              >
+                <span>🗺️</span>
+                Create Itinerary
+              </button>
+              <button
+                onClick={() => {
+                  sessionStorage.removeItem('tempQuestionnaireData');
+                  clearRecommendationsCache();
+                  navigate("/questionnaire");
+                }}
+                className="btn btn-secondary btn-md flex items-center gap-2 whitespace-nowrap border-2 hover:bg-opacity-10"
+                style={{
+                  borderColor: 'var(--primary-600)',
+                  color: 'var(--primary-600)',
+                  borderWidth: '2px',
+                  borderStyle: 'solid'
+                }}
+              >
+                <span>📝</span>
+                Edit Questionnaire
+              </button>
+            </div>
+          </div>
+          {error && (
+            <div className="bg-red-500 text-white p-3 rounded-lg">
+              <p>⚠️ {error}</p>
+            </div>
+          )}
+        </div>
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Filters Sidebar - Updated with sticky positioning */}
+          {/* Filters Sidebar - Updated with mobile-specific compact design */}
           <div className="lg:w-1/4 relative">
             <div
-              className="card p-6"
+              className="card p-4 lg:p-6" // Reduced padding on mobile only
               style={{
                 background: 'var(--surface)',
                 zIndex: 30,
@@ -436,12 +526,12 @@ const RecommendationForm = () => {
               }}
             >
               <div
-                className="flex items-center justify-between cursor-pointer mb-4"
+                className="flex items-center justify-between cursor-pointer mb-3 lg:mb-4" // Reduced margin on mobile only
                 onClick={toggleFilters}
               >
                 <div className="flex items-center gap-2">
-                  <FiFilter className="text-xl" style={{ color: 'var(--text-900)' }} />
-                  <h2 className="text-lg font-semibold" style={{ color: 'var(--text-900)' }}>Filters</h2>
+                  <FiFilter className="text-lg lg:text-xl" style={{ color: 'var(--text-900)' }} /> {/* Smaller icon on mobile */}
+                  <h2 className="text-md lg:text-lg font-semibold" style={{ color: 'var(--text-900)' }}>Filters</h2> {/* Smaller text on mobile */}
                 </div>
                 {showFilters ? (
                   <FiChevronUp style={{ color: 'var(--text-600)' }} />
@@ -451,9 +541,9 @@ const RecommendationForm = () => {
               </div>
 
               {showFilters && (
-                <div className="space-y-6">
+                <div className="space-y-4 lg:space-y-6"> {/* Reduced spacing on mobile only */}
                   <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-900)' }}>
+                    <label className="block text-xs lg:text-sm font-medium mb-1 lg:mb-2" style={{ color: 'var(--text-900)' }}> {/* Smaller text and spacing on mobile */}
                       Budget: LKR {budget.toLocaleString()}
                     </label>
                     <input
@@ -475,10 +565,10 @@ const RecommendationForm = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-900)' }}>
+                    <label className="block text-xs lg:text-sm font-medium mb-2 lg:mb-3" style={{ color: 'var(--text-900)' }}> {/* Smaller text and spacing on mobile */}
                       Areas
                     </label>
-                    <div className="space-y-2">
+                    <div className="space-y-1 lg:space-y-2"> {/* Reduced spacing on mobile */}
                       {areas.map((area) => (
                         <label
                           key={area.id}
@@ -490,7 +580,7 @@ const RecommendationForm = () => {
                             onChange={() => toggleArea(area.id)}
                             className="w-4 h-4 text-gray-600 bg-gray-300 border-gray-400 rounded focus:ring-gray-500 accent-gray-500"
                           />
-                          <span className="text-sm" style={{ color: 'var(--text-600)' }}>
+                          <span className="text-xs lg:text-sm" style={{ color: 'var(--text-600)' }}> {/* Smaller text on mobile */}
                             {area.name}
                           </span>
                         </label>
@@ -499,7 +589,7 @@ const RecommendationForm = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text-900)' }}>
+                    <label className="block text-xs lg:text-sm font-medium mb-2 lg:mb-3" style={{ color: 'var(--text-900)' }}> {/* Smaller text and spacing on mobile */}
                       Sort by
                     </label>
                     <CustomDropdown
@@ -513,7 +603,7 @@ const RecommendationForm = () => {
                         { value: 'travel_time', label: 'Travel time: Shortest first' }
                       ]}
                     />
-                    <div className="mt-2 text-xs" style={{ color: 'var(--text-600)' }}>
+                    <div className="mt-1 lg:mt-2 text-xs" style={{ color: 'var(--text-600)' }}> {/* Reduced spacing on mobile */}
                       {sortBy === 'best_match' && 'Showing most relevant destinations first'}
                       {sortBy === 'budget_low_high' && 'Showing cheapest destinations first'}
                       {sortBy === 'budget_high_low' && 'Showing most expensive destinations first'}
@@ -528,7 +618,7 @@ const RecommendationForm = () => {
                       setBudget(50000);
                       setSortBy("best_match");
                     }}
-                    className="w-full btn btn-secondary btn-sm"
+                    className="w-full btn btn-secondary btn-sm py-2" // Added specific padding
                   >
                     Reset Filters
                   </button>
@@ -539,56 +629,57 @@ const RecommendationForm = () => {
 
           {/* Content Section */}
           <div className="lg:w-3/4">
-            <div className="mb-6">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-                <div>
-                  <h1 className="mb-2" style={{ color: 'var(--text-900)' }}>
-                    Travel Recommendations
-                  </h1>
-                  <p style={{ color: 'var(--text-600)' }}>
-                    {isLoading
-                      ? "Loading your personalized recommendations..."
-                      : `Found ${filteredCards.length} personalized recommendations`}
-                  </p>
+            {!isMobile && (
+              <div className="mb-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                  <div>
+                    <h1 className="mb-2" style={{ color: 'var(--text-900)' }}>
+                      Travel Recommendations
+                    </h1>
+                    <p style={{ color: 'var(--text-600)' }}>
+                      {isLoading
+                        ? "Loading your personalized recommendations..."
+                        : `Found ${filteredCards.length} personalized recommendations`}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={() => {
+                        sessionStorage.removeItem('has_visited_create_itinerary');
+                        sessionStorage.setItem('navigate_from_recommendations', 'true');
+                        navigate("/create-itinerary");
+                      }}
+                      className="btn btn-primary btn-md flex items-center gap-2 whitespace-nowrap"
+                    >
+                      <span>🗺️</span>
+                      Create Itinerary
+                    </button>
+                    <button
+                      onClick={() => {
+                        sessionStorage.removeItem('tempQuestionnaireData');
+                        clearRecommendationsCache();
+                        navigate("/questionnaire");
+                      }}
+                      className="btn btn-secondary btn-md flex items-center gap-2 whitespace-nowrap border-2 hover:bg-opacity-10"
+                      style={{
+                        borderColor: 'var(--primary-600)',
+                        color: 'var(--primary-600)',
+                        borderWidth: '2px',
+                        borderStyle: 'solid'
+                      }}
+                    >
+                      <span>📝</span>
+                      Edit Questionnaire
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <button
-                    onClick={() => {
-                      // Clear any existing visit flag and set the from recommendations flag
-                      sessionStorage.removeItem('has_visited_create_itinerary');
-                      sessionStorage.setItem('navigate_from_recommendations', 'true');
-                      navigate("/create-itinerary");
-                    }}
-                    className="btn btn-primary btn-md flex items-center gap-2 whitespace-nowrap"
-                  >
-                    <span>🗺️</span>
-                    Create Itinerary
-                  </button>
-                  <button
-                    onClick={() => {
-                      sessionStorage.removeItem('tempQuestionnaireData');
-                      clearRecommendationsCache();
-                      navigate("/questionnaire");
-                    }}
-                    className="btn btn-secondary btn-md flex items-center gap-2 whitespace-nowrap border-2 hover:bg-opacity-10"
-                    style={{
-                      borderColor: 'var(--primary-600)',
-                      color: 'var(--primary-600)',
-                      borderWidth: '2px',
-                      borderStyle: 'solid'
-                    }}
-                  >
-                    <span>📝</span>
-                    Edit Questionnaire
-                  </button>
-                </div>
+                {error && (
+                  <div className="bg-red-500 text-white p-3 rounded-lg">
+                    <p>⚠️ {error}</p>
+                  </div>
+                )}
               </div>
-              {error && (
-                <div className="bg-red-500 text-white p-3 rounded-lg">
-                  <p>⚠️ {error}</p>
-                </div>
-              )}
-            </div>
+            )}
 
             {isLoading && (
               <div className="flex justify-center items-center h-64">

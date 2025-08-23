@@ -42,15 +42,17 @@ export default function HeroSection() {
         <div className="container iframe-container text-center text-white py-8 sm:py-20 px-4">
           {/* Animated hero text */}
           <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-            <h1 className="mb-4 sm:mb-6 text-white text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
+            <h1 className="mb-4 sm:mb-6 text-white text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight drop-shadow-md">
               Discover Sri Lanka
               <br />
-              <span className="text-gradient bg-gradient-to-r from-[#159CAF] to-[#0d7a8a] bg-clip-text text-transparent">Your Way</span>
+              <span className="text-gradient bg-gradient-to-r from-[#2CD8E8] via-[#22C1D1] to-[#159CAF] bg-clip-text text-transparent bg-300% animate-gradient-flow drop-shadow-sm">
+                Your Way
+              </span>
             </h1>
           </div>
 
           <div className="animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-            <p className="text-base sm:text-lg md:text-xl mb-6 sm:mb-8 text-white/90 max-w-2xl mx-auto px-2">
+            <p className="text-base sm:text-lg md:text-xl mb-6 sm:mb-8 text-white/90 max-w-2xl mx-auto px-2 drop-shadow-sm">
               Experience the pearl of the Indian Ocean with personalized travel
               recommendations and cost-effective planning
             </p>
@@ -58,7 +60,7 @@ export default function HeroSection() {
 
           {/* Feature highlights with white background */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-4xl mx-auto mb-8 sm:mb-12 px-2">
-            <div className="animate-fade-in-up bg-white p-4 sm:p-6 rounded-xl border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+            <div className="animate-fade-in-up bg-white p-4 sm:p-6 rounded-xl border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer"
               style={{ animationDelay: '0.6s' }}>
               <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 sm:mb-4 bg-[#e6f7f9] rounded-full flex items-center justify-center">
                 <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#159CAF]" fill="currentColor" viewBox="0 0 20 20">
@@ -69,7 +71,7 @@ export default function HeroSection() {
               <p className="text-sm text-gray-600 leading-relaxed">AI-powered recommendations based on your preferences and travel style</p>
             </div>
 
-            <div className="animate-fade-in-up bg-white p-4 sm:p-6 rounded-xl border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+            <div className="animate-fade-in-up bg-white p-4 sm:p-6 rounded-xl border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer"
               style={{ animationDelay: '0.8s' }}>
               <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 sm:mb-4 bg-[#e6f7f9] rounded-full flex items-center justify-center">
                 <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#159CAF]" fill="currentColor" viewBox="0 0 20 20">
@@ -80,7 +82,7 @@ export default function HeroSection() {
               <p className="text-sm text-gray-600 leading-relaxed">Cost-effective planning with detailed budget breakdowns for every trip</p>
             </div>
 
-            <div className="animate-fade-in-up bg-white p-4 sm:p-6 rounded-xl border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 sm:col-span-2 lg:col-span-1"
+            <div className="animate-fade-in-up bg-white p-4 sm:p-6 rounded-xl border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer sm:col-span-2 lg:col-span-1"
               style={{ animationDelay: '1.0s' }}>
               <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 sm:mb-4 bg-[#e6f7f9] rounded-full flex items-center justify-center">
                 <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#159CAF]" fill="currentColor" viewBox="0 0 20 20">
@@ -112,6 +114,26 @@ export default function HeroSection() {
           </div>
         </div>
       </div>
+
+      {/* Add custom CSS for the gradient animation */}
+      <style>
+        {`
+          @keyframes gradientFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+          
+          .animate-gradient-flow {
+            animation: gradientFlow 3s ease infinite;
+            background-size: 300% 300%;
+          }
+          
+          .bg-300% {
+            background-size: 300% 300%;
+          }
+        `}
+      </style>
     </section>
   );
 }

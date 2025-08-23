@@ -14,7 +14,7 @@ export default function Header() {
 
   // Show search bar only on recommendation and search results pages (not destination details)
   const showSearchBar = location.pathname === '/recommendation' ||
-                        (location.pathname.startsWith('/search') && !location.pathname.includes('/destination/'));
+    (location.pathname.startsWith('/search') && !location.pathname.includes('/destination/'));
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -92,18 +92,19 @@ export default function Header() {
                   size="sm"
                   className="text-white bg-cyan-600 hover:bg-cyan-700 border-cyan-600 hover:border-cyan-700"
                 >
-                  Logout
+                  Log out
                 </Button>
               </>
             ) : (
               // Logged out state
               <>
-                <button
+                <Button
                   onClick={() => handleNavigation("/login")}
-                  className="btn btn-tertiary"
+                  variant="outline"
+                  className="btn btn-secondry btn-md"
                 >
                   Log in
-                </button>
+                </Button>
                 <button
                   onClick={() => handleNavigation("/register")}
                   className="btn btn-primary btn-md"
@@ -114,117 +115,62 @@ export default function Header() {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleMobileMenu}
-              aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
-              aria-expanded={isMobileMenuOpen}
-              style={{ color: 'var(--text-600)' }}
-            >
-              {isMobileMenuOpen ? (
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+          {/* Mobile Auth Section - Right side of logo */}
+          <div className="md:hidden flex items-center space-x-2">
+            {isAuthenticated ? (
+              // Mobile logged in state
+              <>
+                <Button
+                  onClick={handleLogout}
+                  variant="outline"
+                  size="sm"
+                  className="text-white bg-cyan-600 hover:bg-cyan-700 border-cyan-600 hover:border-cyan-700 text-xs p-1 h-8 mr-2"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              ) : (
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+                  Log out
+                </Button>
+                <div
+                  onClick={() => {
+                    // Clear temporary questionnaire data when navigating to profile
+                    sessionStorage.removeItem('tempQuestionnaireData');
+                    sessionStorage.removeItem('has_visited_create_itinerary');
+                    console.log('Cleared temporary questionnaire data - navigating to profile');
+                    handleNavigation("/profile");
+                  }}
+                  className="w-8 h-8 bg-cyan-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg cursor-pointer hover:bg-cyan-700 transition border-2 border-white ring-2 ring-cyan-200"
+                  title="Profile"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                </svg>
-              )}
-            </Button>
+                  {userProfile?.firstname ? userProfile.firstname.charAt(0).toUpperCase() : 'U'}
+                </div>
+              </>
+            ) : (
+              // Mobile logged out state - Fixed buttons
+              <div className="flex space-x-2">
+                <Button
+                  onClick={() => handleNavigation("/login")}
+                  variant="outline"
+                  size="sm"
+                  className="btn btn-secondry btn-md"
+                >
+                  Log in
+                </Button>
+                <Button
+                  onClick={() => handleNavigation("/register")}
+                  size="sm"
+                  className="btn btn-primary btn-md"
+                >
+                  Sign up
+                </Button>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Mobile Navigation */}
-        <div
-          className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${isMobileMenuOpen ? "max-h-96 py-4" : "max-h-0 py-0"
-            }`}
-        >
-          <div className="border-t border-gray-200 pt-4 space-y-4">
-            {showSearchBar && (
-              <div className="px-2">
-                <SearchBar className="w-full" />
-              </div>
-            )}
-            <Link
-              to="/aboutus"
-              className="block font-medium transition-colors duration-150 px-2"
-              style={{ color: 'var(--text-600)' }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--primary-600)')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-600)')}
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              About Us
-            </Link>
-            
-            {isAuthenticated ? (
-              // Mobile logged in state
-              <div className="flex flex-col space-y-2 pt-2 px-4">
-                <div className="flex items-center space-x-4">
-                  <div
-                    onClick={() => {
-                      // Clear temporary questionnaire data when navigating to profile
-                      sessionStorage.removeItem('tempQuestionnaireData');
-                      sessionStorage.removeItem('has_visited_create_itinerary');
-                      console.log('Cleared temporary questionnaire data - navigating to profile');
-                      handleNavigation("/profile");
-                    }}
-                    className="w-10 h-10 bg-cyan-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg cursor-pointer hover:bg-cyan-700 transition border-2 border-white ring-2 ring-cyan-200"
-                    title="Profile"
-                  >
-                    {userProfile?.firstname ? userProfile.firstname.charAt(0).toUpperCase() : 'U'}
-                  </div>
-                  <Button
-                    onClick={handleLogout}
-                    variant="outline"
-                    size="sm"
-                    className="text-white bg-cyan-600 hover:bg-cyan-700 border-cyan-600 hover:border-cyan-700"
-                  >
-                    Logout
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              // Mobile logged out state
-              <div className="flex flex-col space-y-2 pt-2 px-4">
-                <button
-                  onClick={() => handleNavigation("/login")}
-                  className="btn btn-tertiary justify-start"
-                >
-                  Log in
-                </button>
-                <button
-                  onClick={() => handleNavigation("/register")}
-                  className="btn btn-primary btn-md justify-start"
-                >
-                  Sign up
-                </button>
-              </div>
-            )}
+        {/* Mobile Search Bar - Below the header row */}
+        {showSearchBar && (
+          <div className="md:hidden pb-4">
+            <SearchBar className="w-full" />
           </div>
-        </div>
+        )}
       </div>
     </header>
   );
