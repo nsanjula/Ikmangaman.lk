@@ -243,6 +243,7 @@ const HowItWorks = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
+            <Header />
             <div className="container mx-auto px-4 py-8">
                 {/* Page Title */}
                 <section className="text-center mb-8">
@@ -350,7 +351,7 @@ const HowItWorks = () => {
                     </div>
                 </div>
             </div>
-
+            <Footer />
             {/* Mobile Sidebar Overlay */}
             {isSidebarOpen && (
                 <div
