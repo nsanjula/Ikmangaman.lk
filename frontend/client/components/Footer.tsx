@@ -1,6 +1,12 @@
 import { Link } from "react-router-dom";
 
 export default function Footer() {
+  // Function to handle Gmail contact link click
+  const handleGmailContact = () => {
+    const subject = encodeURIComponent("Feedback for Ikmangaman.lk");
+    window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=teamikmangaman@gmail.com&su=${subject}`, '_blank');
+  };
+
   return (
     <footer className="py-9" style={{ background: 'var(--primary-700)', color: '#B8E6E6' }}>
       <div className="container iframe-container">
@@ -10,7 +16,7 @@ export default function Footer() {
             <h3 className="text-xl font-bold mb-4" style={{ color: '#F0F9FF' }}>
               Ikmangaman.lk
             </h3>
-            <p className="text-sm mb-6 max-w-xs">
+            <p className="text-sm mb-6 max-w-xs" style={{ color: '#B8E6E6' }}>
               Your trusted companion for discovering the beautiful island of Sri
               Lanka with personalized recommendations.
             </p>
@@ -80,22 +86,14 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link
-                  to="/destinations"
-                  className="text-sm transition-colors duration-150 hover:text-primary-600"
-                  style={{ color: '#B8E6E6' }}
-                >
-                  Destinations
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/contact"
+                <a
+                  href="#"
+                  onClick={handleGmailContact}
                   className="text-sm transition-colors duration-150 hover:text-primary-600"
                   style={{ color: '#B8E6E6' }}
                 >
                   Contact
-                </Link>
+                </a>
               </li>
             </ul>
           </div>
@@ -120,15 +118,6 @@ export default function Footer() {
                   style={{ color: '#B8E6E6' }}
                 >
                   Terms of Service
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/cookie-policy"
-                  className="text-sm transition-colors duration-150 hover:text-primary-600"
-                  style={{ color: '#B8E6E6' }}
-                >
-                  Cookie Policy
                 </Link>
               </li>
             </ul>

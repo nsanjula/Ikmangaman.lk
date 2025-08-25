@@ -31,6 +31,8 @@ import CreateItinerary from "./pages/CreateItinerary";
 import ItineraryDestinationDetail from "./pages/ItineraryDestinationDetail";
 import ChatBot from "./components/ChatBot";
 import HowItWorks from "./pages/HowItWorksPage";
+import PrivacyPolicy from "./pages/PrivacyPolicyPage";
+import TermsOfService from "./pages/TermsofServicePage";
 
 const queryClient = new QueryClient();
 
@@ -107,6 +109,8 @@ const App = () => {
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/compass-loader" element={<CompassLoaderShowcase />} />
                   <Route path="/how-it-works" element={<HowItWorks />} />
+                  <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                  <Route path="/terms-of-service" element={<TermsOfService />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
