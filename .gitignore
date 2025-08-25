@@ -10,6 +10,7 @@ node_modules/
 /backend/data/images
 frontend/.env
 builder.config.json
+/backend/database/ikmangaman.db
 
 __pycache__/
 *.pyc
