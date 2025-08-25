@@ -1,119 +1,74 @@
-# 🌍 Ikmangaman.lk
+# 🌍 Ikmangaman.lk  
 
-**Ikmangaman.lk** is an AI-powered travel planning platform tailored for domestic tourism in Sri Lanka. It helps users discover destinations that match their traveler type, preferences, and travel season, while also offering practical details like weather, transport, accommodations, and local guides — all in one place.
+**Ikmangaman.lk** is an **AI-powered travel planning platform** designed to transform the way people explore **domestic tourism in Sri Lanka**.  
+It helps travelers discover destinations that match their unique profile, plan personalized itineraries, and access practical details such as routes, hotels, crowd levels, and weather — all in one place.  
 
----
-
-## 🚀 Key Features
-
-- 🎯 **Personalized Travel Recommendations**  
-  Uses machine learning to suggest destinations based on user profiles (e.g., Backpacker, Nature Lover, Spiritual Traveler).
-
-- 📍 **Interactive Route Visualization**  
-  Uses Google Maps to display the route from your current location to the destination, including distance and time.
-
-- 🗺️ **Destination-Specific Map Overlays**  
-  Shows key landmarks and points of interest around each recommended destination for better trip planning.
-
-- 🌦️ **Real-Time Weather Insights**  
-  Fetches live weather information to help users plan trips accordingly.
-
-- 🏨 **Hotel Suggestions Nearby**  
-  Integrates data to show accommodation options near the destination.
-
-- 🧭 **Local Guide Contact Info**  
-  Recommends guides and tips sourced from community inputs and external APIs.
+*Built with FastAPI, React, and AI-powered recommendation models.*  
 
 ---
 
-## 🛠️ Tech Stack
+## 🚀 Key Features  
 
-| Layer        | Technology                |
-|--------------|---------------------------|
-| Frontend     | React + TypeScript + Vite |
-| Styling      | Tailwind CSS              |
-| Backend      | FastAPI (Python)          |
-| Machine Learning | Scikit-learn          |
-| Database     | SQLite                    |
-| Dev Tools    | Git, GitHub, VS Code      |
+- 🎯 **Personalized Recommendations**  
+  AI predicts traveler types (e.g., Backpacker, Nature Lover, Spiritual Explorer) and suggests destinations accordingly.  
 
----
-## API integrations
+- 🗺️ **Interactive Route Visualization**  
+  Google Maps integration to display travel routes, distance, and estimated time.  
 
-- 🗺️ **Google maps API's**  
-  Maps Javascript API, Places API, Distance Matrix API, Directions API, Routes API
+- 🏞️ **Destination Insights**  
+  Each location includes attractions, nearby activities, and travel essentials.  
 
-- 🌅 **OpenWeathermap API**  
-  To fetch weather data.
+- 🌦️ **Weather Updates**  
+  Real-time forecasts to help travelers prepare better.  
 
-- 🏨 **Mock API**  
-  To fetch hotel data for destinations.
+- 📝 **Itinerary Generator**  
+  Automatic daily itineraries based on preferences and trip duration.  
+
+- 🔍 **Visual search**  
+  Upload an image to find similar destinations.
 ---
 
-## 🔐 Environment Setup
+## 🛠️ How It Works  
 
-### 🔑 Frontend `.env` Configuration
-
-Create a `.env` file inside the `frontend/` directory with the following variable:
-
-```env
-VITE_GOOGLE_MAPS_API_KEY=your-google-maps-api-key-here
-```
-### 🔑 Root  `.env` Configuration
-
-Create a `.env` file inside the `Ikmangaman.lk_main/` directory with the following variable:
-
-```env
-# API credentials
-AMADEUS_CLIENT_ID=your_api_key
-AMADEUS_CLIENT_SECRET=your_client_secret
-RAPIDAPI_KEY=your_api_key
-
-# API base and weather
-REACT_APP_API_BASE_URL=http://localhost:8000
-OPENWEATHER_API_KEY=your_api_key
-
-# Google Maps
-GOOGLE_MAPS_API_KEY=your_api_key
-
-# Security settings
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-SECRET_KEY=your_secret_key_here
-ALGORITHM=HS256
-```
----
-## 🧪 How to Run the Project
-### 📦 Backend Setup
-
-- In ```backend/database/db.py``` change the ```SQLALCHEMY_DATABASE_URL``` to your databse file path
-```
-cd backend
-python -m venv venv
-source venv/bin/activate  # or venv\Scripts\activate on Windows
-pip install -r requirements.txt
-uvicorn main:app --reload
-```
-- Runs at: http://localhost:8000
-- Docs available at: http://localhost:8000/docs
-
-### 💻 Frontend Setup
-```
-cd frontend
-npm install
-npm run dev
-```
----
-## 👥 Team Members
-- Nisal Sanjula
-- Yasiru Hansana
-- Anupama Wickramarathna
-- Buvindu Suraweera
-- Chirantha Akarsha
+1. **Traveler Questionnaire** → Users answer simple questions about their preferences.  
+2. **AI Traveler Type Prediction** → Our model classifies the user into a traveler type.  
+3. **Destination Matching** → The system recommends destinations tagged with matching interests & seasonal suitability.  
+4. **Interactive Exploration** → Users can view maps, attractions, weather, hotel and guide details.  
+5. **Itinerary Generation** → Create a full trip plan with recommended destinations for each day.  
 
 ---
-## ✅ To Do / Future Enhancements
 
-- 🧠 Crowd prediction models to predict the crowd levels of each destination
-- 📝 Itinerary generation and integrated trip budget calculator
-- 🤝 Affiliate partnerships with hotel booking platforms in Sri Lanka
+## 📸 Screenshots  
 
+### Recommendations page  
+
+![Landing page Screenshot](assets/Recommendation_page_copy.png)  
+
+
+### Destination Page  
+
+![Recommendation page Screenshot](assets/Destination_page_copy.png)  
+
+
+### Itinerary page  
+
+![Destination page Screenshot](assets/Itinerary_copy.png)  
+
+### Search by image   
+
+![Destination page Screenshot](assets/Image_search_copy.png)
+
+---
+
+## 🌐 Website  
+
+👉 [Visit Ikmangaman.lk](https://ikmangaman.netlify.app)  
+
+---
+
+## 👥 Team  
+
+- **Nisal Sanjula** 
+- **Yasiru Hansana** 
+- **Anupama Wickramasinghe** 
+- **Buvindu Suraweera** 

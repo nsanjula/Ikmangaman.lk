@@ -3,10 +3,8 @@ import os
 from fastapi import APIRouter, HTTPException, Request, Response, Depends
 from sqlalchemy.orm import Session
 
-# from weasyprint import HTML  # removed: we now use pdflayer instead
+from backend.services.pdf_via_api2pdf import html_to_pdf_via_api2pdf, PDFExportError
 
-# from backend.services.pdf_via_pdflayer import html_to_pdf_via_pdflayer, PDFExportError
-from backend.services.pdf_via_pdfshift import html_to_pdf_via_pdfshift, PDFExportError
 from backend.database.db import get_db
 from backend.models import Itinerary, LocationCoordinates, Destination, User
 from backend.routers.hotels import get_hotel
@@ -235,9 +233,8 @@ async def export_itinerary(
         base_url=asset_base,
     )
 
-    # HTML -> PDF via pdflayer (test mode = True for local Swagger testing)
     try:
-        pdf_bytes = await html_to_pdf_via_pdfshift(html_content)
+        pdf_bytes = await html_to_pdf_via_api2pdf(html_content)
     except PDFExportError as e:
         raise HTTPException(status_code=502, detail=f"PDF export failed: {e}")
 
