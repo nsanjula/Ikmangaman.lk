@@ -58,6 +58,15 @@ export default function Header() {
               <SearchBar className="w-80" />
             )}
             <Link
+              to="/how-it-works"
+              className="font-medium transition-colors duration-150 whitespace-nowrap"
+              style={{ color: 'var(--text-600)' }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--primary-600)')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-600)')}
+            >
+              How it Works
+            </Link>
+            <Link
               to="/aboutus"
               className="font-medium transition-colors duration-150 whitespace-nowrap"
               style={{ color: 'var(--text-600)' }}

@@ -29,6 +29,7 @@ import QuestionnaireMetricsPage from "./pages/QuestionnaireMetricsPage";
 import SavedPlaceDestinationDetail from "./pages/SavedPlaceDestinationDetail";
 import CreateItinerary from "./pages/CreateItinerary";
 import ItineraryDestinationDetail from "./pages/ItineraryDestinationDetail";
+import HowItWorksPage from "./pages/HowItWorksPage";
 import ChatBot from "./components/ChatBot";
 import HowItWorks from "./pages/HowItWorksPage";
 import PrivacyPolicy from "./pages/PrivacyPolicyPage";
@@ -106,6 +107,7 @@ const App = () => {
                   <Route path="/search/destination/:id" element={<SearchDestinationDetail />} />
                   <Route path="/saved-destination/:id" element={<SavedPlaceDestinationDetail />} />
                   <Route path="/aboutus" element={<AboutUsPage />} />
+                  <Route path="/how-it-works" element={<HowItWorksPage />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/compass-loader" element={<CompassLoaderShowcase />} />
                   <Route path="/how-it-works" element={<HowItWorks />} />
