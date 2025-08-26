@@ -30,14 +30,14 @@ const TermsOfService = () => {
     return (
         <div className="min-h-screen w-full" style={{ background: 'var(--bg)' }}>
             {/* Hero Section */}
-            <div className="w-full py-16" style={{ background: 'var(--surface)' }}>
+            <div className="w-full py-16" style={{ background: '#E6F7F9' }}>
                 <div className="container mx-auto px-4">
                     {/* Title */}
                     <div className="text-center">
-                        <h1 className="text-5xl font-bold mb-4" style={{ color: 'var(--text-900)' }}>
+                        <h1 className="text-5xl font-bold mb-4" style={{ color: 'black' }}>
                             Terms of Service
                         </h1>
-                        <p className="text-xl mb-4 mx-auto text-center max-w-md" style={{ color: 'var(--text-600)' }}>
+                        <p className="text-xl mb-4 mx-auto text-center max-w-md" style={{ color: 'black' }}>
                             The rules and guidelines for using Ikmangaman.lk
                         </p>
                         <p className="text-sm mx-auto text-center max-w-md" style={{ color: 'var(--text-500)' }}>
