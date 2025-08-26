@@ -29,6 +29,7 @@ import QuestionnaireMetricsPage from "./pages/QuestionnaireMetricsPage";
 import SavedPlaceDestinationDetail from "./pages/SavedPlaceDestinationDetail";
 import CreateItinerary from "./pages/CreateItinerary";
 import ItineraryDestinationDetail from "./pages/ItineraryDestinationDetail";
+import HowItWorksPage from "./pages/HowItWorksPage";
 import ChatBot from "./components/ChatBot";
 
 const queryClient = new QueryClient();
@@ -103,6 +104,7 @@ const App = () => {
                   <Route path="/search/destination/:id" element={<SearchDestinationDetail />} />
                   <Route path="/saved-destination/:id" element={<SavedPlaceDestinationDetail />} />
                   <Route path="/aboutus" element={<AboutUsPage />} />
+                  <Route path="/how-it-works" element={<HowItWorksPage />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/compass-loader" element={<CompassLoaderShowcase />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
