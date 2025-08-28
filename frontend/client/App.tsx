@@ -83,7 +83,6 @@ const App = () => {
       <QueryClientProvider client={queryClient}>
         <LoadingProvider>
           <TooltipProvider>
-<<<<<<< HEAD
             <Toaster />
             <Sonner />
             <OfflineNotice />
@@ -92,21 +91,10 @@ const App = () => {
             <LoadingOverlay />
             <BrowserRouter>
               <AuthProvider>
+                <PersonalizationManager />
+                <AnalyticsTracker />
+                <CookieConsent />
                 <ChatBot />
-=======
-              <Toaster />
-              <Sonner />
-              <OfflineNotice />
-              <BackendStartupBanner />
-              {/* <BackendConnectionDiagnostic /> */}
-              <LoadingOverlay />
-              <BrowserRouter>
-                <AuthProvider>
-                  <PersonalizationManager />
-                  <AnalyticsTracker />
-                  <CookieConsent />
-                  <ChatBot />
->>>>>>> master
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/login" element={<LoginPage />} />
