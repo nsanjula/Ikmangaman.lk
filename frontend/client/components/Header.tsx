@@ -3,6 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useEffect } from "react";
+import { getCookie, setCookie, hasPersonalizationConsent, applyThemeFromCookie } from "../utils/cookies";
+import ThemeToggleButton from "./ThemeToggleButton";
+import CurrencyButton from "./CurrencyButton";
 
 import SearchBar from "./SearchBar";
 
@@ -11,10 +15,53 @@ export default function Header() {
   const location = useLocation();
   const { isAuthenticated, logout, userProfile } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark'>(document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+  const [currency, setCurrency] = useState<string>('LKR');
+
+  useEffect(() => {
+    // Apply initial personalization settings
+    applyThemeFromCookie();
+    const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+    setTheme(currentTheme as 'light' | 'dark');
+
+    const savedCurrency = getCookie('pref_currency');
+    if (savedCurrency) setCurrency(savedCurrency);
+  }, []);
+
+  const toggleTheme = () => {
+    const next = theme === 'light' ? 'dark' : 'light';
+    setTheme(next);
+    if (next === 'dark') document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
+    if (hasPersonalizationConsent()) {
+      setCookie('pref_theme', next, 365);
+    }
+  };
+
+  const changeCurrency = (value: string) => {
+    setCurrency(value);
+    if (hasPersonalizationConsent()) {
+      setCookie('pref_currency', value, 365);
+    }
+    try {
+      window.dispatchEvent(new CustomEvent('currency-changed', { detail: { currency: value } }));
+    } catch {}
+  };
 
   // Show search bar only on recommendation and search results pages (not destination details)
   const showSearchBar = location.pathname === '/recommendation' ||
     (location.pathname.startsWith('/search') && !location.pathname.includes('/destination/'));
+
+  // Show currency button only on routes that display budgets/prices
+  const p = location.pathname;
+  const showCurrency = (
+    p === '/recommendation' ||
+    p === '/create-itinerary' ||
+    /^\/destination\//.test(p) ||
+    /^\/itinerary\//.test(p) ||
+    /^\/search\/destination\//.test(p) ||
+    /^\/saved-destination\//.test(p)
+  );
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -75,6 +122,15 @@ export default function Header() {
             >
               About Us
             </Link>
+
+            {/* Currency control (only on budget pages) */}
+            {showCurrency && (
+              <CurrencyButton currency={currency} onChange={(v) => changeCurrency(v)} />
+            )}
+
+            {/* Theme toggle */}
+            <ThemeToggleButton theme={theme} onToggle={toggleTheme} />
+
           </nav>
 
           {/* Desktop Auth Section */}
@@ -126,6 +182,13 @@ export default function Header() {
 
           {/* Mobile Auth Section - Right side of logo */}
           <div className="md:hidden flex items-center space-x-2">
+            {/* Currency (only on budget pages) */}
+            {showCurrency && (
+              <CurrencyButton currency={currency} onChange={(v) => changeCurrency(v)} />
+            )}
+            {/* Theme */}
+            <ThemeToggleButton theme={theme} onToggle={toggleTheme} />
+
             {isAuthenticated ? (
               // Mobile logged in state
               <>

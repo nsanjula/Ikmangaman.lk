@@ -9,6 +9,8 @@ import {
 import { useAuth } from "../contexts/AuthContext";
 import { useApiWithLoading, useRouteLoading } from "../contexts/LoadingContext";
 import BookmarkButton from "./BookmarkButton";
+import { ensureRatesLoaded } from "../utils/currency";
+import useCurrency from "../hooks/useCurrency";
 
 interface RecommendationCard {
   id: number;
@@ -174,6 +176,10 @@ const RecommendationForm = () => {
     // Cleanup
     return () => window.removeEventListener('resize', checkIfMobile);
   }, []);
+
+  // Load exchange rates for currency formatting
+  useEffect(() => { try { ensureRatesLoaded(); } catch {} }, []);
+  const { format: formatCurrency } = useCurrency();
 
   // Set initial filter state based on device type
   useEffect(() => {
@@ -544,7 +550,7 @@ const RecommendationForm = () => {
                 <div className="space-y-4 lg:space-y-6"> {/* Reduced spacing on mobile only */}
                   <div>
                     <label className="block text-xs lg:text-sm font-medium mb-1 lg:mb-2" style={{ color: 'var(--text-900)' }}> {/* Smaller text and spacing on mobile */}
-                      Budget: LKR {budget.toLocaleString()}
+                      Budget: {formatCurrency(budget)}
                     </label>
                     <input
                       type="range"
@@ -559,8 +565,8 @@ const RecommendationForm = () => {
                       }}
                     />
                     <div className="flex justify-between text-xs mt-1" style={{ color: 'var(--text-600)' }}>
-                      <span>LKR 5,000</span>
-                      <span>LKR 500,000</span>
+                      <span>{formatCurrency(5000)}</span>
+                      <span>{formatCurrency(500000)}</span>
                     </div>
                   </div>
 
@@ -727,7 +733,7 @@ const RecommendationForm = () => {
                             size="sm"
                           />
                           <div className="absolute top-3 right-3 px-2 py-1 rounded text-white text-sm font-semibold" style={{ background: 'var(--primary-700)' }}>
-                            LKR {card.price.toLocaleString()}
+                            {formatCurrency(card.price)}
                           </div>
                         </div>
 

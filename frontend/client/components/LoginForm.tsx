@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { authAPI, LoginRequest } from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
+import { getCookie, setCookie } from "../utils/cookies";
 import BackendStatus from "./BackendStatus";
 import ForgotPasswordForm from "./ForgotPasswordForm";
 
@@ -31,6 +32,7 @@ const LoginForm = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [useSavedToken, setUseSavedToken] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { login, isTimeout, clearTimeout } = useAuth();
@@ -39,6 +41,19 @@ const LoginForm = () => {
     // Check for success message from registration
     if (location.state?.message) {
       setSuccessMessage(location.state.message);
+    }
+
+    // Autofill from cookies (username and token placeholder field)
+    const savedUsername = getCookie("auth_username");
+    const savedToken = getCookie("auth_token");
+    if (savedUsername) setUsername(savedUsername);
+    if (savedToken) {
+      setPassword("********");
+      setUseSavedToken(true);
+      try {
+        const hidden = document.getElementById("saved-token-input") as HTMLInputElement | null;
+        if (hidden) hidden.value = savedToken;
+      } catch {}
     }
 
     // Clear timeout state when user navigates to login
@@ -61,33 +76,41 @@ const LoginForm = () => {
     setIsLoading(true);
 
     try {
-      const loginData: LoginRequest = {
-        username,
-        password,
-      };
+      // If we have a saved token and user didn't change the placeholder, use token directly
+      const savedToken = useSavedToken && password === "********" ? getCookie("auth_token") : null;
+      if (savedToken) {
+        login(savedToken);
+        setCookie("auth_username", username, 30);
+        // Ensure token is persisted in localStorage as well
+        authAPI.storeToken(savedToken);
 
-      const response = await authAPI.login(loginData);
-
-      // Use auth context to manage authentication state
-      login(response.access_token);
-
-      // Check if user has recommendations, if not redirect to questionnaire
-      try {
-        const recommendations = await authAPI.getRecommendations();
-        if (recommendations && recommendations.length > 0) {
-          navigate("/recommendation");
-        } else {
+        try {
+          const recommendations = await authAPI.getRecommendations();
+          if (recommendations && recommendations.length > 0) navigate("/recommendation");
+          else navigate("/questionnaire");
+        } catch {
           navigate("/questionnaire");
         }
-      } catch (recommendationError) {
-        // If fetching recommendations fails, redirect to questionnaire
+        return;
+      }
+
+      const loginData: LoginRequest = { username, password };
+      const response = await authAPI.login(loginData);
+
+      login(response.access_token);
+      setCookie("auth_username", username, 30);
+      setCookie("auth_token", response.access_token, 30);
+
+      try {
+        const recommendations = await authAPI.getRecommendations();
+        if (recommendations && recommendations.length > 0) navigate("/recommendation");
+        else navigate("/questionnaire");
+      } catch {
         navigate("/questionnaire");
       }
     } catch (err) {
       setError(
-        err instanceof Error
-          ? err.message
-          : "Invalid credentials. Please try again.",
+        err instanceof Error ? err.message : "Invalid credentials. Please try again.",
       );
     } finally {
       setIsLoading(false);
@@ -135,6 +158,7 @@ const LoginForm = () => {
           <div className="container max-w-md mx-auto px-4">
             <form
               onSubmit={handleSubmit}
+              autoComplete="on"
               className="bg-white p-8 rounded-2xl shadow-2xl border border-gray-100"
             >
               <div className="text-center mb-8">
@@ -176,11 +200,14 @@ const LoginForm = () => {
               )}
 
               <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label htmlFor="login-username" className="block text-sm font-semibold text-gray-700 mb-2">
                   Username
                 </label>
                 <input
+                  id="login-username"
                   type="text"
+                  name="username"
+                  autoComplete="username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="Enter your username"
@@ -189,10 +216,13 @@ const LoginForm = () => {
               </div>
 
               <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                <label htmlFor="login-password" className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
                 <div className="relative">
                   <input
+                    id="login-password"
                     type={showPassword ? "text" : "password"}
+                    name="password"
+                    autoComplete="current-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"

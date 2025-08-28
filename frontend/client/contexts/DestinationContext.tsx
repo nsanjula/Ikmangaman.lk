@@ -343,6 +343,54 @@ export const DestinationProvider: React.FC<DestinationProviderProps> = ({
         }
       }
 
+      // If itinerary context and no tempDestinationData yet, derive from previous day's selected destination
+      if (useItineraryContext && itineraryId && dayNumber && (!tempDestinationData)) {
+        try {
+          const saved = localStorage.getItem('create_itinerary_state');
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            const prevDay = Number(dayNumber) - 1;
+            const prevName: string | undefined = prevDay > 0 ? parsed?.days?.[prevDay]?.destination_name : undefined;
+            const startLoc: string | undefined = prevDay > 0 ? prevName : parsed?.start_location;
+            if (startLoc) {
+              const payload = {
+                destination_id: destinationId,
+                travel_month: parsed?.travel_month || 'December',
+                no_of_people: parsed?.no_of_people || 2,
+                start_location: startLoc,
+              };
+
+              // Store for consistency with existing flow
+              const derivedKey = `tempDestinationData_itinerary_${itineraryId}_${dayNumber}_${destinationId}`;
+              sessionStorage.setItem(derivedKey, JSON.stringify(payload));
+
+              // Call API same as tempDestinationData path
+              setProgress(50);
+              const destinationDetailsWithTemp = await authAPI.getDestinationWithTempQuestionnaire(payload);
+              const coords = getLocationCoordinates(startLoc);
+              const questionnaireDataForMap = {
+                starting_location_latitudes: coords.lat,
+                starting_location_longitudes: coords.lng,
+                travel_month: payload.travel_month,
+                no_of_people: payload.no_of_people,
+                start_location: startLoc,
+              };
+              setDestinationData(destinationDetailsWithTemp);
+              setQuestionnaireData(questionnaireDataForMap);
+              setIsFallbackData(false);
+              setLoading(false);
+              setError(null);
+              setProgress(100);
+              finishLoading('destination-data');
+              console.log('✅ Derived start location from previous day:', startLoc);
+              return;
+            }
+          }
+        } catch (e) {
+          console.warn('Failed to derive previous-day start location:', e);
+        }
+      }
+
       // Check for completed temp questionnaire data (from API call)
       if (tempCompletedData) {
         try {

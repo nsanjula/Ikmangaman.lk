@@ -103,10 +103,7 @@ export default function HeroSection() {
               Start planning
             </button>
             <button
-              onClick={() => {
-                const element = document.getElementById('features');
-                element?.scrollIntoView({ behavior: 'smooth' });
-              }}
+              onClick={() => navigate('/how-it-works')}
               className="w-full sm:w-auto bg-white text-[#159CAF] border-2 border-[#159CAF] hover:bg-[#e6f7f9] px-6 sm:px-8 py-3 rounded-lg font-semibold transform hover:scale-105 transition-all duration-300 text-sm sm:text-base"
             >
               See how it works

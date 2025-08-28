@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { FiMapPin, FiStar, FiPhone, FiExternalLink } from "react-icons/fi";
 import { useDestination } from "../../contexts/DestinationContext";
 import { HotelData, Hotel } from "@shared/api";
+import { ensureRatesLoaded, getSelectedCurrency } from "../../utils/currency";
+import useCurrency from "../../hooks/useCurrency";
 
 const HotelsNearby: React.FC = () => {
   const { destinationData, loading, error } = useDestination();
@@ -62,14 +64,8 @@ const HotelsNearby: React.FC = () => {
     }
   }, [destinationData]);
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-LK", {
-      style: "currency",
-      currency: "LKR",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
+  useEffect(() => { try { ensureRatesLoaded(); } catch {} }, []);
+  const { format: formatCurrency } = useCurrency();
 
   const getAvailabilityColor = (availability: string) => {
     const lowerAvailability = availability.toLowerCase();
@@ -268,7 +264,7 @@ const HotelsNearby: React.FC = () => {
             <p className="text-sm" style={{ color: 'var(--text-600)' }}>
               Hotel information is provided by our booking partners. 
               Prices and availability may vary based on season and demand.
-              Prices are displayed in Sri Lankan Rupees (LKR).
+              Prices are displayed in your selected currency (currently: {getSelectedCurrency()}).
             </p>
           </div>
         </div>

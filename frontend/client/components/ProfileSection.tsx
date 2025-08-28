@@ -539,6 +539,7 @@ const Profile = () => {
             <div className="relative">
               <input
                 type="password"
+                autoComplete={editMode ? "new-password" : "off"}
                 value={userData.password}
                 placeholder="********"
                 onChange={(e) => handleChange("password", e.target.value)}
