@@ -5,6 +5,8 @@ import { MdDirectionsTransit } from "react-icons/md";
 import { DestinationDetails } from "../../lib/api";
 import { useDestination } from "../../contexts/DestinationContext";
 import WeatherServiceNotice from "../WeatherServiceNotice";
+import { ensureRatesLoaded } from "../../utils/currency";
+import useCurrency from "../../hooks/useCurrency";
 
 interface TransportOption {
   name: string;
@@ -90,14 +92,11 @@ const BudgetSection: React.FC = () => {
     },
   ];
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-LK", {
-      style: "currency",
-      currency: "LKR",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
+  // Load rates on mount and subscribe to currency changes
+  useEffect(() => {
+    try { ensureRatesLoaded(); } catch {}
+  }, []);
+  const { format: formatCurrency } = useCurrency();
 
   return (
     <div className="card p-6 mb-6" style={{ background: 'var(--surface)' }}>
