@@ -29,7 +29,7 @@ export default function Testimonials() {
   ];
 
   return (
-    <section className="bg-[#e6f7f9] py-12 sm:py-16 lg:py-20">
+    <section className="bg-[#e6f7f9] dark:bg-gray-800  py-12 sm:py-16 lg:py-20">
       <div className="container iframe-container px-4">
         <div className="text-center mb-10 sm:mb-16">
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
