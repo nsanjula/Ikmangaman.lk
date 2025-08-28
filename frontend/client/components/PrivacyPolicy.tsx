@@ -27,17 +27,17 @@ const PrivacyPolicy = () => {
     return (
         <div className="min-h-screen w-full" style={{ background: 'var(--bg)' }}>
             {/* Hero Section */}
-            <div className="w-full py-16" style={{ background: '#E6F7F9' }}>
+            <div className="w-full py-16 bg-cyan-100 dark:bg-gray-800">
                 <div className="container mx-auto px-4">
                     {/* Title */}
                     <div className="text-center">
-                        <h1 className="text-5xl font-bold mb-4" style={{ color: 'black' }}>
+                        <h1 className="text-5xl font-bold mb-4 dark:text-white">
                             Privacy Policy
                         </h1>
-                        <p className="text-xl mb-4 mx-auto text-center max-w-md" style={{ color: 'black' }}>
+                        <p className="text-xl mb-4 mx-auto text-center max-w-md  dark:text-white">
                             How Ikmangaman.lk handles your data
                         </p>
-                        <p className="text-sm mx-auto text-center max-w-md" style={{ color: '#5C8A8A' }}>
+                        <p className="text-sm mx-auto text-center max-w-md  dark:text-gray-400">
                             Updated December 2024
                         </p>
                     </div>

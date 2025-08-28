@@ -45,7 +45,7 @@ export default function Header() {
     }
     try {
       window.dispatchEvent(new CustomEvent('currency-changed', { detail: { currency: value } }));
-    } catch {}
+    } catch { }
   };
 
   // Show search bar only on recommendation and search results pages (not destination details)
@@ -94,7 +94,7 @@ export default function Header() {
         <div className="flex justify-between items-center py-6">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <Link to="/recommendation" className="text-2xl font-bold" style={{ color: 'var(--primary-700)' }}>
+            <Link to="/recommendation" className="text-2xl font-bold text-cyan-700 dark:text-cyan-500">
               Ikmangaman.lk
             </Link>
           </div>
@@ -146,7 +146,7 @@ export default function Header() {
                     console.log('Cleared temporary questionnaire data - navigating to profile');
                     handleNavigation("/profile");
                   }}
-                  className="w-10 h-10 bg-cyan-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg cursor-pointer hover:bg-cyan-700 transition border-2 border-white ring-2 ring-cyan-200"
+                  className="w-10 h-10 bg-cyan-600 dark:bg-cyan-500 rounded-full flex items-center justify-center text-white font-bold shadow-lg cursor-pointer hover:bg-cyan-700 dark:hover:bg-cyan-600 transition border-2 border-white dark:border-gray-700 ring-2 ring-cyan-200 dark:ring-cyan-400"
                   title="Profile"
                 >
                   {userProfile?.firstname ? userProfile.firstname.charAt(0).toUpperCase() : 'U'}
@@ -155,7 +155,7 @@ export default function Header() {
                   onClick={handleLogout}
                   variant="outline"
                   size="sm"
-                  className="text-white bg-cyan-600 hover:bg-cyan-700 border-cyan-600 hover:border-cyan-700"
+                  className="bg-cyan-600 text-white hover:bg-gray-50  hover:text-gray-800 dark:hover:text-white"
                 >
                   Log out
                 </Button>
@@ -166,16 +166,17 @@ export default function Header() {
                 <Button
                   onClick={() => handleNavigation("/login")}
                   variant="outline"
-                  className="btn btn-secondry btn-md"
+                  className=" bg-cyan-600 text-white hover:bg-gray-50 hover:text-gray-800 dark:hover:text-white"
                 >
                   Log in
                 </Button>
-                <button
+                <Button
                   onClick={() => handleNavigation("/register")}
-                  className="btn btn-primary btn-md"
+                  variant="outline"
+                  className=" bg-cyan-600 text-white hover:bg-gray-50  hover:text-gray-800 dark:hover:text-white"
                 >
                   Sign up
-                </button>
+                </Button>
               </>
             )}
           </div>
@@ -196,7 +197,7 @@ export default function Header() {
                   onClick={handleLogout}
                   variant="outline"
                   size="sm"
-                  className="text-white bg-cyan-600 hover:bg-cyan-700 border-cyan-600 hover:border-cyan-700 text-xs p-1 h-8 mr-2"
+                  className=" bg-cyan-600 text-white hover:bg-gray-50 hover:text-gray-800 dark:hover:text-white"
                 >
                   Log out
                 </Button>
@@ -208,7 +209,7 @@ export default function Header() {
                     console.log('Cleared temporary questionnaire data - navigating to profile');
                     handleNavigation("/profile");
                   }}
-                  className="w-8 h-8 bg-cyan-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg cursor-pointer hover:bg-cyan-700 transition border-2 border-white ring-2 ring-cyan-200"
+                  className="w-8 h-8 bg-cyan-600 dark:bg-cyan-500 rounded-full flex items-center justify-center text-white font-bold shadow-lg cursor-pointer hover:bg-cyan-700 dark:hover:bg-cyan-600 transition border-2 border-white dark:border-gray-700 ring-2 ring-cyan-200 dark:ring-cyan-400"
                   title="Profile"
                 >
                   {userProfile?.firstname ? userProfile.firstname.charAt(0).toUpperCase() : 'U'}
@@ -221,14 +222,15 @@ export default function Header() {
                   onClick={() => handleNavigation("/login")}
                   variant="outline"
                   size="sm"
-                  className="btn btn-secondry btn-md"
+                  className="bg-cyan-600 text-white hover:bg-gray-50 hover:text-gray-800 dark:hover:text-white"
                 >
                   Log in
                 </Button>
                 <Button
                   onClick={() => handleNavigation("/register")}
+                  variant="outline"
                   size="sm"
-                  className="btn btn-primary btn-md"
+                  className=" bg-cyan-600 text-white hover:bg-gray-50 hover:text-gray-800 dark:hover:text-white"
                 >
                   Sign up
                 </Button>
@@ -244,6 +246,6 @@ export default function Header() {
           </div>
         )}
       </div>
-    </header>
+    </header >
   );
 }

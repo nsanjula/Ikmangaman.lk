@@ -189,18 +189,18 @@ const HowItWorksPage = () => {
     <div className="min-h-screen bg-[#F0F9FF]">
       <Header />
       {/* Hero Section */}
-      <div className="bg-gradient-to-b from-[#F0F9FF] to-white pt-24 pb-16">
+      <div className=" bg-cyan-100 dark:bg-gray-800 pt-24 pb-16 ">
         <div className="container mx-auto px-6">
           <div className="text-center max-w-4xl mx-auto">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-[#1196A0] rounded-full mb-6">
               <FiBarChart2 className="w-8 h-8 text-white" />
             </div>
 
-            <h1 className="text-5xl md:text-6xl font-bold text-[#0F172A] mb-6 font-[var(--font-heading)]">
+            <h1 className="text-5xl md:text-6xl font-bold dark:text-white text-[#0F172A] mb-6 font-[var(--font-heading)]">
               How It Works
             </h1>
 
-            <p className="text-xl text-[#475569] mb-8 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-xl text-[#475569]  dark:text-gray-400 mb-8 max-w-2xl mx-auto leading-relaxed">
               Discover amazing travel destinations through our intelligent recommendation system.
               Follow these simple steps to start your personalized travel journey.
             </p>
@@ -234,13 +234,13 @@ const HowItWorksPage = () => {
                           element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                         }}
                         className={`w-full flex items-center gap-4 p-4 rounded-xl text-left transition-all ${activeStep === step.id
-                            ? 'bg-[#E6F6F7] border-2 border-[#1196A0] text-[#0C7C84]'
-                            : 'hover:bg-[#F1F5F9] border-2 border-transparent text-[#475569]'
+                          ? 'bg-[#E6F6F7] border-2 border-[#1196A0] text-[#0C7C84]'
+                          : 'hover:bg-[#F1F5F9] border-2 border-transparent text-[#475569]'
                           }`}
                       >
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${activeStep === step.id
-                            ? 'bg-[#1196A0] text-white'
-                            : 'bg-[#E2E8F0] text-[#475569]'
+                          ? 'bg-[#1196A0] text-white'
+                          : 'bg-[#E2E8F0] text-[#475569]'
                           }`}>
                           {step.id}
                         </div>
@@ -277,8 +277,8 @@ const HowItWorksPage = () => {
                         </div>
                       </div>
 
-                      <div className="bg-[#F8FAFC] rounded-2xl p-8 mb-6">
-                        <p className="text-lg text-[#475569] leading-relaxed mb-6">
+                      <div className="bg-[#F8FAFC] dark:bg-gray-800 rounded-2xl p-8 mb-6">
+                        <p className="text-lg text-[#475569] dark:text-gray-400 leading-relaxed mb-6">
                           {step.description}
                         </p>
 
@@ -312,7 +312,7 @@ const HowItWorksPage = () => {
 
                     {/* Interactive Demo Area - Now Below Description */}
                     <div className="max-w-2xl mx-auto">
-                      <div className="bg-gradient-to-br from-[#E6F6F7] to-[#F0F9FF] rounded-2xl p-8 border border-[#1196A0]/20">
+                      <div className="bg-cyan-50 dark:bg-gray-800  rounded-2xl p-8 border border-[#1196A0]/20">
                         <div className="text-center mb-6">
                           <h3 className="text-xl font-semibold text-[#0F172A] mb-2">Try it yourself</h3>
                           <p className="text-[#475569]">Interactive demo for {step.title}</p>
@@ -363,10 +363,10 @@ const HowItWorksPage = () => {
               through our personalized recommendation system.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <div className="bg-white text-[#1196A0] px-8 py-4 rounded-full font-semibold hover:bg-gray-50 transition-colors cursor-pointer">
+              <div className="bg-white dark:text-white text-[#1196A0] px-8 py-4 rounded-full font-semibold hover:bg-gray-50 transition-colors cursor-pointer">
                 Get Started Now
               </div>
-              <div className="border-2 border-white text-white px-8 py-4 rounded-full font-semibold hover:bg-white hover:text-[#1196A0] transition-colors cursor-pointer">
+              <div className="border-2 border-white text-white px-8 py-4 rounded-full font-semibold hover:bg-white dark:hover:text-white hover:text-[#1196A0] transition-colors cursor-pointer">
                 Learn More
               </div>
             </div>

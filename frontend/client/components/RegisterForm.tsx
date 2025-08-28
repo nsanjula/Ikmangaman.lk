@@ -267,7 +267,7 @@ const RegisterForm = () => {
                     value={formData.firstName}
                     onChange={handleChange}
                     placeholder="Ex: Nisal"
-                    className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500 ${errors.firstName ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                    className={`w-full p-3 border rounded-lg focus:ring-2 dark:bg-gray-700 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500 ${errors.firstName ? 'border-red-300 bg-red-50' : 'border-gray-200'
                       }`}
                   />
                   {errors.firstName && (
@@ -285,7 +285,7 @@ const RegisterForm = () => {
                     value={formData.lastName}
                     onChange={handleChange}
                     placeholder="Ex: Sanjula"
-                    className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500 ${errors.lastName ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                    className={`w-full p-3 border rounded-lg focus:ring-2 dark:bg-gray-700 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500 ${errors.lastName ? 'border-red-300 bg-red-50' : 'border-gray-200'
                       }`}
                   />
                   {errors.lastName && (
@@ -304,7 +304,7 @@ const RegisterForm = () => {
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="Ex: nisal@example.com"
-                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500 ${errors.email ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                  className={`w-full p-3 border rounded-lg focus:ring-2 dark:bg-gray-700 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500 ${errors.email ? 'border-red-300 bg-red-50' : 'border-gray-200'
                     }`}
                 />
                 {errors.email && (
@@ -321,7 +321,7 @@ const RegisterForm = () => {
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
-                        className={`w-full p-3 h-auto justify-between text-left font-normal hover:bg-transparent hover:border-gray-300 ${errors.birthday ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                        className={`w-full p-3 h-auto justify-between text-left font-normal hover:bg-transparent dark:bg-gray-700 hover:border-gray-300 ${errors.birthday ? 'border-red-300 bg-red-50' : 'border-gray-200'
                           }`}
                       >
                         <input
@@ -330,7 +330,7 @@ const RegisterForm = () => {
                           value={formData.birthday}
                           onChange={handleChange}
                           placeholder="DD/MM/YYYY"
-                          className="bg-transparent border-none outline-none flex-1 text-gray-900 placeholder-gray-500"
+                          className="bg-transparent border-none outline-none flex-1 dark:bg-gray-700 text-gray-900 placeholder-gray-500"
                           autoComplete="off"
                         />
                         <FiCalendar className="h-4 w-4 text-gray-400" />
@@ -365,7 +365,7 @@ const RegisterForm = () => {
                   value={formData.username}
                   onChange={handleChange}
                   placeholder="Ex: Nisal01"
-                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500 ${errors.username ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                  className={`w-full p-3 border rounded-lg focus:ring-2 dark:bg-gray-700 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500 ${errors.username ? 'border-red-300 bg-red-50' : 'border-gray-200'
                     }`}
                 />
                 {errors.username && (
@@ -382,7 +382,7 @@ const RegisterForm = () => {
                     value={formData.password}
                     onChange={handleChange}
                     placeholder="Enter your password"
-                    className={`w-full p-3 pr-12 border rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500 ${errors.password ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                    className={`w-full p-3 pr-12 border rounded-lg focus:ring-2 dark:bg-gray-700 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500 ${errors.password ? 'border-red-300 bg-red-50' : 'border-gray-200'
                       }`}
                   />
                   <button
@@ -409,7 +409,7 @@ const RegisterForm = () => {
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     placeholder="Confirm your password"
-                    className={`w-full p-3 pr-12 border rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500 ${errors.confirmPassword ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                    className={`w-full p-3 pr-12 border rounded-lg focus:ring-2 dark:bg-gray-700 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500 ${errors.confirmPassword ? 'border-red-300 bg-red-50' : 'border-gray-200'
                       }`}
                   />
                   <button
