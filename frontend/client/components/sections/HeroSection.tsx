@@ -109,9 +109,9 @@ const HeroSection: React.FC = () => {
       error?.includes("Authentication failed");
 
     return (
-      <div className="card p-6 mb-6 border-l-4" style={{ 
-        background: 'var(--surface)', 
-        borderLeftColor: '#EF4444' 
+      <div className="card p-6 mb-6 border-l-4" style={{
+        background: 'var(--surface)',
+        borderLeftColor: '#EF4444'
       }}>
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="flex-1">
@@ -147,9 +147,9 @@ const HeroSection: React.FC = () => {
                     Log In
                   </a>
                 </div>
-                <div className="text-sm p-3 rounded" style={{ 
-                  background: '#FEF2F2', 
-                  color: '#B91C1C' 
+                <div className="text-sm p-3 rounded" style={{
+                  background: '#FEF2F2',
+                  color: '#B91C1C'
                 }}>
                   <strong>Authentication Issue:</strong> Your login session has
                   expired. Please log in again to access this destination.
@@ -219,7 +219,7 @@ const HeroSection: React.FC = () => {
                       .map((activity, index) => (
                         <span
                           key={index}
-                          className="chip chip-selected"
+                          className="chip chip-selected dark:bg-cyan-900 dark:text-cyan-300"
                         >
                           {activity.trim()}
                         </span>
@@ -281,7 +281,7 @@ const HeroSection: React.FC = () => {
                     <button
                       onClick={prevImage}
                       className="w-8 h-8 rounded-full flex items-center justify-center text-white transition-all"
-                      style={{ 
+                      style={{
                         background: 'rgba(0, 0, 0, 0.5)',
                         backdropFilter: 'blur(4px)'
                       }}
@@ -291,7 +291,7 @@ const HeroSection: React.FC = () => {
                     <button
                       onClick={nextImage}
                       className="w-8 h-8 rounded-full flex items-center justify-center text-white transition-all"
-                      style={{ 
+                      style={{
                         background: 'rgba(0, 0, 0, 0.5)',
                         backdropFilter: 'blur(4px)'
                       }}
@@ -305,11 +305,10 @@ const HeroSection: React.FC = () => {
                       <button
                         key={index}
                         onClick={() => setCurrentImageIndex(index)}
-                        className={`w-2 h-2 rounded-full transition-colors ${
-                          currentImageIndex === index
-                            ? "bg-white"
-                            : "bg-white bg-opacity-50"
-                        }`}
+                        className={`w-2 h-2 rounded-full transition-colors ${currentImageIndex === index
+                          ? "bg-white"
+                          : "bg-white bg-opacity-50"
+                          }`}
                       />
                     ))}
                   </div>

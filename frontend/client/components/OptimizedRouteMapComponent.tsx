@@ -146,11 +146,10 @@ const OptimizedRouteMapComponent: React.FC<OptimizedRouteMapComponentProps> = ({
           <button
             key={mode}
             onClick={() => setSelectedTravelMode(mode)}
-            className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
-              selectedTravelMode === mode
-                ? "bg-cyan-600 text-white"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-            }`}
+            className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${selectedTravelMode === mode
+              ? "bg-cyan-600 text-white"
+              : "bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-800"
+              }`}
           >
             {getTravelModeIcon(mode)}
             <span className="capitalize">{mode.toLowerCase()}</span>
@@ -265,15 +264,15 @@ const OptimizedRouteMapComponent: React.FC<OptimizedRouteMapComponentProps> = ({
 
       {/* Legend */}
       <div className="mt-4 flex flex-wrap gap-4 text-sm text-gray-800">
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-green-500 rounded-full"></div>
+        <div className="flex items-center gap-2 dark:text-white">
+          <div className="w-4 h-4 bg-green-500 rounded-full "></div>
           <span>Starting Location</span>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-red-500 rounded-full"></div>
+        <div className="flex items-center gap-2 dark:text-white">
+          <div className="w-4 h-4 bg-red-500 rounded-full "></div>
           <span>Destination</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 dark:text-white">
           <div
             className="w-6 h-1 rounded"
             style={{ backgroundColor: getRouteColor(selectedTravelMode) }}

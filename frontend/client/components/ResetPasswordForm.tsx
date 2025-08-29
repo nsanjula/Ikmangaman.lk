@@ -67,7 +67,7 @@ const ResetPasswordForm: React.FC = () => {
 
     try {
       await authAPI.resetPassword(token, password);
-      
+
       // Redirect to login with success message
       navigate("/login", {
         state: {
@@ -89,8 +89,8 @@ const ResetPasswordForm: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" style={{borderBottomColor: 'var(--primary-600)'}}></div>
-          <p className="text-lg" style={{color: 'var(--text-600)'}}>Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" style={{ borderBottomColor: 'var(--primary-600)' }}></div>
+          <p className="text-lg" style={{ color: 'var(--text-600)' }}>Loading...</p>
         </div>
       </div>
     );
@@ -182,7 +182,7 @@ const ResetPasswordForm: React.FC = () => {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Confirm your new password"
-                    className="w-full p-4 pr-12 border border-gray-200 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500"
+                    className="w-full p-4 pr-12 border dark:bg-gray-700 border-gray-200 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500"
                   />
                   <button
                     type="button"

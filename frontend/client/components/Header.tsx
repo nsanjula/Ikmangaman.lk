@@ -91,10 +91,13 @@ export default function Header() {
   return (
     <header className="bg-white shadow-sm relative z-50 iframe-header border-b border-border">
       <div className="container iframe-container">
-        <div className="flex justify-between items-center py-6">
-          {/* Logo */}
-          <div className="flex-shrink-0">
-            <Link to="/recommendation" className="text-2xl font-bold text-cyan-700 dark:text-cyan-500">
+
+        {/* Logo */}<div className="flex justify-between items-center py-6 gap-4">
+          <div className="flex-shrink-0 min-w-0">
+            <Link
+              to="/recommendation"
+              className="text-xl sm:text-2xl font-bold text-cyan-700 dark:text-cyan-500 whitespace-nowrap transition-all duration-200"
+            >
               Ikmangaman.lk
             </Link>
           </div>

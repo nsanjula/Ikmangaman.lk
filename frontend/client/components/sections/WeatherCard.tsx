@@ -114,9 +114,9 @@ const WeatherCard: React.FC = () => {
 
   if (error) {
     return (
-      <div className="card p-6 mb-6 border-l-4" style={{ 
-        background: 'var(--surface)', 
-        borderLeftColor: '#EF4444' 
+      <div className="card p-6 mb-6 border-l-4" style={{
+        background: 'var(--surface)',
+        borderLeftColor: '#EF4444'
       }}>
         <h2 className="text-2xl font-bold mb-4" style={{ color: '#DC2626' }}>
           Weather Forecast
@@ -179,7 +179,7 @@ const WeatherCard: React.FC = () => {
         {weatherData.slice(0, 5).map((day, index) => {
           const dateInfo = formatDate(day.date);
           const weatherColor = getWeatherColor(day.weather);
-          
+
           return (
             <div
               key={day.date}
@@ -191,10 +191,10 @@ const WeatherCard: React.FC = () => {
             >
               {/* Date Header */}
               <div className="mb-4">
-                <p className="text-sm font-bold" style={{ color: 'var(--text-900)' }}>
+                <p className="text-sm font-bold text-[var(--text-900)] dark:text-black">
                   {index === 0 ? "Today" : dateInfo.day}
                 </p>
-                <p className="text-xs" style={{ color: 'var(--text-600)' }}>
+                <p className="text-xs text-[var(--text-600)] dark:text-black">
                   {dateInfo.date}
                 </p>
               </div>
@@ -206,14 +206,14 @@ const WeatherCard: React.FC = () => {
 
               {/* Temperature */}
               <div className="mb-3">
-                <p className="text-2xl font-bold" style={{ color: 'var(--text-900)' }}>
+                <p className="text-2xl font-bold text-[var(--text-900)] dark:text-black" >
                   {day.temperature}
                 </p>
               </div>
 
               {/* Weather Description */}
               <div className="mb-4">
-                <span 
+                <span
                   className="px-2 py-1 rounded-full text-xs font-medium capitalize"
                   style={{
                     backgroundColor: weatherColor.bg,
@@ -227,14 +227,14 @@ const WeatherCard: React.FC = () => {
               {/* Weather Details */}
               <div className="space-y-2 text-xs">
                 <div className="flex items-center justify-center gap-2">
-                  <FiDroplet className="w-3 h-3" style={{ color: 'var(--primary-600)' }} />
-                  <span style={{ color: 'var(--text-600)' }}>
+                  <FiDroplet className="w-3 h-3 " style={{ color: 'var(--primary-600)' }} />
+                  <span className="text-[var(--text-600)] dark:text-black">
                     {day.humidity}
                   </span>
                 </div>
                 <div className="flex items-center justify-center gap-2">
                   <FiEye className="w-3 h-3" style={{ color: 'var(--primary-600)' }} />
-                  <span style={{ color: 'var(--text-600)' }}>
+                  <span className="text-[var(--text-600)] dark:text-black">
                     {day.visibility}
                   </span>
                 </div>
@@ -245,9 +245,9 @@ const WeatherCard: React.FC = () => {
       </div>
 
       {/* Weather Tips */}
-      <div className="p-4 rounded-lg border-l-4" style={{ 
-        background: 'var(--surface-alt)', 
-        borderLeftColor: '#F59E0B' 
+      <div className="p-4 rounded-lg border-l-4" style={{
+        background: 'var(--surface-alt)',
+        borderLeftColor: '#F59E0B'
       }}>
         <div className="flex items-start gap-3">
           <span className="text-xl">🌤️</span>
@@ -256,7 +256,7 @@ const WeatherCard: React.FC = () => {
               Weather Planning Tips
             </p>
             <p className="text-sm" style={{ color: 'var(--text-600)' }}>
-              Check the weather forecast to pack appropriate clothing and plan your outdoor activities. 
+              Check the weather forecast to pack appropriate clothing and plan your outdoor activities.
               Weather conditions can change rapidly in mountainous areas.
             </p>
           </div>
