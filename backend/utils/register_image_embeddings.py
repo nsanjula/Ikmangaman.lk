@@ -34,6 +34,18 @@ FOLDER_TO_ID = {
     "Folder26": 26,
     "Folder27": 27,
     "Folder28": 28,
+    "Folder29": 29,
+    "Folder30": 30,
+    "Folder31": 31,
+    "Folder32": 32,
+    "Folder33": 33,
+    "Folder34": 34,
+    "Folder35": 35,
+    "Folder36": 36,
+    "Folder37": 37,
+    "Folder38": 38,
+    "Folder39": 39,
+    "Folder40": 40,
 }
 
 print("Folder dict created")
