@@ -110,6 +110,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setToken(null);
     setUserProfile(null);
     setIsTimeout(false);
+    if (typeof window !== 'undefined') {
+      try {
+        sessionStorage.removeItem('chatbot_intro_shown');
+        sessionStorage.removeItem('chatbot_intro_seen_session');
+        sessionStorage.removeItem('chatbot_intro_dismissed_session');
+      } catch (_) {}
+    }
   };
 
   const handleAuthError = (error: Error) => {

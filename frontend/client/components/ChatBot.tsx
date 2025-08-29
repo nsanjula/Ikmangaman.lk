@@ -54,11 +54,13 @@ const ChatBot: React.FC<ChatBotProps> = ({ className = '' }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [hasShownWelcome, setHasShownWelcome] = useState(false);
-  const [isShowingWelcome, setIsShowingWelcome] = useState(false);
+  const [hasGreeted, setHasGreeted] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight });
+  const [showIntroBubble, setShowIntroBubble] = useState(false);
+  const [showNotification, setShowNotification] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const closedWhileWaitingRef = useRef(false);
   const { isAuthenticated, logout } = useAuth();
   const { loadingState } = useLoading();
   const location = useLocation();
@@ -103,35 +105,69 @@ const ChatBot: React.FC<ChatBotProps> = ({ className = '' }) => {
     }
   }, [isAuthenticated, userProfile]);
 
-  // Show welcome message when first opening chat
+  // Show intro bubble on first visit to recommendations page after login
   useEffect(() => {
-    if (isOpen && !hasShownWelcome && userProfile && messages.length === 0) {
-      setIsShowingWelcome(true);
+    const INTRO_KEY = 'chatbot_intro_seen_session';
+    const LEGACY_KEY = 'chatbot_intro_shown';
+    const DISMISSED_KEY = 'chatbot_intro_dismissed_session';
 
-      const timer = setTimeout(() => {
-        const welcomeMessage: ChatMessage = {
-          id: `welcome-${Date.now()}`,
-          text: `Welcome ${userProfile.firstname}! 👋`,
+    const onRecommendations = location.pathname === '/recommendation';
+    const seen = sessionStorage.getItem(INTRO_KEY) === 'true' || sessionStorage.getItem(LEGACY_KEY) === 'true';
+    const dismissed = sessionStorage.getItem(DISMISSED_KEY) === 'true';
+
+    if (dismissed) {
+      setShowIntroBubble(false);
+      return;
+    }
+
+    if (!onRecommendations && showIntroBubble) {
+      // Never carry the bubble to other pages
+      setShowIntroBubble(false);
+      return;
+    }
+
+    if (isAuthenticated && userProfile && onRecommendations && !seen && !dismissed) {
+      setShowIntroBubble(true);
+    } else if (seen || dismissed) {
+      setShowIntroBubble(false);
+    }
+  }, [isAuthenticated, userProfile, location.pathname, showIntroBubble]);
+
+  // When chat opens, greet instantly (no fake delay) and clear notification badge
+  useEffect(() => {
+    if (isOpen) {
+      setShowNotification(false);
+      const INTRO_KEY = 'chatbot_intro_seen_session';
+      sessionStorage.setItem(INTRO_KEY, 'true');
+      sessionStorage.setItem('chatbot_intro_shown', 'true'); // keep legacy flag for safety
+      sessionStorage.setItem('chatbot_intro_dismissed_session', 'true');
+      if (showIntroBubble) setShowIntroBubble(false);
+
+      if (!hasGreeted && userProfile) {
+        const greeting: ChatMessage = {
+          id: `greeting-${Date.now()}`,
+          text: `Hi ${userProfile.firstname}👋, I’m your friendly assistant from ikmangaman.lk`,
           isBot: true,
           timestamp: new Date()
         };
-        setMessages([welcomeMessage]);
-        setHasShownWelcome(true);
-        setIsShowingWelcome(false);
-      }, 1000);
-
-      return () => clearTimeout(timer);
+        setMessages([greeting]);
+        setHasGreeted(true);
+      }
     }
-  }, [isOpen, hasShownWelcome, userProfile, messages.length]);
+  }, [isOpen, hasGreeted, userProfile, showIntroBubble]);
+
+  // Removed fake welcome delay; greeting handled instantly when opening chat
 
   // Clear messages on logout
   useEffect(() => {
     if (!isAuthenticated) {
       setMessages([]);
-      setHasShownWelcome(false);
-      setIsShowingWelcome(false);
+      setHasGreeted(false);
       setUserProfile(null);
       setIsOpen(false);
+      setShowIntroBubble(false);
+      setShowNotification(false);
+      closedWhileWaitingRef.current = false;
     }
   }, [isAuthenticated]);
 
@@ -161,6 +197,10 @@ const ChatBot: React.FC<ChatBotProps> = ({ className = '' }) => {
       };
 
       setMessages(prev => [...prev, botMessage]);
+      if (!isOpen && closedWhileWaitingRef.current) {
+        setShowNotification(true);
+        closedWhileWaitingRef.current = false;
+      }
     } catch (error: any) {
       console.error('Chat error:', error);
       if (error.message?.includes('Authentication required')) {
@@ -173,6 +213,10 @@ const ChatBot: React.FC<ChatBotProps> = ({ className = '' }) => {
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
+      if (!isOpen && closedWhileWaitingRef.current) {
+        setShowNotification(true);
+        closedWhileWaitingRef.current = false;
+      }
     } finally {
       setIsLoading(false);
     }
@@ -194,48 +238,138 @@ const ChatBot: React.FC<ChatBotProps> = ({ className = '' }) => {
   const isVerySmall = windowSize.width <= 480;
   const isLandscape = windowSize.width > windowSize.height;
 
+  const openWithGreeting = () => {
+    setIsOpen(true);
+    setShowNotification(false);
+    if (showIntroBubble) {
+      setShowIntroBubble(false);
+      sessionStorage.setItem('chatbot_intro_seen_session', 'true');
+      sessionStorage.setItem('chatbot_intro_shown', 'true');
+      sessionStorage.setItem('chatbot_intro_dismissed_session', 'true');
+    }
+    if (!hasGreeted && userProfile) {
+      const greeting: ChatMessage = {
+        id: `greeting-${Date.now()}`,
+        text: `Hi ${userProfile.firstname}👋, I’m your friendly assistant from ikmangaman.lk`,
+        isBot: true,
+        timestamp: new Date()
+      };
+      setMessages([greeting]);
+      setHasGreeted(true);
+    }
+  };
+
   return (
     <>
       {/* Floating Chat Icon - Always fixed to viewport using Portal */}
       {!isOpen && createPortal(
-        <button
-          onClick={() => setIsOpen(true)}
-          className="chatbot-floating-button"
-          style={{
-            position: 'fixed',
-            bottom: isMobile ? '16px' : '24px',
-            right: isMobile ? '16px' : '24px',
-            width: isVerySmall ? '48px' : '56px',
-            height: isVerySmall ? '48px' : '56px',
-            borderRadius: '50%',
-            background: 'var(--primary-600)',
-            border: 'none',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
-            cursor: 'pointer',
-            zIndex: 9999,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'all 0.2s ease',
-            transform: 'scale(1)'
-          }}
-          onMouseEnter={(e) => {
-            (e.target as HTMLButtonElement).style.transform = 'scale(1.05)';
-          }}
-          onMouseLeave={(e) => {
-            (e.target as HTMLButtonElement).style.transform = 'scale(1)';
-          }}
-          onFocus={(e) => {
-            e.target.style.outline = '4px solid rgba(6, 182, 212, 0.3)';
-            e.target.style.outlineOffset = '2px';
-          }}
-          onBlur={(e) => {
-            e.target.style.outline = 'none';
-          }}
-          aria-label="Open TripMate Chat"
-        >
-          <MessageCircle className={`${isVerySmall ? 'w-5 h-5' : 'w-6 h-6'} text-white`} />
-        </button>,
+        <>
+          <button
+            onClick={openWithGreeting}
+            className="chatbot-floating-button"
+            style={{
+              position: 'fixed',
+              bottom: isMobile ? '16px' : '24px',
+              right: isMobile ? '16px' : '24px',
+              width: isVerySmall ? '48px' : '56px',
+              height: isVerySmall ? '48px' : '56px',
+              borderRadius: '50%',
+              background: 'var(--primary-600)',
+              border: 'none',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+              cursor: 'pointer',
+              zIndex: 9999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s ease',
+              transform: 'scale(1)'
+            }}
+            onMouseEnter={(e) => {
+              (e.target as HTMLButtonElement).style.transform = 'scale(1.05)';
+            }}
+            onMouseLeave={(e) => {
+              (e.target as HTMLButtonElement).style.transform = 'scale(1)';
+            }}
+            onFocus={(e) => {
+              e.target.style.outline = '4px solid rgba(6, 182, 212, 0.3)';
+              e.target.style.outlineOffset = '2px';
+            }}
+            onBlur={(e) => {
+              e.target.style.outline = 'none';
+            }}
+            aria-label="Open TripMate Chat"
+          >
+            <MessageCircle className={`${isVerySmall ? 'w-5 h-5' : 'w-6 h-6'} text-white`} />
+            {showNotification && (
+              <span
+                style={{
+                  position: 'absolute',
+                  top: '-6px',
+                  right: '-6px',
+                  width: '18px',
+                  height: '18px',
+                  borderRadius: '9999px',
+                  background: '#EF4444',
+                  color: '#FFFFFF',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  boxShadow: '0 0 0 2px white'
+                }}
+              >
+                1
+              </span>
+            )}
+          </button>
+
+          {showIntroBubble && (
+            <div
+              onClick={openWithGreeting}
+              style={{
+                position: 'fixed',
+                bottom: isMobile ? '24px' : '32px',
+                right: isMobile ? (isVerySmall ? '76px' : '88px') : '96px',
+                maxWidth: '280px',
+                background: 'var(--surface)',
+                border: '1px solid var(--border)',
+                borderRadius: '12px',
+                boxShadow: '0 10px 40px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1)',
+                padding: '12px 14px',
+                zIndex: 9999,
+                cursor: 'pointer'
+              }}
+            >
+              <div className="flex items-start gap-2">
+                <span style={{ fontSize: '18px' }}>👋</span>
+                <p style={{ color: 'var(--text-900)' }}>
+                  Hi {userProfile?.firstname}👋, I’m your friendly assistant from ikmangaman.lk
+                </p>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowIntroBubble(false);
+                    sessionStorage.setItem('chatbot_intro_seen_session', 'true');
+                    sessionStorage.setItem('chatbot_intro_shown', 'true');
+                    sessionStorage.setItem('chatbot_intro_dismissed_session', 'true');
+                  }}
+                  aria-label="Dismiss intro message"
+                  className="ml-2"
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'var(--text-600)',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
+        </>,
         document.body
       )}
 
@@ -287,7 +421,12 @@ const ChatBot: React.FC<ChatBotProps> = ({ className = '' }) => {
               </div>
             </div>
             <button
-              onClick={() => setIsOpen(false)}
+              onClick={() => {
+                if (isLoading) {
+                  closedWhileWaitingRef.current = true;
+                }
+                setIsOpen(false);
+              }}
               className="p-1 hover:bg-cyan-700 rounded transition-colors"
               aria-label="Close chat"
             >
@@ -328,7 +467,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ className = '' }) => {
                   </div>
                 </div>
               ))}
-              {(isLoading || isShowingWelcome) && (
+              {isLoading && (
                 <div className="flex justify-start">
                   <div
                     className="rounded-2xl rounded-bl-sm"

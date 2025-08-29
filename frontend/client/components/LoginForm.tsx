@@ -32,7 +32,6 @@ const LoginForm = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [useSavedToken, setUseSavedToken] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { login, isTimeout, clearTimeout } = useAuth();
@@ -43,18 +42,9 @@ const LoginForm = () => {
       setSuccessMessage(location.state.message);
     }
 
-    // Autofill from cookies (username and token placeholder field)
+    // Autofill from cookies (username only)
     const savedUsername = getCookie("auth_username");
-    const savedToken = getCookie("auth_token");
     if (savedUsername) setUsername(savedUsername);
-    if (savedToken) {
-      setPassword("********");
-      setUseSavedToken(true);
-      try {
-        const hidden = document.getElementById("saved-token-input") as HTMLInputElement | null;
-        if (hidden) hidden.value = savedToken;
-      } catch {}
-    }
 
     // Clear timeout state when user navigates to login
     return () => {
@@ -76,30 +66,11 @@ const LoginForm = () => {
     setIsLoading(true);
 
     try {
-      // If we have a saved token and user didn't change the placeholder, use token directly
-      const savedToken = useSavedToken && password === "********" ? getCookie("auth_token") : null;
-      if (savedToken) {
-        login(savedToken);
-        setCookie("auth_username", username, 30);
-        // Ensure token is persisted in localStorage as well
-        authAPI.storeToken(savedToken);
-
-        try {
-          const recommendations = await authAPI.getRecommendations();
-          if (recommendations && recommendations.length > 0) navigate("/recommendation");
-          else navigate("/questionnaire");
-        } catch {
-          navigate("/questionnaire");
-        }
-        return;
-      }
-
       const loginData: LoginRequest = { username, password };
       const response = await authAPI.login(loginData);
 
       login(response.access_token);
       setCookie("auth_username", username, 30);
-      setCookie("auth_token", response.access_token, 30);
 
       try {
         const recommendations = await authAPI.getRecommendations();
@@ -222,7 +193,7 @@ const LoginForm = () => {
                     id="login-password"
                     type={showPassword ? "text" : "password"}
                     name="password"
-                    autoComplete="current-password"
+                    autoComplete="new-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"

@@ -4,7 +4,6 @@ export type CookieCategory = "necessary" | "personalization";
 const COOKIE_CATEGORY_MAP: Record<string, CookieCategory> = {
   // Authentication/session (necessary)
   auth_username: "necessary",
-  auth_token: "necessary",
 
   // Personalization
   pref_theme: "personalization",
@@ -51,7 +50,7 @@ export function eraseCookie(name: string): void {
 
 export function clearAllCookies(): void {
   try {
-    const names = ["auth_username", "auth_token", "pref_theme", "pref_currency", "cookie_consent"];
+    const names = ["auth_username", "pref_theme", "pref_currency", "cookie_consent"];
     names.forEach(eraseCookie);
     // Best-effort clear for any other cookies on current domain
     document.cookie.split("; ").forEach(c => {
