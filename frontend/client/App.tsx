@@ -34,6 +34,9 @@ import CreateItinerary from "./pages/CreateItinerary";
 import ItineraryDestinationDetail from "./pages/ItineraryDestinationDetail";
 import HowItWorksPage from "./pages/HowItWorksPage";
 import ChatBot from "./components/ChatBot";
+import HowItWorks from "./pages/HowItWorksPage";
+import PrivacyPolicy from "./pages/PrivacyPolicyPage";
+import TermsOfService from "./pages/TermsofServicePage";
 
 const queryClient = new QueryClient();
 
@@ -80,18 +83,18 @@ const App = () => {
       <QueryClientProvider client={queryClient}>
         <LoadingProvider>
           <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <OfflineNotice />
-              <BackendStartupBanner />
-              {/* <BackendConnectionDiagnostic /> */}
-              <LoadingOverlay />
-              <BrowserRouter>
-                <AuthProvider>
-                  <PersonalizationManager />
-                  <AnalyticsTracker />
-                  <CookieConsent />
-                  <ChatBot />
+            <Toaster />
+            <Sonner />
+            <OfflineNotice />
+            <BackendStartupBanner />
+            {/* <BackendConnectionDiagnostic /> */}
+            <LoadingOverlay />
+            <BrowserRouter>
+              <AuthProvider>
+                <PersonalizationManager />
+                <AnalyticsTracker />
+                <CookieConsent />
+                <ChatBot />
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/login" element={<LoginPage />} />
@@ -113,12 +116,15 @@ const App = () => {
                   <Route path="/how-it-works" element={<HowItWorksPage />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/compass-loader" element={<CompassLoaderShowcase />} />
+                  <Route path="/how-it-works" element={<HowItWorks />} />
+                  <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                  <Route path="/terms-of-service" element={<TermsOfService />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-                </AuthProvider>
-              </BrowserRouter>
-            </TooltipProvider>
+              </AuthProvider>
+            </BrowserRouter>
+          </TooltipProvider>
         </LoadingProvider>
       </QueryClientProvider>
     </div>

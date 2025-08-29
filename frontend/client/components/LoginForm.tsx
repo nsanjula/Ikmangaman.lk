@@ -45,6 +45,14 @@ const LoginForm = () => {
     // Autofill from cookies (username only)
     const savedUsername = getCookie("auth_username");
     if (savedUsername) setUsername(savedUsername);
+    if (savedToken) {
+      setPassword("********");
+      setUseSavedToken(true);
+      try {
+        const hidden = document.getElementById("saved-token-input") as HTMLInputElement | null;
+        if (hidden) hidden.value = savedToken;
+      } catch {}
+    }
 
     // Clear timeout state when user navigates to login
     return () => {
@@ -182,7 +190,7 @@ const LoginForm = () => {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="Enter your username"
-                  className="w-full p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500"
+                  className="w-full p-4 border dark:bg-gray-700 border-gray-200 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500"
                 />
               </div>
 
@@ -197,7 +205,7 @@ const LoginForm = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
-                    className="w-full p-4 pr-12 border border-gray-200 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500"
+                    className="w-full p-4 pr-12 border dark:bg-gray-700 border-gray-200 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500"
                   />
                   <button
                     type="button"

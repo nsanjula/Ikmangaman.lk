@@ -89,7 +89,7 @@ export default function FeatureSections() {
       </section>
 
       {/* Cost-Effective Planning */}
-      <section className="bg-[#e6f7f9] py-20">
+      <section className="bg-[#e6f7f9] dark:bg-gray-800  py-20">
         <div className="container iframe-container">
           <div
             ref={ref2}
@@ -99,7 +99,7 @@ export default function FeatureSections() {
               <div className="bg-white rounded-2xl shadow-2xl p-8 transform -rotate-3 border-2 border-[#a8e1ea]">
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <div className="text-2xl font-bold text-gray-800">
+                    <div className="text-2xl font-bold text-gray-800 dark:text-white">
                       Rs. 12,345
                     </div>
                     <div className="text-[#159CAF] text-sm font-semibold">

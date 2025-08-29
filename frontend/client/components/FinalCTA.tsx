@@ -36,14 +36,14 @@ export default function FinalCTA() {
           <Button
             onClick={() => isAuthenticated ? navigate("/recommendation") : navigate("/register")}
             size="lg"
-            className="w-full sm:w-auto bg-white text-[#159CAF] hover:bg-gray-100 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-bold rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 border-2 border-white"
+            className="w-full sm:w-auto bg-white text-[#159CAF] dark:text-white dark:bg-white hover:bg-gray-100 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-bold rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 border-2 border-white"
           >
             Start Planning Your Trip
           </Button>
           <Button
             variant="outline"
             size="lg"
-            className="w-full sm:w-auto border-2 border-white text-white hover:bg-white hover:text-[#159CAF] px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-bold rounded-lg transform hover:scale-105 transition-all duration-300 bg-transparent hover:bg-opacity-90"
+            className="w-full sm:w-auto border-2 border-white text-white hover:bg-white dark:hover:text-white hover:text-[#159CAF] px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-bold rounded-lg transform hover:scale-105 transition-all duration-300 bg-transparent hover:bg-opacity-90"
           >
             Learn More
           </Button>
