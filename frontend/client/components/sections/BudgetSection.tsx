@@ -26,7 +26,7 @@ const BudgetSection: React.FC = () => {
         <div className="h-4 bg-gray-200 rounded mb-6 w-full"></div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="p-4 rounded-lg border" style={{ 
+            <div key={i} className="p-4 rounded-lg border" style={{
               background: 'var(--surface-alt)',
               borderColor: 'var(--border)'
             }}>
@@ -42,9 +42,9 @@ const BudgetSection: React.FC = () => {
 
   if (error || !budgetData) {
     return (
-      <div className="card p-6 mb-6 border-l-4" style={{ 
-        background: 'var(--surface)', 
-        borderLeftColor: '#EF4444' 
+      <div className="card p-6 mb-6 border-l-4" style={{
+        background: 'var(--surface)',
+        borderLeftColor: '#EF4444'
       }}>
         <h2 className="text-xl font-semibold mb-4" style={{ color: '#DC2626' }}>
           Budget Information
@@ -94,7 +94,7 @@ const BudgetSection: React.FC = () => {
 
   // Load rates on mount and subscribe to currency changes
   useEffect(() => {
-    try { ensureRatesLoaded(); } catch {}
+    try { ensureRatesLoaded(); } catch { }
   }, []);
   const { format: formatCurrency } = useCurrency();
 
@@ -122,10 +122,7 @@ const BudgetSection: React.FC = () => {
             <h3 className="font-bold text-lg mb-1" style={{ color: 'var(--text-900)' }}>
               {option.name}
             </h3>
-            <div className="text-sm font-semibold px-2 py-1 rounded" style={{
-              background: 'var(--primary-100)',
-              color: 'var(--primary-700)'
-            }}>
+            <div className="text-sm font-semibold px-2 py-1 rounded dark:text-cyan-300 bg-[var(--primary-100)] text-[var(--primary-700)]" >
               {formatCurrency(option.cost)}
             </div>
           </div>
@@ -133,9 +130,9 @@ const BudgetSection: React.FC = () => {
       </div>
 
       {/* Additional Information */}
-      <div className="p-4 rounded-lg border-l-4" style={{ 
-        background: 'var(--surface-alt)', 
-        borderLeftColor: 'var(--primary-600)' 
+      <div className="p-4 rounded-lg border-l-4" style={{
+        background: 'var(--surface-alt)',
+        borderLeftColor: 'var(--primary-600)'
       }}>
         <div className="flex items-start gap-3">
           <span className="text-xl">💡</span>
@@ -144,7 +141,7 @@ const BudgetSection: React.FC = () => {
               Cost Estimation Note
             </p>
             <p className="text-sm" style={{ color: 'var(--text-600)' }}>
-              These estimates include fuel, tolls, and other transportation costs. 
+              These estimates include fuel, tolls, and other transportation costs.
               Actual costs may vary based on current prices and specific route conditions.
             </p>
           </div>

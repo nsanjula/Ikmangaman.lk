@@ -20,6 +20,27 @@ export const SmokingTrainLoader: React.FC<SmokingTrainLoaderProps> = ({
   const [isVisible, setIsVisible] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const [smokeFrames, setSmokeFrames] = useState<number[]>([]);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  // Check for dark mode preference
+  useEffect(() => {
+    const checkDarkMode = () => {
+      const isDark = document.documentElement.classList.contains('dark');
+      setIsDarkMode(isDark);
+    };
+
+    // Initial check
+    checkDarkMode();
+
+    // Create a MutationObserver to watch for changes to the html class
+    const observer = new MutationObserver(checkDarkMode);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   // Intersection Observer for performance
   useEffect(() => {
@@ -83,18 +104,18 @@ export const SmokingTrainLoader: React.FC<SmokingTrainLoaderProps> = ({
     const now = Date.now();
     const age = (now - timestamp) / 1000; // Age in seconds
     const maxAge = 3; // 3 seconds lifetime
-    
+
     if (age > maxAge) return null;
 
     // Calculate animation phase (0-1)
     const phase = age / maxAge;
-    
+
     // Smoke properties based on age
     const baseScale = 0.3 + phase * 1.2; // Grows from 0.3 to 1.5
     const opacity = Math.max(0, 1 - phase); // Fades out
     const xOffset = -phase * 25 - index * 2; // Drifts backward
     const yOffset = -phase * 30 - index * 3; // Drifts upward
-    
+
     // Different frame shapes based on age
     const getFrameShape = (phase: number) => {
       if (phase < 0.2) {
@@ -217,8 +238,8 @@ export const SmokingTrainLoader: React.FC<SmokingTrainLoaderProps> = ({
           width={width}
           height="95"
           preserveAspectRatio="xMidYMid slice"
+          filter={isDarkMode ? "invert(1) hue-rotate(180deg)" : undefined}
         />
-
 
         {/* Train with clipping */}
         <g clipPath="url(#bridgeClip)">
@@ -231,6 +252,7 @@ export const SmokingTrainLoader: React.FC<SmokingTrainLoaderProps> = ({
               width="280"
               height="75"
               preserveAspectRatio="xMidYMid meet"
+              filter={isDarkMode ? "invert(1) hue-rotate(180deg)" : undefined}
             />
 
             {/* Train Shadow */}
@@ -242,6 +264,7 @@ export const SmokingTrainLoader: React.FC<SmokingTrainLoaderProps> = ({
                 width="280"
                 height="75"
                 preserveAspectRatio="xMidYMid meet"
+                filter={isDarkMode ? "invert(1) hue-rotate(180deg)" : undefined}
               />
             </g>
           </g>
@@ -261,8 +284,8 @@ export const SmokingTrainLoader: React.FC<SmokingTrainLoaderProps> = ({
       {/* Percentage text */}
       {showPercent && (
         <div
-          className="mt-2 text-sm font-medium text-gray-700"
-          style={{ 
+          className="mt-2 text-sm font-medium text-gray-700 dark:text-gray-300"
+          style={{
             fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
             fontSize: '14px'
           }}
@@ -304,21 +327,21 @@ export const SmokingTrainLoaderExample: React.FC = () => {
   return (
     <div className="flex flex-col items-center gap-6 p-8">
       <h3 className="text-lg font-semibold">Smoking Train Loader</h3>
-      
+
       <div className="flex flex-wrap items-end gap-8">
         <div className="text-center">
           <SmokingTrainLoader progress={progress} width={300} height={120} showPercent />
-          <p className="text-xs mt-2 text-gray-600">Width: 300px</p>
+          <p className="text-xs mt-2 text-gray-600 dark:text-gray-400">Width: 300px</p>
         </div>
-        
+
         <div className="text-center">
           <SmokingTrainLoader progress={progress} width={400} height={160} showPercent />
-          <p className="text-xs mt-2 text-gray-600">Default size</p>
+          <p className="text-xs mt-2 text-gray-600 dark:text-gray-400">Default size</p>
         </div>
-        
+
         <div className="text-center">
           <SmokingTrainLoader progress={progress} width={500} height={200} showPercent />
-          <p className="text-xs mt-2 text-gray-600">Large size</p>
+          <p className="text-xs mt-2 text-gray-600 dark:text-gray-400">Large size</p>
         </div>
       </div>
 

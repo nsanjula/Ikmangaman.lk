@@ -450,15 +450,13 @@ const ChatBot: React.FC<ChatBotProps> = ({ className = '' }) => {
                   className={`flex ${message.isBot ? 'justify-start' : 'justify-end'}`}
                 >
                   <div
-                    className={`p-3 rounded-2xl text-sm ${
-                      message.isBot
-                        ? 'rounded-bl-sm'
-                        : 'rounded-br-sm'
-                    }`}
+                    className={`p-3 rounded-2xl  text-sm ${message.isBot
+                      ? 'rounded-bl-sm bg-[#E6F6F7] dark:bg-gray-800'
+                      : 'rounded-br-sm bg-[var(--surface)] dark:bg-gray-600 '
+                      }`}
                     style={{
                       maxWidth: 'min(280px, calc(100% - 20px))',
                       wordWrap: 'break-word',
-                      background: message.isBot ? '#E6F6F7' : 'var(--surface)',
                       color: message.isBot ? 'var(--primary-700)' : 'var(--text-900)',
                       border: message.isBot ? 'none' : '1px solid var(--border)'
                     }}
@@ -470,10 +468,9 @@ const ChatBot: React.FC<ChatBotProps> = ({ className = '' }) => {
               {isLoading && (
                 <div className="flex justify-start">
                   <div
-                    className="rounded-2xl rounded-bl-sm"
+                    className="rounded-2xl rounded-bl-sm bg-[#E6F6F7] dark:bg-gray-800"
                     style={{
                       maxWidth: 'min(280px, calc(100% - 20px))',
-                      background: '#E6F6F7',
                       color: 'var(--primary-700)'
                     }}
                   >
@@ -486,7 +483,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ className = '' }) => {
           </div>
 
           {/* Input */}
-          <div className="p-4 border-t" style={{ borderTopColor: 'var(--border)' }}>
+          <div className="p-4 border-t dark:bg-gray-800" style={{ borderTopColor: 'var(--border)' }}>
             <div className="flex items-center space-x-2">
               <input
                 type="text"

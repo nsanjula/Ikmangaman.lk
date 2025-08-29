@@ -267,7 +267,7 @@ const RegisterForm = () => {
                     value={formData.firstName}
                     onChange={handleChange}
                     placeholder="Ex: Nisal"
-                    className={`w-full p-3 border rounded-lg focus:ring-2 dark:bg-gray-700 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500 ${errors.firstName ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                    className={`w-full p-3 border rounded-lg focus:ring-2 dark:bg-gray-700 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500 ${errors.firstName ? 'border-red-300 bg-red-50 ' : 'border-gray-200'
                       }`}
                   />
                   {errors.firstName && (

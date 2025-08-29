@@ -178,7 +178,7 @@ const RecommendationForm = () => {
   }, []);
 
   // Load exchange rates for currency formatting
-  useEffect(() => { try { ensureRatesLoaded(); } catch {} }, []);
+  useEffect(() => { try { ensureRatesLoaded(); } catch { } }, []);
   const { format: formatCurrency } = useCurrency();
 
   // Set initial filter state based on device type
@@ -858,7 +858,7 @@ const RecommendationForm = () => {
                             setBudget(50000);
                             setSortBy("best_match");
                           }}
-                          className="bg-white text-cyan-700 hover:bg-gray-50 px-5 py-2 rounded-md transition-colors font-medium text-sm shadow-sm"
+                          className="bg-white text-cyan-700 dark:text-white dark:bg-gray-800 hover:bg-gray-50 px-5 py-2 rounded-md transition-colors font-medium text-sm shadow-sm"
                         >
                           Reset All Filters
                         </button>

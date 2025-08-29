@@ -192,16 +192,16 @@ const EnhancedTouristAttractionsMapComponent: React.FC<EnhancedTouristAttraction
           all: false,
           [filterType]: !prev[filterType],
         };
-        
+
         // If no specific filters are active, activate "All"
         const hasActiveFilters = Object.entries(newFilters)
           .filter(([key]) => key !== 'all')
           .some(([, value]) => value);
-        
+
         if (!hasActiveFilters) {
           newFilters.all = true;
         }
-        
+
         return newFilters;
       });
     }
@@ -269,12 +269,12 @@ const EnhancedTouristAttractionsMapComponent: React.FC<EnhancedTouristAttraction
         ]);
 
         const allPlacesData = [...parks, ...museums, ...attractions, ...hotels, ...restaurants];
-        
+
         // Remove duplicates based on place_id
-        const uniquePlaces = allPlacesData.filter((place, index, self) => 
+        const uniquePlaces = allPlacesData.filter((place, index, self) =>
           index === self.findIndex(p => p.place_id === place.place_id)
         );
-        
+
         setAllPlaces(uniquePlaces);
       } catch (error) {
         console.error("Error loading places:", error);
@@ -293,11 +293,11 @@ const EnhancedTouristAttractionsMapComponent: React.FC<EnhancedTouristAttraction
       hotels: 0,
       restaurants: 0,
     };
-    
+
     allPlaces.forEach(place => {
       counts[place.category]++;
     });
-    
+
     return counts;
   }, [allPlaces]);
 
@@ -327,65 +327,59 @@ const EnhancedTouristAttractionsMapComponent: React.FC<EnhancedTouristAttraction
           <div className="flex flex-wrap gap-2 mb-4">
             <button
               onClick={() => handleFilterClick('all')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeFilters.all
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeFilters.all
+                ? 'bg-cyan-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200  dark:bg-gray-800'
+                }`}
             >
               All
             </button>
             <button
               onClick={() => handleFilterClick('parks')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeFilters.parks
-                  ? 'text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeFilters.parks
+                ? 'text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200  dark:bg-gray-800'
+                }`}
               style={activeFilters.parks ? { backgroundColor: '#4CAF50' } : {}}
             >
               Parks ({placeCounts.parks})
             </button>
             <button
               onClick={() => handleFilterClick('museums')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeFilters.museums
-                  ? 'text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeFilters.museums
+                ? 'text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200  dark:bg-gray-800'
+                }`}
               style={activeFilters.museums ? { backgroundColor: '#2196F3' } : {}}
             >
               Museums ({placeCounts.museums})
             </button>
             <button
               onClick={() => handleFilterClick('attractions')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeFilters.attractions
-                  ? 'text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeFilters.attractions
+                ? 'text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200  dark:bg-gray-800'
+                }`}
               style={activeFilters.attractions ? { backgroundColor: '#00BCD4' } : {}}
             >
               Attractions ({placeCounts.attractions})
             </button>
             <button
               onClick={() => handleFilterClick('hotels')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeFilters.hotels
-                  ? 'text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeFilters.hotels
+                ? 'text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200  dark:bg-gray-800'
+                }`}
               style={activeFilters.hotels ? { backgroundColor: '#E91E63' } : {}}
             >
               Hotels ({placeCounts.hotels})
             </button>
             <button
               onClick={() => handleFilterClick('restaurants')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeFilters.restaurants
-                  ? 'text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeFilters.restaurants
+                ? 'text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200  dark:bg-gray-800'
+                }`}
               style={activeFilters.restaurants ? { backgroundColor: '#FF9800' } : {}}
             >
               Restaurants ({placeCounts.restaurants})
@@ -518,7 +512,7 @@ const EnhancedTouristAttractionsMapComponent: React.FC<EnhancedTouristAttraction
                   <h3 className="font-semibold text-gray-800 mb-1">
                     {selectedPlace.name}
                   </h3>
-                  
+
                   {selectedPlace.rating && (
                     <div className="flex items-center gap-1 mb-1">
                       <span className="text-yellow-500">⭐</span>
@@ -527,31 +521,29 @@ const EnhancedTouristAttractionsMapComponent: React.FC<EnhancedTouristAttraction
                       </span>
                     </div>
                   )}
-                  
+
                   {selectedPlace.vicinity && (
                     <p className="text-xs text-gray-500 mb-2">
                       📍 {selectedPlace.vicinity}
                     </p>
                   )}
-                  
+
                   {selectedPlace.opening_hours?.open_now !== undefined && (
-                    <p className={`text-xs mb-2 ${
-                      selectedPlace.opening_hours.open_now 
-                        ? 'text-green-600' 
-                        : 'text-red-600'
-                    }`}>
+                    <p className={`text-xs mb-2 ${selectedPlace.opening_hours.open_now
+                      ? 'text-green-600'
+                      : 'text-red-600'
+                      }`}>
                       {selectedPlace.opening_hours.open_now ? '🟢 Open' : '🔴 Closed'}
                     </p>
                   )}
-                  
+
                   <div className="mb-2">
-                    <span className={`text-xs px-2 py-1 rounded ${
-                      selectedPlace.category === 'parks' ? 'bg-green-50 text-green-700' :
+                    <span className={`text-xs px-2 py-1 rounded ${selectedPlace.category === 'parks' ? 'bg-green-50 text-green-700' :
                       selectedPlace.category === 'museums' ? 'bg-blue-50 text-blue-700' :
-                      selectedPlace.category === 'hotels' ? 'bg-pink-50 text-pink-700' :
-                      selectedPlace.category === 'restaurants' ? 'bg-orange-50 text-orange-700' :
-                      'bg-cyan-50 text-cyan-700'
-                    }`}>
+                        selectedPlace.category === 'hotels' ? 'bg-pink-50 text-pink-700' :
+                          selectedPlace.category === 'restaurants' ? 'bg-orange-50 text-orange-700' :
+                            'bg-cyan-50 text-cyan-700'
+                      }`}>
                       {selectedPlace.category.charAt(0).toUpperCase() + selectedPlace.category.slice(1)}
                     </span>
                   </div>

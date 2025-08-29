@@ -61,9 +61,8 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({ className = '' }
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center loading-overlay-force-visible ${className}`}
+      className={`fixed inset-0 z-50 flex items-center justify-center loading-overlay-force-visible ${className} bg-white dark:bg-black`}
       style={{
-        backgroundColor: 'rgba(255, 255, 255, 0.95)',
         backdropFilter: 'blur(8px)',
         position: 'fixed',
         top: '0px !important',

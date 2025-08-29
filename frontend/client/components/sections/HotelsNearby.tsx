@@ -46,7 +46,7 @@ const HotelsNearby: React.FC = () => {
     // Extract hotel data from destination data
     try {
       const hotelData = destinationData["hotel data"];
-      
+
       if (hotelData && Array.isArray(hotelData)) {
         // New format: array of HotelData objects
         const normalizedHotels = normalizeHotelData(hotelData);
@@ -64,7 +64,7 @@ const HotelsNearby: React.FC = () => {
     }
   }, [destinationData]);
 
-  useEffect(() => { try { ensureRatesLoaded(); } catch {} }, []);
+  useEffect(() => { try { ensureRatesLoaded(); } catch { } }, []);
   const { format: formatCurrency } = useCurrency();
 
   const getAvailabilityColor = (availability: string) => {
@@ -104,9 +104,9 @@ const HotelsNearby: React.FC = () => {
 
   if (error) {
     return (
-      <div className="card p-6 mb-6 border-l-4" style={{ 
-        background: 'var(--surface)', 
-        borderLeftColor: '#EF4444' 
+      <div className="card p-6 mb-6 border-l-4" style={{
+        background: 'var(--surface)',
+        borderLeftColor: '#EF4444'
       }}>
         <h2 className="text-2xl font-bold mb-4" style={{ color: '#DC2626' }}>
           Hotels Nearby
@@ -126,10 +126,10 @@ const HotelsNearby: React.FC = () => {
         </h2>
         <div className="text-center py-8">
           <div className="text-6xl mb-4">🏨</div>
-          <p className="font-medium mb-2" style={{ color: 'var(--text-900)' }}>
+          <p className="font-medium mb-2 mx-auto text-center max-w-md" style={{ color: 'var(--text-900)' }}>
             Hotel information not available
           </p>
-          <p className="text-sm" style={{ color: 'var(--text-600)' }}>
+          <p className="text-sm mx-auto text-center max-w-md" style={{ color: 'var(--text-600)' }}>
             Hotel booking service may be temporarily unavailable
           </p>
         </div>
@@ -151,7 +151,7 @@ const HotelsNearby: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
         {hotels.map((hotel) => {
           const availabilityColor = getAvailabilityColor(hotel.availability);
-          
+
           return (
             <div
               key={hotel.id}
@@ -174,18 +174,18 @@ const HotelsNearby: React.FC = () => {
                 />
                 <div
                   className={`fallback-content absolute inset-0 flex flex-col items-center justify-center text-center p-4 hidden`}
-                  style={{ 
-                    background: 'var(--surface-alt)', 
-                    color: 'var(--text-600)' 
+                  style={{
+                    background: 'var(--surface-alt)',
+                    color: 'var(--text-600)'
                   }}
                 >
                   <div className="text-4xl mb-2">🏨</div>
                   <div className="text-sm font-medium">{hotel.hotel_name}</div>
                 </div>
-                
+
                 {/* Price Badge */}
-                <div className="absolute top-3 right-3 px-2 py-1 rounded text-white text-sm font-semibold" style={{ 
-                  background: 'var(--primary-700)' 
+                <div className="absolute top-3 right-3 px-2 py-1 rounded text-white text-sm font-semibold" style={{
+                  background: 'var(--primary-700)'
                 }}>
                   {formatCurrency(hotel.price)}/night
                 </div>
@@ -212,11 +212,10 @@ const HotelsNearby: React.FC = () => {
                     {[...Array(5)].map((_, i) => (
                       <FiStar
                         key={i}
-                        className={`w-4 h-4 ${
-                          i < Math.floor(hotel.rating)
+                        className={`w-4 h-4 ${i < Math.floor(hotel.rating)
                             ? 'text-yellow-400 fill-current'
                             : 'text-gray-300'
-                        }`}
+                          }`}
                       />
                     ))}
                   </div>
@@ -237,7 +236,7 @@ const HotelsNearby: React.FC = () => {
 
               {/* Action Footer */}
               <div className="p-4 pt-0">
-                <button 
+                <button
                   className="btn btn-primary btn-md w-full flex items-center justify-center gap-2"
                   onClick={() => window.open(hotel.url, '_blank')}
                 >
@@ -251,9 +250,9 @@ const HotelsNearby: React.FC = () => {
       </div>
 
       {/* Additional Info */}
-      <div className="p-4 rounded-lg border-l-4" style={{ 
-        background: 'var(--surface-alt)', 
-        borderLeftColor: 'var(--primary-600)' 
+      <div className="p-4 rounded-lg border-l-4" style={{
+        background: 'var(--surface-alt)',
+        borderLeftColor: 'var(--primary-600)'
       }}>
         <div className="flex items-start gap-3">
           <span className="text-xl">🏨</span>
@@ -262,7 +261,7 @@ const HotelsNearby: React.FC = () => {
               Hotel Information
             </p>
             <p className="text-sm" style={{ color: 'var(--text-600)' }}>
-              Hotel information is provided by our booking partners. 
+              Hotel information is provided by our booking partners.
               Prices and availability may vary based on season and demand.
               Prices are displayed in your selected currency (currently: {getSelectedCurrency()}).
             </p>
