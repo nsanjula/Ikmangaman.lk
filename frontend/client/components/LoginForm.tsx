@@ -45,14 +45,6 @@ const LoginForm = () => {
     // Autofill from cookies (username only)
     const savedUsername = getCookie("auth_username");
     if (savedUsername) setUsername(savedUsername);
-    if (savedToken) {
-      setPassword("********");
-      setUseSavedToken(true);
-      try {
-        const hidden = document.getElementById("saved-token-input") as HTMLInputElement | null;
-        if (hidden) hidden.value = savedToken;
-      } catch {}
-    }
 
     // Clear timeout state when user navigates to login
     return () => {
