@@ -36,6 +36,8 @@ const LoginForm = () => {
   const location = useLocation();
   const { login, isTimeout, clearTimeout } = useAuth();
 
+  const [hasSavedUsername, setHasSavedUsername] = useState(false);
+
   useEffect(() => {
     // Check for success message from registration
     if (location.state?.message) {
@@ -45,6 +47,7 @@ const LoginForm = () => {
     // Autofill from cookies (username only)
     const savedUsername = getCookie("auth_username");
     if (savedUsername) setUsername(savedUsername);
+    setHasSavedUsername(!!savedUsername);
 
     // Clear timeout state when user navigates to login
     return () => {
@@ -101,7 +104,7 @@ const LoginForm = () => {
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: `url('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=80')`,
+            backgroundImage: `url('/hiriketiya.webp')`,
           }}
         />
 
@@ -223,7 +226,7 @@ const LoginForm = () => {
                     Signing in...
                   </div>
                 ) : (
-                  "Sign In"
+                  hasSavedUsername ? "Log In" : "Sign In"
                 )}
               </button>
 
