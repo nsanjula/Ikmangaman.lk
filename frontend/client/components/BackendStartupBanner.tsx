@@ -11,37 +11,28 @@ const BackendStartupBanner: React.FC = () => {
   const hostedBackendUrl = "https://ikmangamanlk-production.up.railway.app";
 
   const checkBackend = async () => {
-    // Create an AbortController for timeout
     const controller = new AbortController();
     let timeoutId: NodeJS.Timeout;
 
     try {
-      timeoutId = setTimeout(() => controller.abort(), 3000);
+      timeoutId = setTimeout(() => controller.abort(), 4000);
 
-      const response = await fetch("https://ikmangamanlk-production.up.railway.app/docs", {
-        method: "HEAD",
+      // Use health endpoint and no-cors so that CORS restrictions don't throw
+      await fetch(`${hostedBackendUrl}/health`, {
+        method: 'GET',
         signal: controller.signal,
-        mode: 'cors'
+        mode: 'no-cors',
+        cache: 'no-store',
       });
 
       clearTimeout(timeoutId);
 
-      if (response.ok) {
-        setBackendStatus("online");
-        setShowBanner(false);
-      } else {
-        setBackendStatus("offline");
-        setShowBanner(true);
-      }
+      // If fetch resolves (even opaque), consider backend online
+      setBackendStatus('online');
+      setShowBanner(false);
     } catch (error: any) {
-      // Clear the timeout if it's still active
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-
-      // Silently handle all connection errors including AbortError
-      // This is expected when the backend is not running
-      setBackendStatus("offline");
+      if (timeoutId) clearTimeout(timeoutId);
+      setBackendStatus('offline');
       setShowBanner(true);
     }
   };

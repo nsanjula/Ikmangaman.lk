@@ -20,7 +20,7 @@ const Toggle = ({ checked, onChange, disabled }: { checked: boolean; onChange: (
 
 const CookieConsentPopup = ({ onCustomize, onAcceptAll, onRejectAll }: { onCustomize: () => void; onAcceptAll: () => void; onRejectAll: () => void; }) => (
   createPortal(
-    <div className="cookie-consent-popup fixed bottom-4 right-4 z-[99999] card p-4 max-w-md shadow-lg" style={{ pointerEvents: 'auto' }}>
+    <div className="cookie-consent-popup fixed bottom-4 left-4 z-[99999] card p-4 max-w-md shadow-lg" style={{ pointerEvents: 'auto' }}>
       <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-900)' }}>We value your privacy</h3>
       <p className="text-sm mb-3" style={{ color: 'var(--text-600)' }}>
         We use cookies to enhance your experience, serve personalized content, and analyze traffic.

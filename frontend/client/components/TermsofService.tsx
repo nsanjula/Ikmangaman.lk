@@ -1,9 +1,22 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useScrollToTop } from "../hooks/useScrollToTop";
 
 const TermsOfService = () => {
     useScrollToTop();
     const [activeTab, setActiveTab] = useState('everyone');
+    const [isMobile, setIsMobile] = useState(false);
+    const [showNav, setShowNav] = useState(true);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 1024);
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    useEffect(() => {
+        setShowNav(!isMobile);
+    }, [isMobile]);
 
     const sidebarItems = [
         { id: 'introduction', label: 'Introduction' },
@@ -49,9 +62,44 @@ const TermsOfService = () => {
 
             {/* Main Content */}
             <div className="container mx-auto px-4 py-12">
+                {/* Mobile Navigation Toggle */}
+                <div className="lg:hidden mb-6">
+                    <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-4">
+                        <div
+                            className="flex items-center justify-between cursor-pointer mb-2"
+                            onClick={() => setShowNav(!showNav)}
+                        >
+                            <h2 className="text-md font-semibold" style={{ color: 'var(--text-900)' }}>Navigation</h2>
+                            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M6 9l6 6 6-6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                        </div>
+                        {showNav && (
+                            <div className="space-y-2">
+                                {sidebarItems.map((item) => (
+                                    <div key={item.id} className="mb-2">
+                                        <button
+                                            onClick={() => scrollToSection(item.id)}
+                                            className={`w-full flex items-center justify-between p-3 rounded-lg transition-all duration-200 ${activeSection === item.id
+                                                ? 'bg-cyan-100 text-cyan-700 border border-cyan-200'
+                                                : 'bg-white hover:bg-gray-50 text-gray-700 hover:text-cyan-600 border border-gray-200'
+                                                }`}
+                                        >
+                                            <span className="font-medium text-left">{item.label}</span>
+                                            <svg className={`w-4 h-4 transition-transform duration-200 ${activeSection === item.id ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
                 <div className="flex gap-12">
                     {/* Sidebar */}
-                    <div className="w-80 flex-shrink-0">
+                    <div className="hidden lg:block w-80 flex-shrink-0">
                         <div className="sticky top-8">
                             <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6">
                                 <h2 className="text-xl font-semibold text-cyan-700 mb-6">Navigation</h2>

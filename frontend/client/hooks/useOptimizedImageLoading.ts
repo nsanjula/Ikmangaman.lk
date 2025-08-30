@@ -105,65 +105,110 @@ const useOptimizedImageLoading = ({
     }
   }, [getCacheKey, loadFromCache]);
 
-  // Fetch place image from Google Places API with improved error handling
+  // Fetch place image using Google Places API v1 (REST)
   const fetchPlaceImage = useCallback(async (
     placeName: string,
     destinationName: string,
     signal?: AbortSignal
   ): Promise<string | null> => {
-    return new Promise((resolve) => {
-      if (!isGoogleMapsAvailable()) {
-        resolve(null);
-        return;
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
+    if (!apiKey) return null;
+
+    const controller = new AbortController();
+    const onExternalAbort = () => controller.abort();
+    if (signal) signal.addEventListener('abort', onExternalAbort, { once: true });
+    const timeout = setTimeout(() => controller.abort(), 8000);
+
+    try {
+      const searchUrl = 'https://places.googleapis.com/v1/places:searchText';
+      const baseQuery = `${placeName} ${destinationName} Sri Lanka`;
+      const body = { textQuery: baseQuery, languageCode: 'en', regionCode: 'LK', pageSize: 8 } as const;
+      const res = await fetch(searchUrl, {
+        method: 'POST',
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': apiKey,
+          'X-Goog-FieldMask': 'places.photos.name,places.photos.photoUri,places.name',
+        },
+        body: JSON.stringify(body),
+        mode: 'cors',
+      });
+
+      clearTimeout(timeout);
+      if (!res.ok) return null;
+
+      const data = await res.json();
+      const candidates: any[] = Array.isArray(data?.places) ? data.places : [];
+
+      // Find the first candidate that actually has a photo
+      let photoUri: string | undefined;
+      let photoName: string | undefined;
+      for (const c of candidates) {
+        const p = c?.photos?.[0];
+        if (p?.photoUri || p?.name) {
+          photoUri = p.photoUri;
+          photoName = p.name;
+          break;
+        }
       }
 
-      try {
-        const service = new window.google.maps.places.PlacesService(
-          document.createElement("div")
-        );
-
-        const request = {
-          query: `${placeName} ${destinationName} Sri Lanka`,
-          fields: ["place_id", "name", "photos"],
-        };
-
-        const timeout = setTimeout(() => {
-          resolve(null);
-        }, 8000); // 8 second timeout
-
-        service.textSearch(request, (results, status) => {
-          clearTimeout(timeout);
-          
-          if (signal?.aborted) {
-            resolve(null);
-            return;
-          }
-
-          try {
-            if (
-              status === window.google.maps.places.PlacesServiceStatus.OK &&
-              results &&
-              results[0] &&
-              results[0].photos &&
-              results[0].photos.length > 0
-            ) {
-              const photoUrl = results[0].photos[0].getUrl({
-                maxWidth: 400,
-                maxHeight: 300,
-              });
-              resolve(photoUrl);
-            } else {
-              resolve(null);
-            }
-          } catch (error) {
-            resolve(null);
-          }
+      // If none found, retry once with a slightly different query emphasizing POIs
+      if (!photoUri && !photoName) {
+        const altQuery = `${placeName} ${destinationName} point of interest`;
+        const altRes = await fetch(searchUrl, {
+          method: 'POST',
+          signal: controller.signal,
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': apiKey,
+            'X-Goog-FieldMask': 'places.photos.name,places.photos.photoUri,places.name',
+          },
+          body: JSON.stringify({ ...body, textQuery: altQuery }),
+          mode: 'cors',
         });
-      } catch (error) {
-        resolve(null);
+        if (altRes.ok) {
+          const altData = await altRes.json();
+          const altCandidates: any[] = Array.isArray(altData?.places) ? altData.places : [];
+          for (const c of altCandidates) {
+            const p = c?.photos?.[0];
+            if (p?.photoUri || p?.name) {
+              photoUri = p.photoUri;
+              photoName = p.name;
+              break;
+            }
+          }
+        }
       }
-    });
-  }, [isGoogleMapsAvailable]);
+
+      // Prefer direct photoUri when available (avoids extra redirect)
+      if (photoUri) {
+        try {
+          const url = new URL(photoUri);
+          url.searchParams.set('maxWidthPx', '400');
+          url.searchParams.set('maxHeightPx', '300');
+          url.searchParams.set('key', apiKey);
+          return url.toString();
+        } catch {
+          // Fall back to using media endpoint
+        }
+      }
+
+      if (!photoName) return null;
+
+      // Build the media URL that browsers can use directly as an <img> src
+      // Do NOT use encodeURIComponent here; photoName contains path segments (e.g., "places/.../photos/...")
+      // Encoding would turn slashes into %2F and break the endpoint.
+      const mediaUrl = `https://places.googleapis.com/v1/${photoName}/media?maxWidthPx=400&maxHeightPx=300&key=${apiKey}`;
+      return mediaUrl;
+    } catch (e) {
+      if ((e as any)?.name === 'AbortError') return null;
+      return null;
+    } finally {
+      clearTimeout(timeout);
+      if (signal) signal.removeEventListener('abort', onExternalAbort as EventListener);
+    }
+  }, []);
 
   // Load images with batching and prioritization
   const loadPlaceImages = useCallback(async () => {
@@ -192,12 +237,7 @@ const useOptimizedImageLoading = ({
     });
     setPlaceImages(initialImageMap);
 
-    try {
-      await waitForGoogleMaps();
-    } catch (error) {
-      console.warn("Google Maps not available, using placeholders");
-      return;
-    }
+    // Proceed without waiting for Google Maps; using Places REST API
 
     // Load images for places that aren't cached
     const placesToLoad = places.filter(place => {
@@ -267,13 +307,12 @@ const useOptimizedImageLoading = ({
       }
     }
   }, [
-    places, 
-    destinationName, 
-    fetchPlaceImage, 
-    getCacheKey, 
-    loadFromCache, 
-    saveToCache, 
-    waitForGoogleMaps
+    places,
+    destinationName,
+    fetchPlaceImage,
+    getCacheKey,
+    loadFromCache,
+    saveToCache
   ]);
 
   // Cleanup on unmount

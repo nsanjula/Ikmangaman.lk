@@ -692,22 +692,27 @@ class AuthAPI {
         throw new Error(errorMessage);
       }
 
-      return response.json();
+      const data: StartingLocationsResponse = await response.json();
+      const extras = [
+        "Kilinochchi","Mullaitivu","Mannar","Point Pedro","Chavakachcheri","Kankesanthurai","Valvettithurai","Kodikamam","Pooneryn","Velanai","Kayts","Pallai",
+        "Akkaraipattu","Kalmunai","Sainthamaruthu","Eravur","Valachchenai","Oddamavadi","Kattankudy",
+        "Mawanella","Gampola","Hatton","Nawalapitiya","Talawakele","Haputale","Bandarawela","Wellawaya","Monaragala","Buttala","Kataragama","Tissamaharama","Embilipitiya","Balangoda","Belihuloya","Seethawaka","Avissawella","Homagama","Maharagama","Kottawa","Moratuwa","Panadura","Beruwala","Wadduwa",
+        "Kalpitiya","Chilaw","Wennappuwa","Dankotuwa","Minuwangoda","Divulapitiya","Katunayake","Seeduwa","Ragama","Wattala","Ja-Ela","Kelaniya","Kiribathgoda","Gampaha","Nittambuwa","Warakapola","Alawwa","Melsiripura","Galewela",
+        "Dambulla","Habarana","Sigiriya","Kekirawa","Medawachchiya","Padaviya","Horowpathana","Mihintale","Madhu","Murunkan","Pesalai","Talai Mannar","Nanattan","Pallimunai","Erukkulampiddi","Silavathurai","Marichchukaddi","Dehiwala"
+      ];
+      const merged = Array.from(new Set([...(data?.locations || []), ...extras]));
+      return { locations: merged };
     } catch (error) {
       console.warn("Starting locations API failed, using fallback:", error);
-      // Return fallback starting locations
+      // Return fallback starting locations (full list)
       return {
         locations: [
-          "Colombo",
-          "Kandy",
-          "Galle",
-          "Jaffna",
-          "Trincomalee",
-          "Anuradhapura",
-          "Polonnaruwa",
-          "Matara",
-          "Batticaloa",
-          "Kurunegala"
+          "Colombo","Kandy","Galle","Jaffna","Trincomalee","Anuradhapura","Pollonaruwa","Nuwara Eliya","Ella","Matara","Negombo","Batticaloa","Badulla","Kurunegala","Ratnapura","Hambantota","Puttalam","Vavniya","Kalutara","Ampara",
+          "Kilinochchi","Mullaitivu","Mannar","Point Pedro","Chavakachcheri","Kankesanthurai","Valvettithurai","Kodikamam","Pooneryn","Velanai","Kayts","Pallai",
+          "Akkaraipattu","Kalmunai","Sainthamaruthu","Eravur","Valachchenai","Oddamavadi","Kattankudy",
+          "Mawanella","Gampola","Hatton","Nawalapitiya","Talawakele","Haputale","Bandarawela","Wellawaya","Monaragala","Buttala","Kataragama","Tissamaharama","Embilipitiya","Balangoda","Belihuloya","Seethawaka","Avissawella","Homagama","Maharagama","Kottawa","Moratuwa","Panadura","Beruwala","Wadduwa",
+          "Kalpitiya","Chilaw","Wennappuwa","Dankotuwa","Minuwangoda","Divulapitiya","Katunayake","Seeduwa","Ragama","Wattala","Ja-Ela","Kelaniya","Kiribathgoda","Gampaha","Nittambuwa","Warakapola","Alawwa","Melsiripura","Galewela",
+          "Dambulla","Habarana","Sigiriya","Kekirawa","Medawachchiya","Padaviya","Horowpathana","Mihintale","Madhu","Murunkan","Pesalai","Talai Mannar","Nanattan","Pallimunai","Erukkulampiddi","Silavathurai","Marichchukaddi","Dehiwala"
         ]
       };
     }

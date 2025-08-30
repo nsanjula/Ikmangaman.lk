@@ -142,7 +142,7 @@ const WeatherCard: React.FC = () => {
             Plan your visit to {destinationData?.destination_name} with detailed weather information
           </p>
         </div>
-        <div className="text-center py-12">
+        <div className="flex flex-col items-center justify-center text-center py-12 w-full">
           <div className="mb-6">
             <div className="w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center" style={{
               background: 'var(--surface-alt)'
@@ -150,7 +150,7 @@ const WeatherCard: React.FC = () => {
               <FiSun className="w-10 h-10" style={{ color: 'var(--primary-600)' }} />
             </div>
           </div>
-          <p className="text-lg font-semibold mb-3 text-center" style={{ color: 'var(--text-900)' }}>
+          <p className="text-lg font-semibold mb-3" style={{ color: 'var(--text-900)' }}>
             Weather Information Unavailable
           </p>
           <p className="text-sm max-w-md mx-auto leading-relaxed" style={{ color: 'var(--text-600)' }}>

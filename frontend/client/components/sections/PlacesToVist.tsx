@@ -63,19 +63,13 @@ const PlacesToVisit: React.FC = () => {
 
   // Load place images after component has loaded
   useEffect(() => {
-    if (
-      destinationData &&
-      placesToDo.length > 0 &&
-      isGoogleMapsLoaded
-    ) {
-      // Small delay to ensure Google Maps services are ready
+    if (destinationData && placesToDo.length > 0) {
       const timer = setTimeout(() => {
         loadPlaceImages();
-      }, 1000);
-
+      }, 200);
       return () => clearTimeout(timer);
     }
-  }, [destinationData, placesToDo.length, isGoogleMapsLoaded, loadPlaceImages]);
+  }, [destinationData, placesToDo.length, loadPlaceImages]);
 
   if (loading) {
     return (

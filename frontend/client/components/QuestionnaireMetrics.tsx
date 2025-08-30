@@ -131,7 +131,7 @@ const QuestionnaireMetrics: React.FC = () => {
     "July", "August", "September", "October", "November", "December",
   ];
 
-  const [travelMonth, setTravelMonth] = useState("April");
+  const [travelMonth, setTravelMonth] = useState(() => months[new Date().getMonth()] || "April");
   const [groupSize, setGroupSize] = useState(6);
   const [startLocation, setStartLocation] = useState("");
   const [availableLocations, setAvailableLocations] = useState<string[]>([]);
@@ -182,6 +182,86 @@ const QuestionnaireMetrics: React.FC = () => {
       Vavniya: { lat: 8.7514, lng: 80.4971 },
       Kalutara: { lat: 6.5854, lng: 79.9607 },
       Ampara: { lat: 7.322, lng: 81.675 },
+      Kilinochchi: { lat: 9.397, lng: 80.403 },
+      Mullaitivu: { lat: 9.267, lng: 80.814 },
+      Mannar: { lat: 8.977, lng: 79.904 },
+      "Point Pedro": { lat: 9.816, lng: 80.233 },
+      Chavakachcheri: { lat: 9.661, lng: 80.165 },
+      Kankesanthurai: { lat: 9.791, lng: 80.038 },
+      Valvettithurai: { lat: 9.817, lng: 80.071 },
+      Kodikamam: { lat: 9.647, lng: 80.198 },
+      Pooneryn: { lat: 9.267, lng: 79.904 },
+      Velanai: { lat: 9.63, lng: 79.919 },
+      Kayts: { lat: 9.673, lng: 79.918 },
+      Pallai: { lat: 9.627, lng: 80.273 },
+      Akkaraipattu: { lat: 7.217, lng: 81.849 },
+      Kalmunai: { lat: 7.416, lng: 81.816 },
+      Sainthamaruthu: { lat: 7.363, lng: 81.833 },
+      Eravur: { lat: 7.783, lng: 81.6 },
+      Valachchenai: { lat: 7.922, lng: 81.567 },
+      Oddamavadi: { lat: 7.903, lng: 81.566 },
+      Kattankudy: { lat: 7.704, lng: 81.7 },
+      Mawanella: { lat: 7.25, lng: 80.445 },
+      Gampola: { lat: 7.164, lng: 80.571 },
+      Hatton: { lat: 6.899, lng: 80.595 },
+      Nawalapitiya: { lat: 7.046, lng: 80.529 },
+      Talawakele: { lat: 6.936, lng: 80.653 },
+      Haputale: { lat: 6.768, lng: 80.951 },
+      Bandarawela: { lat: 6.828, lng: 80.986 },
+      Wellawaya: { lat: 6.739, lng: 81.104 },
+      Monaragala: { lat: 6.871, lng: 81.349 },
+      Buttala: { lat: 6.714, lng: 81.239 },
+      Kataragama: { lat: 6.422, lng: 81.332 },
+      Tissamaharama: { lat: 6.28, lng: 81.286 },
+      Embilipitiya: { lat: 6.342, lng: 80.849 },
+      Balangoda: { lat: 6.661, lng: 80.704 },
+      Belihuloya: { lat: 6.713, lng: 80.704 },
+      Seethawaka: { lat: 6.956, lng: 80.248 },
+      Avissawella: { lat: 6.954, lng: 80.204 },
+      Homagama: { lat: 6.843, lng: 80.002 },
+      Maharagama: { lat: 6.844, lng: 79.928 },
+      Kottawa: { lat: 6.841, lng: 79.959 },
+      Moratuwa: { lat: 6.774, lng: 79.882 },
+      Panadura: { lat: 6.716, lng: 79.951 },
+      Beruwala: { lat: 6.478, lng: 79.983 },
+      Wadduwa: { lat: 6.642, lng: 79.959 },
+      Kalpitiya: { lat: 8.229, lng: 79.716 },
+      Chilaw: { lat: 7.575, lng: 79.795 },
+      Wennappuwa: { lat: 7.333, lng: 79.866 },
+      Dankotuwa: { lat: 7.283, lng: 79.95 },
+      Minuwangoda: { lat: 7.166, lng: 79.953 },
+      Divulapitiya: { lat: 7.2, lng: 79.978 },
+      Katunayake: { lat: 7.169, lng: 79.89 },
+      Seeduwa: { lat: 7.129, lng: 79.901 },
+      Ragama: { lat: 7.027, lng: 79.922 },
+      Wattala: { lat: 6.989, lng: 79.889 },
+      "Ja-Ela": { lat: 7.027, lng: 79.876 },
+      Kelaniya: { lat: 6.955, lng: 79.922 },
+      Kiribathgoda: { lat: 6.977, lng: 79.93 },
+      Gampaha: { lat: 7.089, lng: 79.994 },
+      Nittambuwa: { lat: 7.144, lng: 80.06 },
+      Warakapola: { lat: 7.235, lng: 80.203 },
+      Alawwa: { lat: 7.33, lng: 80.242 },
+      Melsiripura: { lat: 7.471, lng: 80.497 },
+      Galewela: { lat: 7.692, lng: 80.568 },
+      Dambulla: { lat: 7.857, lng: 80.649 },
+      Habarana: { lat: 8.036, lng: 80.745 },
+      Sigiriya: { lat: 7.957, lng: 80.76 },
+      Kekirawa: { lat: 8.041, lng: 80.598 },
+      Medawachchiya: { lat: 8.632, lng: 80.493 },
+      Padaviya: { lat: 8.933, lng: 80.767 },
+      Horowpathana: { lat: 8.616, lng: 80.683 },
+      Mihintale: { lat: 8.35, lng: 80.5 },
+      Madhu: { lat: 8.8, lng: 80.133 },
+      Murunkan: { lat: 8.733, lng: 80.05 },
+      Pesalai: { lat: 9, lng: 79.833 },
+      "Talai Mannar": { lat: 8.983, lng: 79.917 },
+      Nanattan: { lat: 8.733, lng: 79.933 },
+      Pallimunai: { lat: 9, lng: 79.883 },
+      Erukkulampiddi: { lat: 8.967, lng: 79.9 },
+      Silavathurai: { lat: 8.7, lng: 79.883 },
+      Marichchukaddi: { lat: 8.617, lng: 79.833 },
+      Dehiwala: { lat: 6.8531, lng: 79.8651 },
     };
 
     let closestLocation = locations[0] || "Colombo";
@@ -218,6 +298,11 @@ const QuestionnaireMetrics: React.FC = () => {
           "Pollonaruwa", "Nuwara Eliya", "Ella", "Matara", "Negombo", "Batticaloa",
           "Badulla", "Kurunegala", "Ratnapura", "Hambantota", "Puttalam", "Vavniya",
           "Kalutara", "Ampara",
+          "Kilinochchi","Mullaitivu","Mannar","Point Pedro","Chavakachcheri","Kankesanthurai","Valvettithurai","Kodikamam","Pooneryn","Velanai","Kayts","Pallai",
+          "Akkaraipattu","Kalmunai","Sainthamaruthu","Eravur","Valachchenai","Oddamavadi","Kattankudy",
+          "Mawanella","Gampola","Hatton","Nawalapitiya","Talawakele","Haputale","Bandarawela","Wellawaya","Monaragala","Buttala","Kataragama","Tissamaharama","Embilipitiya","Balangoda","Belihuloya","Seethawaka","Avissawella","Homagama","Maharagama","Kottawa","Moratuwa","Panadura","Beruwala","Wadduwa",
+          "Kalpitiya","Chilaw","Wennappuwa","Dankotuwa","Minuwangoda","Divulapitiya","Katunayake","Seeduwa","Ragama","Wattala","Ja-Ela","Kelaniya","Kiribathgoda","Gampaha","Nittambuwa","Warakapola","Alawwa","Melsiripura","Galewela",
+          "Dambulla","Habarana","Sigiriya","Kekirawa","Medawachchiya","Padaviya","Horowpathana","Mihintale","Madhu","Murunkan","Pesalai","Talai Mannar","Nanattan","Pallimunai","Erukkulampiddi","Silavathurai","Marichchukaddi","Dehiwala"
         ]);
       } finally {
         setIsLoading(false);
@@ -489,7 +574,9 @@ const QuestionnaireMetrics: React.FC = () => {
         sessionStorage.setItem('tempQuestionnaireCompleted', 'true');
         sessionStorage.setItem(tempCompletedKey, JSON.stringify(destinationWithTempData));
         // Navigate back to saved place destination page which will now show full details
-        navigate(`/saved-destination/${destinationId}`);
+        navigate(`/saved-destination/${destinationId}`, {
+          state: { fromQuestionnaireMetrics: true }
+        });
       } else {
         // For search results, store both the API result and the questionnaire data for compatibility
         sessionStorage.setItem(tempCompletedKey, JSON.stringify(destinationWithTempData));

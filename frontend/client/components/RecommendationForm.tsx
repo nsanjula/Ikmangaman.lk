@@ -509,7 +509,7 @@ const RecommendationForm = () => {
             </div>
           </div>
           {error && (
-            <div className="bg-red-500 text-white p-3 rounded-lg">
+            <div className="p-3 rounded-lg border-l-4" style={{ background: 'var(--surface-alt)', borderLeftColor: 'var(--primary-600)', color: 'var(--text-900)' }}>
               <p>⚠️ {error}</p>
             </div>
           )}
@@ -680,7 +680,7 @@ const RecommendationForm = () => {
                   </div>
                 </div>
                 {error && (
-                  <div className="bg-red-500 text-white p-3 rounded-lg">
+                  <div className="p-3 rounded-lg border-l-4" style={{ background: 'var(--surface-alt)', borderLeftColor: 'var(--primary-600)', color: 'var(--text-900)' }}>
                     <p>⚠️ {error}</p>
                   </div>
                 )}
@@ -784,12 +784,12 @@ const RecommendationForm = () => {
                     ))}
                   </div>
                 ) : cards.length === 0 ? (
-                  <div className="bg-cyan-600 p-8 rounded-lg text-center text-white">
+                  <div className="card p-8 text-center" style={{ background: 'var(--surface-alt)' }}>
                     <div className="text-6xl mb-4">🗺️</div>
-                    <p className="text-lg mb-4">
+                    <p className="text-lg mb-4" style={{ color: 'var(--text-900)' }}>
                       No recommendations available yet
                     </p>
-                    <p className="text-sm text-cyan-200 mb-6">
+                    <p className="text-sm mb-6" style={{ color: 'var(--text-600)' }}>
                       {error ||
                         "Complete the questionnaire to get personalized travel recommendations."}
                     </p>
@@ -800,7 +800,7 @@ const RecommendationForm = () => {
                           clearRecommendationsCache();
                           fetchRecommendations(true);
                         }}
-                        className="bg-white hover:bg-gray-100 text-cyan-700 px-6 py-3 rounded transition-colors font-medium"
+                        className="btn btn-secondary btn-md"
                         disabled={isLoading}
                       >
                         {isLoading ? "Loading..." : "Refresh Recommendations"}
@@ -810,15 +810,13 @@ const RecommendationForm = () => {
                           try {
                             const controller = new AbortController();
                             const timeoutId = setTimeout(() => controller.abort(), 3000);
-
-                            const response = await fetch(
-                              "https://ikmangamanlk-production.up.railway.app/docs",
+                            await fetch(
+                              "https://ikmangamanlk-production.up.railway.app/health",
                               {
                                 signal: controller.signal,
-                                mode: 'cors'
+                                mode: 'no-cors'
                               }
                             );
-
                             clearTimeout(timeoutId);
                           } catch (err: any) {
                             if (err.name === 'AbortError') {
@@ -826,7 +824,7 @@ const RecommendationForm = () => {
                             }
                           }
                         }}
-                        className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded transition-colors font-medium text-sm"
+                        className="btn btn-secondary btn-sm"
                       >
                         Test API
                       </button>
@@ -836,19 +834,19 @@ const RecommendationForm = () => {
                           clearRecommendationsCache();
                           navigate("/questionnaire");
                         }}
-                        className="bg-cyan-700 hover:bg-cyan-800 text-white px-6 py-3 rounded transition-colors font-medium border-2 border-white"
+                        className="btn btn-primary btn-md"
                       >
                         Edit Questionnaire
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-cyan-600 p-6 rounded-lg shadow-md text-center text-white">
+                  <div className="card p-6 text-center" style={{ background: 'var(--surface-alt)' }}>
                     <div className="flex flex-col items-center">
-                      <h3 className="text-xl font-semibold mb-2 text-cyan-100">
+                      <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-900)' }}>
                         No recommendations match your current filters
                       </h3>
-                      <p className="text-sm mb-5 max-w-md text-cyan-100">
+                      <p className="text-sm mb-5 max-w-md" style={{ color: 'var(--text-600)' }}>
                         We couldn't find any destinations that match your selected filters.
                       </p>
                       <div className="flex flex-wrap gap-3 justify-center">
@@ -858,13 +856,13 @@ const RecommendationForm = () => {
                             setBudget(50000);
                             setSortBy("best_match");
                           }}
-                          className="bg-white text-cyan-700 dark:text-white dark:bg-gray-800 hover:bg-gray-50 px-5 py-2 rounded-md transition-colors font-medium text-sm shadow-sm"
+                          className="btn btn-secondary btn-sm"
                         >
                           Reset All Filters
                         </button>
                         <button
                           onClick={() => setBudget(500000)}
-                          className="bg-cyan-700 text-white hover:bg-cyan-800 px-5 py-2 rounded-md transition-colors font-medium text-sm shadow-sm border border-cyan-500"
+                          className="btn btn-primary btn-sm"
                         >
                           Increase Budget
                         </button>

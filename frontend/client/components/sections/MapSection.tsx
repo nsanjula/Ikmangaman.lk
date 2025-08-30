@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { FiMapPin, FiNavigation, FiCompass } from "react-icons/fi";
 import { useLocation } from "react-router-dom";
 import OptimizedRouteMapComponent from "../OptimizedRouteMapComponent";
@@ -15,19 +15,30 @@ const MapSection: React.FC = () => {
   // Check if we're in saved places basic view (before questionnaire metrics)
   const isInSavedPlacesBasicView = useMemo(() => {
     if (!location.pathname.includes('/saved-destination/')) return false;
+
+    // If we just returned from questionnaire, show full view
     if (location.state?.fromQuestionnaireMetrics) return false;
 
-    // Check if temp questionnaire is currently in progress
+    // Global completion flag set by QuestionnaireMetrics upon saved flow
     if (sessionStorage.getItem('tempQuestionnaireCompleted')) return false;
 
-    // Check if this specific destination has completed questionnaire before
     const destinationId = destinationData?.destination_id;
     if (destinationId) {
-      const destinationQuestionnaireStatus = sessionStorage.getItem(`tempQuestionnaire_${destinationId}`);
-      return destinationQuestionnaireStatus !== 'completed';
+      // Saved-specific flags/data indicating completion for this destination
+      const savedFlag = sessionStorage.getItem(`tempQuestionnaire_saved_${destinationId}`);
+      const savedData = sessionStorage.getItem(`tempQuestionnaireDestinationData_saved_${destinationId}`);
+      if (savedFlag === 'completed' || savedData) return false;
+
+      // Backward compatibility fallback
+      const legacyFlag = sessionStorage.getItem(`tempQuestionnaire_${destinationId}`);
+      if (legacyFlag === 'completed') return false;
+
+      // No completion info for this destination -> basic view
+      return true;
     }
 
-    return true; // Default to basic view if no destination ID yet
+    // Default to basic view until destination ID is known
+    return true;
   }, [location.pathname, location.state?.fromQuestionnaireMetrics, destinationData?.destination_id]);
 
   // Memoize starting location calculation

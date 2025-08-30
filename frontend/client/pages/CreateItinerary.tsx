@@ -40,7 +40,19 @@ const DESTINATION_COORDINATES = {
   "Puttalam": { lat: 8.035, lng: 79.8428 },
   "Hambantota": { lat: 6.1243, lng: 81.1185 },
   "Pasikuda": { lat: 7.9252, lng: 81.5612 },
-  "Katharagama": { lat: 6.4211, lng: 81.3312 }
+  "Katharagama": { lat: 6.4211, lng: 81.3312 },
+  "Habarana": { lat: 8.0362, lng: 80.745 },
+  "Hatton": { lat: 6.8916, lng: 80.595 },
+  "Belihuloya": { lat: 6.7135, lng: 80.7048 },
+  "Ohiya": { lat: 6.8177, lng: 80.8929 },
+  "Wellawaya": { lat: 6.7379, lng: 81.1043 },
+  "Hiriketiya": { lat: 5.9575, lng: 80.6965 },
+  "Matara": { lat: 5.9549, lng: 80.554 },
+  "Hikkaduwa": { lat: 6.1405, lng: 80.1016 },
+  "Ambalangoda": { lat: 6.2354, lng: 80.0532 },
+  "Seethawaka": { lat: 6.956, lng: 80.245 },
+  "Knuckles range": { lat: 7.4558, lng: 80.7847 },
+  "Koggala": { lat: 5.9932, lng: 80.3335 }
 };
 
 // Types for the itinerary system

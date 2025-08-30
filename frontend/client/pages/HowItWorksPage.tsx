@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   FiUser,
   FiFileText,
@@ -9,14 +9,252 @@ import {
   FiCamera,
   FiBarChart2,
   FiChevronDown,
-  FiChevronUp
+  FiChevronUp,
+  FiMessageSquare
 } from 'react-icons/fi';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
+const StepMedia: React.FC<{ stepId: number }> = ({ stepId }) => {
+  // Centralized config so hooks are always called in the same order
+  const cfg = React.useMemo(() => {
+    const map: Record<number, { slides: string[]; scrollIndex?: number | number[]; dwell?: number[]; alt: string; scrollDurationMs?: number | number[] } > = {
+      1: {
+        slides: [
+          "https://cdn.builder.io/api/v1/image/assets%2F3785bc09384b42beb967a17e29ffd2c3%2Fb65a95bb2cb944e3845c32fb14f1d092?format=webp&width=1600",
+        ],
+        alt: "Step 1 - Sign Up screenshot",
+      },
+      2: {
+        slides: [
+          "https://cdn.builder.io/api/v1/image/assets%2F3785bc09384b42beb967a17e29ffd2c3%2Fe25b8577b5bb4b0aaaa6bd32cfbe44c0?format=webp&width=1600",
+          "https://cdn.builder.io/api/v1/image/assets%2F3785bc09384b42beb967a17e29ffd2c3%2F71de632fb8b24eef84b7b58cc1f334c3?format=webp&width=1600",
+          "https://cdn.builder.io/api/v1/image/assets%2F3785bc09384b42beb967a17e29ffd2c3%2Fcc29933a87f64cd1b2d58027f7389290?format=webp&width=1600",
+          "https://cdn.builder.io/api/v1/image/assets%2F3785bc09384b42beb967a17e29ffd2c3%2F920848f4273c415ab507363466a4d9a1?format=webp&width=1600",
+        ],
+        alt: "Step 2 - Fill Questionnaire slideshow",
+      },
+      3: {
+        slides: [
+          "https://cdn.builder.io/api/v1/image/assets%2F3785bc09384b42beb967a17e29ffd2c3%2F309134c023c74b83928529f832f25ee0?format=webp&width=1600",
+          "/howitworks/scrolling_destination.png",
+        ],
+        scrollIndex: 1,
+        dwell: [2000, 9000],
+        alt: "Step 3 - Select Recommendation",
+      },
+      4: {
+        slides: [
+          "https://cdn.builder.io/api/v1/image/assets%2F60311f6242b1434cb753d5f3e4c9af86%2F6887b10baa9b4117ba8a97ec9a1af281?format=webp&width=1600",
+          "/howitworks/profile.png",
+          "/howitworks/saved-destination.png"
+        ],
+        scrollIndex: [1, 2],
+        scrollDurationMs: [2500, 6000],
+        alt: "Step 4 - Save Places",
+      },
+      5: {
+        slides: [
+          "https://cdn.builder.io/api/v1/image/assets%2F60311f6242b1434cb753d5f3e4c9af86%2Ffcf5b22a9b724e1e9fa5fa09b218d41d?format=webp&width=1600",
+          "https://cdn.builder.io/api/v1/image/assets%2F60311f6242b1434cb753d5f3e4c9af86%2F77ae65ab4aba4c6d91905436eca8389e?format=webp&width=1600",
+          "https://cdn.builder.io/api/v1/image/assets%2F60311f6242b1434cb753d5f3e4c9af86%2F6a02887299af42de8fe3c56e6d2150e1?format=webp&width=1600",
+        ],
+        alt: "Step 5 - Edit Profile slideshow",
+      },
+      6: {
+        slides: [
+          "https://cdn.builder.io/api/v1/image/assets%2F60311f6242b1434cb753d5f3e4c9af86%2F80dd76e19a8f4d2983b554c0a07f8870?format=webp&width=1600",
+          "https://cdn.builder.io/api/v1/image/assets%2F60311f6242b1434cb753d5f3e4c9af86%2F785f1e8176a8466fb8a7d60115082ee5?format=webp&width=1600",
+        ],
+        alt: "Step 6 - Search by Text slideshow",
+      },
+      7: {
+        slides: [
+          "https://cdn.builder.io/api/v1/image/assets%2F60311f6242b1434cb753d5f3e4c9af86%2F6aa97101306246deb6cc20cba710193e?format=webp&width=1600",
+          "https://cdn.builder.io/api/v1/image/assets%2F60311f6242b1434cb753d5f3e4c9af86%2Fdf414a7970ea40eaa76ef3ebf4a90c91?format=webp&width=1600",
+          "https://cdn.builder.io/api/v1/image/assets%2F60311f6242b1434cb753d5f3e4c9af86%2Fc381ab7ea7c94049a8ecf953d6486f9c?format=webp&width=1600",
+          "https://cdn.builder.io/api/v1/image/assets%2F60311f6242b1434cb753d5f3e4c9af86%2Fbf35648d7bc3439b9ac48b64d16a1e3e?format=webp&width=1600",
+        ],
+        alt: "Step 7 - Search by Image slideshow",
+      },
+      8: {
+        slides: [
+          "https://cdn.builder.io/api/v1/image/assets%2F60311f6242b1434cb753d5f3e4c9af86%2F48fa62b7c0604f1b9fc8cff958009816?format=webp&width=1600",
+          "https://cdn.builder.io/api/v1/image/assets%2F60311f6242b1434cb753d5f3e4c9af86%2F440c2f865e6349fe8edcee11d63517a3?format=webp&width=1600",
+          "https://cdn.builder.io/api/v1/image/assets%2F60311f6242b1434cb753d5f3e4c9af86%2F0a1c1ed2381647348e35ea0f3bbc24d9?format=webp&width=1600",
+          "/howitworks/use-questionnaire-metrics.png",
+        ],
+        scrollIndex: 3,
+        dwell: [2000, 2000, 2000, 9000],
+        alt: "Step 8 - Questionnaire metrics slideshow",
+      },
+      9: {
+        slides: [
+          "https://cdn.builder.io/api/v1/image/assets%2F60311f6242b1434cb753d5f3e4c9af86%2Fdc204ef251b54e0488ed948c0ee14fa1?format=webp&width=1600",
+          "https://cdn.builder.io/api/v1/image/assets%2F60311f6242b1434cb753d5f3e4c9af86%2F91ebcf0932e54cc0ac4f24b28f739ceb?format=webp&width=1600",
+          "https://cdn.builder.io/api/v1/image/assets%2F60311f6242b1434cb753d5f3e4c9af86%2Fdacb2b5cd7a04fc4bfa18445505eb351?format=webp&width=1600",
+          "https://cdn.builder.io/api/v1/image/assets%2F60311f6242b1434cb753d5f3e4c9af86%2F5f557b9fc80742d6847f22d604832ef7?format=webp&width=1600",
+          "https://cdn.builder.io/api/v1/image/assets%2F60311f6242b1434cb753d5f3e4c9af86%2F3b71b7fb14974eff841a555ffca5a454?format=webp&width=1600",
+        ],
+        alt: "Step 9 - Travel Assistant slideshow",
+      },
+    };
+    return map[stepId as keyof typeof map] ?? map[1];
+  }, [stepId]);
+
+  const [current, setCurrent] = useState(0);
+  const [inView, setInView] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const scrollHolderRef = useRef<HTMLDivElement | null>(null);
+  const scrollImgRef = useRef<HTMLImageElement | null>(null);
+
+  // Observe visibility
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setInView(true);
+          } else {
+            setInView(false);
+            setCurrent(0); // reset when out of view
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const isScrollingSlide = cfg.scrollIndex != null && (Array.isArray(cfg.scrollIndex) ? cfg.scrollIndex.includes(current) : current === cfg.scrollIndex);
+
+  // Preload tall image when step is visible to avoid blank top during buffer
+  useEffect(() => {
+    if (!inView || cfg.scrollIndex == null) return;
+    const indices = Array.isArray(cfg.scrollIndex) ? cfg.scrollIndex : [cfg.scrollIndex];
+    indices.forEach((idx) => {
+      const src = cfg.slides[idx];
+      const pre = new Image();
+      pre.src = src;
+      if ((pre as any).decode) {
+        (pre as any).decode().catch(() => undefined);
+      }
+    });
+  }, [inView, cfg.scrollIndex, cfg.slides]);
+
+  // Advance slides with dwell per step; if single slide, skip
+  useEffect(() => {
+    if (!inView) return;
+    if (cfg.slides.length <= 1) return;
+    const getScrollMs = () => {
+      if (Array.isArray(cfg.scrollDurationMs)) return cfg.scrollDurationMs[current] ?? 8000;
+      return cfg.scrollDurationMs ?? 8000;
+    };
+    const defaultScrollDwell = getScrollMs() + 2000; // 1s pre + 1s post buffers
+    const dwell = cfg.dwell?.[current] ?? (isScrollingSlide ? defaultScrollDwell : 2000);
+    const id = setInterval(() => {
+      setCurrent((c) => (c + 1) % cfg.slides.length);
+    }, dwell);
+    return () => clearInterval(id);
+  }, [inView, current, cfg.dwell, cfg.slides.length, isScrollingSlide, cfg.scrollDurationMs]);
+
+  // Scroll animation for long slide
+  useEffect(() => {
+    const holder = scrollHolderRef.current;
+    const img = scrollImgRef.current;
+
+    if (!isScrollingSlide || !inView || !holder || !img) {
+      if (img) {
+        img.style.transition = '';
+        // Do not reset transform here to avoid flashing the top before slide change
+      }
+      return;
+    }
+
+    let startTimer: number | undefined;
+
+    const run = () => {
+      const holderH = holder.getBoundingClientRect().height;
+      const imgH = img.getBoundingClientRect().height;
+      const maxScroll = Math.max(0, imgH - holderH);
+      // Prepare static frame, then animate smoothly after buffer
+      img.style.willChange = 'transform';
+      img.style.transition = 'none';
+      img.style.transform = 'translateY(0) translateZ(0)';
+      void (img as any).offsetHeight;
+      // 1s buffer before starting scroll
+      startTimer = window.setTimeout(() => {
+        const durationMs = Array.isArray(cfg.scrollDurationMs) ? (cfg.scrollDurationMs[current] ?? 8000) : (cfg.scrollDurationMs ?? 8000);
+        img.style.transition = `transform ${durationMs}ms linear`;
+        requestAnimationFrame(() => {
+          if (maxScroll > 0) {
+            img.style.transform = `translateY(-${maxScroll}px)`;
+          }
+        });
+      }, 1000);
+    };
+
+    if (img.complete) run();
+    else {
+      const onLoad = () => run();
+      img.addEventListener('load', onLoad, { once: true });
+    }
+
+    return () => {
+      if (startTimer) window.clearTimeout(startTimer);
+      if (img) {
+        img.style.transition = '';
+        // Keep final transform position; next run will explicitly reset to 0 before animating
+      }
+    };
+  }, [inView, isScrollingSlide, cfg.scrollIndex, current, cfg.scrollDurationMs]);
+
+  // Render
+  return (
+    <div ref={containerRef} className="w-full h-full">
+      {isScrollingSlide ? (
+        <div ref={scrollHolderRef} className="w-full h-full overflow-hidden">
+          <img
+            ref={scrollImgRef}
+            src={cfg.slides[current]}
+            alt={`${cfg.alt} scroll preview`}
+            style={{ width: '100%', height: 'auto', display: 'block', transform: 'translateY(0)' }}
+            loading="eager"
+            decoding="sync"
+            fetchpriority="high"
+          />
+        </div>
+      ) : (
+        <img
+          src={cfg.slides[current]}
+          alt={cfg.alt}
+          className="w-full h-full object-contain"
+          loading="lazy"
+        />
+      )}
+    </div>
+  );
+};
+
 const HowItWorksPage = () => {
   const [activeStep, setActiveStep] = useState(1);
   const [expandedStep, setExpandedStep] = useState<number | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [showStepsNav, setShowStepsNav] = useState(true);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 1024);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    setShowStepsNav(!isMobile);
+  }, [isMobile]);
 
   // Add CSS for better sticky behavior
   useEffect(() => {
@@ -26,27 +264,19 @@ const HowItWorksPage = () => {
         position: sticky !important;
         top: 2rem !important;
         align-self: flex-start !important;
-        max-height: calc(100vh - 4rem) !important;
-        overflow-y: auto !important;
+        overflow: visible !important;
         z-index: 30 !important;
       }
 
       .sticky-sidebar::-webkit-scrollbar {
-        width: 4px;
+        width: 0;
+        height: 0;
+        display: none;
       }
 
-      .sticky-sidebar::-webkit-scrollbar-track {
-        background: #f1f5f9;
-        border-radius: 2px;
-      }
-
-      .sticky-sidebar::-webkit-scrollbar-thumb {
-        background: #1196A0;
-        border-radius: 2px;
-      }
-
-      .sticky-sidebar::-webkit-scrollbar-thumb:hover {
-        background: #0C7C84;
+      @keyframes scrollVertical {
+        0% { background-position: center top; }
+        100% { background-position: center bottom; }
       }
     `;
     document.head.appendChild(style);
@@ -178,6 +408,18 @@ const HowItWorksPage = () => {
         "Get insights into travel patterns",
         "Export your travel data"
       ]
+    },
+    {
+      id: 9,
+      title: "Travel Assistant",
+      icon: FiMessageSquare,
+      description: "Chat with TripMate to ask questions, get budgets, and plan faster with AI help right inside the app.",
+      details: [
+        "Open the assistant from any page",
+        "Ask travel questions in plain English",
+        "Receive actionable tips and budgets",
+        "Refine results with follow-up prompts"
+      ]
     }
   ];
 
@@ -217,10 +459,51 @@ const HowItWorksPage = () => {
       {/* Main Content */}
       <div className="bg-white">
         <div className="container mx-auto px-6 py-16">
+          {/* Mobile Steps Toggle */}
+          <div className="lg:hidden mb-6">
+            <div className="bg-white border border-[#E2E8F0] rounded-2xl p-4 shadow-lg">
+              <div
+                className="flex items-center justify-between cursor-pointer mb-2"
+                onClick={() => setShowStepsNav(!showStepsNav)}
+              >
+                <div className="flex items-center gap-2">
+                  <FiBarChart2 className="text-lg" style={{ color: 'var(--text-900)' }} />
+                  <h2 className="text-md font-semibold" style={{ color: 'var(--text-900)' }}>Steps Overview</h2>
+                </div>
+                {showStepsNav ? <FiChevronUp style={{ color: 'var(--text-600)' }} /> : <FiChevronDown style={{ color: 'var(--text-600)' }} />}
+              </div>
+              {showStepsNav && (
+                <div className="space-y-3">
+                  {steps.map((step) => (
+                    <button
+                      key={step.id}
+                      onClick={() => {
+                        const element = document.getElementById(`step-${step.id}`);
+                        element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }}
+                      className={`w-full flex items-center gap-4 p-4 rounded-xl text-left transition-all ${activeStep === step.id
+                        ? 'bg-[#E6F6F7] border-2 border-[#1196A0] text-[#0C7C84]'
+                        : 'hover:bg-[#F1F5F9] border-2 border-transparent text-[#475569]'
+                        }`}
+                    >
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${activeStep === step.id
+                        ? 'bg-[#1196A0] text-white'
+                        : 'bg-[#E2E8F0] text-[#475569]'
+                        }`}>
+                        {step.id}
+                      </div>
+                      <span className="font-medium">{step.title}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
           <div className="flex gap-12 sticky-parent-fix flex-sticky-container">
 
             {/* Sidebar Navigation */}
-            <div className="w-80 flex-shrink-0 sticky-parent-fix">
+            <div className="hidden lg:block w-80 flex-shrink-0 sticky-parent-fix">
               <div className="sticky-sidebar force-sticky-fix">
                 <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 shadow-lg">
                   <h3 className="font-semibold text-lg text-[#0F172A] mb-6">Steps Overview</h3>
@@ -310,31 +593,11 @@ const HowItWorksPage = () => {
                       </div>
                     </div>
 
-                    {/* Interactive Demo Area - Now Below Description */}
+                    {/* Image Container Area */}
                     <div className="max-w-2xl mx-auto">
-                      <div className="bg-cyan-50 dark:bg-gray-800  rounded-2xl p-8 border border-[#1196A0]/20">
-                        <div className="text-center mb-6">
-                          <h3 className="text-xl font-semibold text-[#0F172A] mb-2">Try it yourself</h3>
-                          <p className="text-[#475569]">Interactive demo for {step.title}</p>
-                        </div>
-
-                        <div className="aspect-video bg-white rounded-xl border border-[#E2E8F0] flex items-center justify-center mb-6">
-                          <div className="text-center">
-                            <step.icon className="w-16 h-16 text-[#1196A0] mx-auto mb-4" />
-                            <div className="text-lg font-medium text-[#475569] mb-2">
-                              {step.title} Demo
-                            </div>
-                            <div className="text-sm text-[#94A3B8]">
-                              Click the button below to interact
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="text-center">
-                          <div className="inline-flex items-center gap-3 bg-[#1196A0] text-white px-6 py-3 rounded-xl text-base font-semibold hover:bg-[#0C7C84] transition-colors cursor-pointer shadow-lg hover:shadow-xl transform hover:scale-105">
-                            <span>Try {step.title}</span>
-                            <step.icon className="w-5 h-5" />
-                          </div>
+                      <div className="bg-cyan-50 dark:bg-gray-800 rounded-2xl p-4 border border-[#1196A0]/20">
+                        <div className="aspect-video bg-white rounded-xl border border-[#E2E8F0] overflow-hidden">
+                          <StepMedia stepId={step.id} />
                         </div>
                       </div>
                     </div>
