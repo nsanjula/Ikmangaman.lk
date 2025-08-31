@@ -144,8 +144,8 @@ const TermsOfService = () => {
                                 </p>
                                 <p className="mb-6">
                                     Ikmangaman.lk is a travel planning platform that helps travelers discover and book experiences
-                                    throughout Sri Lanka. Our services include personalized itinerary planning, booking services for
-                                    accommodations, tours, and activities, and travel recommendations.
+                                    throughout Sri Lanka. Our services include providing travel recommendations based user preferences and intrests, provide destination details based
+                                    text and image based searches and generate personalized iternaries.
                                 </p>
                                 <p>
                                     Please read these terms carefully before using our services. If you do not agree to these terms,
@@ -161,7 +161,7 @@ const TermsOfService = () => {
                             </h2>
                             <div style={{ color: 'var(--text-600)', lineHeight: '1.6' }}>
                                 <p className="mb-6">
-                                    By creating an account, making a booking, or using any of our services, you acknowledge that:
+                                    By creating an account or using any of our services, you acknowledge that:
                                 </p>
                                 <ul className="space-y-2 mb-6 pl-6">
                                     <li>• You are at least 18 years old and have the legal capacity to enter into binding contracts</li>
@@ -190,12 +190,8 @@ const TermsOfService = () => {
                                     interests, and travel style through our interactive questionnaire.
                                 </p>
                                 <p className="mb-4">
-                                    <strong>Booking Services:</strong> Facilitation of bookings for accommodations, tours, activities,
-                                    and transportation services with our partner providers throughout Sri Lanka.
-                                </p>
-                                <p className="mb-4">
                                     <strong>Travel Information:</strong> Comprehensive information about destinations, attractions,
-                                    cultural norms, and practical travel advice for Sri Lanka.
+                                    weather,hotel and local guide info and for Sri Lanka.
                                 </p>
                                 <p className="mb-4">
                                     <strong>Customer Support:</strong> Assistance with bookings, itinerary changes, and travel-related
@@ -226,9 +222,6 @@ const TermsOfService = () => {
                                     registration and keeping it updated.
                                 </p>
                                 <p className="mb-4">
-                                    <strong>One Account:</strong> Maintaining only one active account unless expressly permitted by Ikmangaman.lk.
-                                </p>
-                                <p className="mb-4">
                                     <strong>Termination:</strong> We reserve the right to suspend or terminate your account if we suspect
                                     unauthorized or fraudulent activity, or violation of these terms.
                                 </p>
@@ -238,74 +231,6 @@ const TermsOfService = () => {
                             </div>
                         </section>
 
-                        {/* Bookings & Payments */}
-                        <section id="bookings-payments" className="mb-16">
-                            <h2 className="text-3xl font-bold mb-6" style={{ color: 'var(--text-900)' }}>
-                                Bookings & Payments
-                            </h2>
-                            <div style={{ color: 'var(--text-600)', lineHeight: '1.6' }}>
-                                <p className="mb-6">
-                                    When you make a booking through Ikmangaman.lk:
-                                </p>
-                                <p className="mb-4">
-                                    <strong>Payment Processing:</strong> All payments are processed securely through our payment partners.
-                                    You agree to pay all charges incurred by your account.
-                                </p>
-                                <p className="mb-4">
-                                    <strong>Price Changes:</strong> Prices are subject to change without notice. The price at the time of
-                                    booking confirmation is the final price, unless otherwise specified.
-                                </p>
-                                <p className="mb-4">
-                                    <strong>Currency:</strong> All transactions are processed in Sri Lankan Rupees (LKR) or US Dollars (USD)
-                                    as indicated during the booking process.
-                                </p>
-                                <p className="mb-4">
-                                    <strong>Service Fees:</strong> We may charge service fees for facilitating bookings. These will be
-                                    clearly displayed before confirmation.
-                                </p>
-                                <p className="mb-4">
-                                    <strong>Confirmation:</strong> Bookings are confirmed only after payment is successfully processed and
-                                    you receive a confirmation email from us.
-                                </p>
-                                <p>
-                                    <strong>Third-party Providers:</strong> Your contract for travel services is with the third-party provider,
-                                    not Ikmangaman.lk. We are not responsible for the services provided by these partners.
-                                </p>
-                            </div>
-                        </section>
-
-                        {/* Cancellation Policy */}
-                        <section id="cancellation" className="mb-16">
-                            <h2 className="text-3xl font-bold mb-6" style={{ color: 'var(--text-900)' }}>
-                                Cancellation Policy
-                            </h2>
-                            <div style={{ color: 'var(--text-600)', lineHeight: '1.6' }}>
-                                <p className="mb-6">
-                                    Cancellation policies vary by service provider and are specified during the booking process:
-                                </p>
-                                <p className="mb-4">
-                                    <strong>Provider Policies:</strong> Each service provider sets their own cancellation policy.
-                                    We clearly display these policies before you confirm your booking.
-                                </p>
-                                <p className="mb-4">
-                                    <strong>Refunds:</strong> Refund eligibility depends on the specific provider's policy and the
-                                    timing of your cancellation. We process refunds according to these policies.
-                                </p>
-                                <p className="mb-4">
-                                    <strong>Cancellation Fees:</strong> Some providers may charge cancellation fees, which will be
-                                    deducted from any refund amount.
-                                </p>
-                                <p className="mb-4">
-                                    <strong>How to Cancel:</strong> Cancellations must be made through your Ikmangaman.lk account
-                                    or by contacting our support team. Direct cancellations with providers may not be recognized
-                                    in our system.
-                                </p>
-                                <p>
-                                    <strong>Force Majeure:</strong> In cases of extraordinary circumstances beyond our control
-                                    (natural disasters, political unrest, pandemics, etc.), special cancellation policies may apply.
-                                </p>
-                            </div>
-                        </section>
 
                         {/* User Conduct */}
                         <section id="user-conduct" className="mb-16">
@@ -320,11 +245,9 @@ const TermsOfService = () => {
                                     <li>• Use our platform for any illegal purpose or in violation of any laws</li>
                                     <li>• Submit false or misleading information</li>
                                     <li>• Infringe upon the rights of others, including intellectual property rights</li>
-                                    <li>• Harass, abuse, or harm other users or our staff</li>
                                     <li>• Use automated systems or software to extract data from our website</li>
                                     <li>• Interfere with or disrupt the integrity or performance of our platform</li>
                                     <li>• Attempt to gain unauthorized access to our systems or networks</li>
-                                    <li>• Make bookings without the intention to actually use the services</li>
                                 </ul>
                                 <p>
                                     Violation of these conduct guidelines may result in termination of your account and
@@ -402,7 +325,7 @@ const TermsOfService = () => {
                                 Questions about our terms?
                             </h3>
                             <p style={{ color: 'var(--text-600)' }}>
-                                If you have any questions about these Terms of Service, contact us at <strong>legal@ikmangaman.lk</strong>
+                                If you have any questions about these Terms of Service, contact us at <strong>teamikmangaman@gmail.com</strong>
                             </p>
                         </div>
                     </div>

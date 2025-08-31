@@ -14,11 +14,14 @@ import {
 } from 'react-icons/fi';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { useNavigate } from "react-router-dom";
+import { useScrollToTop } from "../hooks/useScrollToTop";
+import { useAuth } from "../contexts/AuthContext";
 
 const StepMedia: React.FC<{ stepId: number }> = ({ stepId }) => {
   // Centralized config so hooks are always called in the same order
   const cfg = React.useMemo(() => {
-    const map: Record<number, { slides: string[]; scrollIndex?: number | number[]; dwell?: number[]; alt: string; scrollDurationMs?: number | number[] } > = {
+    const map: Record<number, { slides: string[]; scrollIndex?: number | number[]; dwell?: number[]; alt: string; scrollDurationMs?: number | number[] }> = {
       1: {
         slides: [
           "https://cdn.builder.io/api/v1/image/assets%2F3785bc09384b42beb967a17e29ffd2c3%2Fb65a95bb2cb944e3845c32fb14f1d092?format=webp&width=1600",
@@ -107,6 +110,7 @@ const StepMedia: React.FC<{ stepId: number }> = ({ stepId }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const scrollHolderRef = useRef<HTMLDivElement | null>(null);
   const scrollImgRef = useRef<HTMLImageElement | null>(null);
+  const { isAuthenticated } = useAuth();
 
   // Observe visibility
   useEffect(() => {
@@ -244,7 +248,10 @@ const HowItWorksPage = () => {
   const [expandedStep, setExpandedStep] = useState<number | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [showStepsNav, setShowStepsNav] = useState(true);
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
+  useScrollToTop();
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 1024);
     handleResize();
@@ -431,6 +438,7 @@ const HowItWorksPage = () => {
     <div className="min-h-screen bg-[#F0F9FF]">
       <Header />
       {/* Hero Section */}
+
       <div className=" bg-cyan-100 dark:bg-gray-800 pt-24 pb-16 ">
         <div className="container mx-auto px-6">
           <div className="text-center max-w-4xl mx-auto">
@@ -448,9 +456,12 @@ const HowItWorksPage = () => {
             </p>
 
             <div className="flex justify-center">
-              <div className="bg-[#1196A0] text-white px-8 py-4 rounded-full font-semibold hover:bg-[#0C7C84] transition-colors cursor-pointer">
+              <button
+                onClick={() => isAuthenticated ? navigate("/recommendation") : navigate("/register")}
+                className="w-full sm:w-auto bg-[#159CAF] hover:bg-[#0d7a8a] text-white px-10 py-5 rounded-full font-semibold transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl text-lg"
+              >
                 Get Started Today
-              </div>
+              </button>
             </div>
           </div>
         </div>
@@ -488,7 +499,7 @@ const HowItWorksPage = () => {
                     >
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${activeStep === step.id
                         ? 'bg-[#1196A0] text-white'
-                        : 'bg-[#E2E8F0] text-[#475569]'
+                        : 'bg-[#E2E8F0] text-[#475569] '
                         }`}>
                         {step.id}
                       </div>
@@ -518,12 +529,12 @@ const HowItWorksPage = () => {
                         }}
                         className={`w-full flex items-center gap-4 p-4 rounded-xl text-left transition-all ${activeStep === step.id
                           ? 'bg-[#E6F6F7] border-2 border-[#1196A0] text-[#0C7C84]'
-                          : 'hover:bg-[#F1F5F9] border-2 border-transparent text-[#475569]'
+                          : 'hover:bg-[#F1F5F9] border-2 border-transparent text-[#475569] dark:hover:bg-gray-800 dark:text-white dark:hover:text-white'
                           }`}
                       >
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${activeStep === step.id
                           ? 'bg-[#1196A0] text-white'
-                          : 'bg-[#E2E8F0] text-[#475569]'
+                          : 'bg-[#E2E8F0] text-[#475569] '
                           }`}>
                           {step.id}
                         </div>
@@ -554,7 +565,7 @@ const HowItWorksPage = () => {
                           <div className="text-sm font-medium text-[#1196A0] mb-1">
                             Step {step.id}
                           </div>
-                          <h2 className="text-3xl font-bold text-[#0F172A] font-[var(--font-heading)]">
+                          <h2 className="text-3xl font-bold dark:text-white text-[#0F172A] font-[var(--font-heading)]">
                             {step.title}
                           </h2>
                         </div>
@@ -579,12 +590,12 @@ const HowItWorksPage = () => {
 
                         {expandedStep === step.id && (
                           <div className="mt-6 pt-6 border-t border-[#E2E8F0]">
-                            <h4 className="font-semibold text-[#0F172A] mb-4">What you can do:</h4>
+                            <h4 className="font-semibold text-[#0F172A] dark:text-white mb-4">What you can do:</h4>
                             <ul className="space-y-3">
                               {step.details.map((detail, idx) => (
                                 <li key={idx} className="flex items-start gap-3">
                                   <div className="w-2 h-2 bg-[#1196A0] rounded-full mt-2 flex-shrink-0"></div>
-                                  <span className="text-[#475569]">{detail}</span>
+                                  <span className="text-[#475569] dark:text-gray-400 ">{detail}</span>
                                 </li>
                               ))}
                             </ul>
@@ -626,12 +637,12 @@ const HowItWorksPage = () => {
               through our personalized recommendation system.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <div className="bg-white dark:text-white text-[#1196A0] px-8 py-4 rounded-full font-semibold hover:bg-gray-50 transition-colors cursor-pointer">
-                Get Started Now
-              </div>
-              <div className="border-2 border-white text-white px-8 py-4 rounded-full font-semibold hover:bg-white dark:hover:text-white hover:text-[#1196A0] transition-colors cursor-pointer">
-                Learn More
-              </div>
+              <button
+                onClick={() => isAuthenticated ? navigate("/recommendation") : navigate("/register")}
+                className="w-full sm:w-auto bg-[#159CAF] hover:bg-[#0d7a8a] text-white px-10 py-5 rounded-full font-semibold transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl text-lg"
+              >
+                Get Started Today
+              </button>
             </div>
           </div>
         </div>
