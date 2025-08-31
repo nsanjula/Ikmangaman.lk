@@ -11,7 +11,7 @@ export default function FinalCTA() {
   const { isAuthenticated } = useAuth();
 
   return (
-    <section className="bg-[#159CAF] py-12 sm:py-16 lg:py-20">
+    <section className="bg-[#138a99] py-12 sm:py-16 lg:py-20">
       <div className="container iframe-container text-center px-4">
         <div
           ref={headerRef}
@@ -33,20 +33,18 @@ export default function FinalCTA() {
           ref={buttonsRef}
           className={`flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center scroll-animate-zoom-in ${buttonsVisible ? 'animate' : ''} px-2`}
         >
-          <Button
+          <button
             onClick={() => isAuthenticated ? navigate("/recommendation") : navigate("/register")}
-            size="lg"
-            className="w-full sm:w-auto bg-white text-[#159CAF] dark:text-white dark:bg-white hover:bg-gray-100 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-bold rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 border-2 border-white"
+            className="w-full sm:w-auto bg-[#159CAF] hover:bg-[#0d7a8a] text-white px-10 py-5 rounded-full font-semibold transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl text-lg"
           >
-            Start Planning Your Trip
-          </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            className="w-full sm:w-auto border-2 border-white text-white hover:bg-white dark:hover:text-white hover:text-[#159CAF] px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-bold rounded-lg transform hover:scale-105 transition-all duration-300 bg-transparent hover:bg-opacity-90"
+            Get Started Today
+          </button>
+          <button
+            onClick={() => navigate('/how-it-works')}
+            className="w-full sm:w-auto bg-white dark:text-cyan-200 dark:border-cyan-200 text-[#159CAF] border-2 border-[#159CAF] hover:bg-[#e6f7f9] rounded-full px-10 py-5 sm:px-8 font-semibold transform hover:scale-105 transition-all duration-300 text-sm sm:text-base"
           >
-            Learn More
-          </Button>
+            See how it works
+          </button>
         </div>
 
         <div
