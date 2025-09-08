@@ -29,6 +29,12 @@
   command = "npm ci && npm run build:client"
   publish = "dist/spa"   # use "dist" if your client build outputs there
 
+# Ensure sitemap.xml is served as a static file (not SPA fallback)
+[[redirects]]
+  from = "/sitemap.xml"
+  to = "/sitemap.xml"
+  status = 200
+
 # SPA fallback so refresh works on client routes
 [[redirects]]
   from = "/*"
