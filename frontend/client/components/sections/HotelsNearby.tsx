@@ -80,6 +80,15 @@ const HotelsNearby: React.FC = () => {
     }
   };
 
+  const displayedHotels = React.useMemo(() => {
+    const cityName = destinationData?.destination_name?.toLowerCase?.();
+    let filtered = hotels;
+    if (cityName) {
+      filtered = hotels.filter(h => (h.city || '').toLowerCase() === cityName);
+    }
+    return filtered.slice(0, 5);
+  }, [hotels, destinationData?.destination_name]);
+
   if (loading) {
     return (
       <div className="card p-6 mb-6 animate-pulse" style={{ background: 'var(--surface)' }}>
@@ -118,7 +127,7 @@ const HotelsNearby: React.FC = () => {
     );
   }
 
-  if (!hotels || hotels.length === 0) {
+  if (!displayedHotels || displayedHotels.length === 0) {
     return (
       <div className="card p-6 mb-6" style={{ background: 'var(--surface)' }}>
         <h2 className="text-2xl font-bold mb-4" style={{ color: 'var(--text-900)' }}>
@@ -149,7 +158,7 @@ const HotelsNearby: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-        {hotels.map((hotel) => {
+        {displayedHotels.map((hotel) => {
           const availabilityColor = getAvailabilityColor(hotel.availability);
 
           return (

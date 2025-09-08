@@ -19,6 +19,11 @@ interface TransportOption {
 const BudgetSection: React.FC = () => {
   const { destinationData: budgetData, loading, error } = useDestination();
 
+  useEffect(() => {
+    try { ensureRatesLoaded(); } catch { }
+  }, []);
+  const { format: formatCurrency } = useCurrency();
+
   if (loading) {
     return (
       <div className="card p-6 mb-6 animate-pulse" style={{ background: 'var(--surface)' }}>
@@ -92,11 +97,7 @@ const BudgetSection: React.FC = () => {
     },
   ];
 
-  // Load rates on mount and subscribe to currency changes
-  useEffect(() => {
-    try { ensureRatesLoaded(); } catch { }
-  }, []);
-  const { format: formatCurrency } = useCurrency();
+
 
   return (
     <div className="card p-6 mb-6" style={{ background: 'var(--surface)' }}>

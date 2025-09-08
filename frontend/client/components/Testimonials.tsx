@@ -6,22 +6,22 @@ export default function Testimonials() {
 
   const testimonials = [
     {
-      name: "Sarah Johnson",
-      location: "London, UK",
+      name: "Ravindu Tennakoon",
+      location: "Matale",
       rating: 5,
       text: "Ikmangamn.lk helped me discover hidden gems in Sri Lanka that I never would have found on my own. The personalized recommendations were spot-on!",
       avatar: "SJ",
     },
     {
-      name: "Marcus Chen",
-      location: "Singapore",
+      name: "Arun Rajanathan",
+      location: "Jaffna",
       rating: 5,
-      text: "The cost-effective planning feature saved me over $500 on my trip. The interface is so intuitive, I had my entire itinerary planned in under an hour.",
+      text: "The highly intuitive interface, combined with extensive customization options, helped me to plan my entire itinerary in under an hour! A lifesaver for busy travelers.",
       avatar: "MC",
     },
     {
-      name: "Elena Rodriguez",
-      location: "Madrid, Spain",
+      name: "Kasuni De Silva",
+      location: "Colombo",
       rating: 5,
       text: "As a solo female traveler, the detailed local insights and safety recommendations gave me confidence to explore Sri Lanka independently. Highly recommend!",
       avatar: "ER",

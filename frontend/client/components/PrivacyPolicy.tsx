@@ -138,10 +138,9 @@ const PrivacyPolicy = () => {
                                     In our mission to make travel planning better for everyone at Ikmangaman.lk, we collect and use information about you, our:
                                 </p>
                                 <ul className="space-y-2 mb-6 pl-6">
-                                    <li>• <span style={{ color: 'var(--primary-600)' }} className="underline cursor-pointer">travelers using Ikmangaman.lk</span> to plan your journey</li>
-                                    <li>• <span style={{ color: 'var(--primary-600)' }} className="underline cursor-pointer">customers</span> who book through our platform</li>
-                                    <li>• <span style={{ color: 'var(--primary-600)' }} className="underline cursor-pointer">partners</span> who work with us to provide travel services, recommendations, or help travelers discover Sri Lanka</li>
-                                    <li>• visitors to Ikmangaman.lk's websites, or anyone contacting <span style={{ color: 'var(--primary-600)' }} className="underline cursor-pointer">Ikmangaman.lk support</span></li>
+                                    <li>• <span style={{ color: 'white' }} className=" cursor-pointer">travelers using Ikmangaman.lk</span> to plan your journey</li>
+                                    <li>• <span style={{ color: 'white' }} className="cursor-pointer">partners</span> who work with us to provide travel services, recommendations, or help travelers discover Sri Lanka</li>
+                                    <li>• visitors to Ikmangaman.lk's websites, or anyone contacting Ikmangaman.lk support</li>
                                 </ul>
                                 <p>
                                     This Privacy Policy describes how we collect, use, and share your personal information in connection with Ikmangaman.lk services, and your choices regarding our use of your personal information.
@@ -183,16 +182,16 @@ const PrivacyPolicy = () => {
                                     We process your personal information for several key purposes that enable us to provide you with the best travel planning experience:
                                 </p>
                                 <p className="mb-4">
-                                    <strong>Personalized Recommendations:</strong> We analyze your travel preferences, past trips, and interests to suggest destinations and activities you'll love. This includes processing your questionnaire responses, search history, and booking patterns.
+                                    <strong>Personalized Recommendations:</strong> We analyze your travel preferences, past trips, and interests to suggest destinations and activities you'll love. This includes processing your questionnaire responses and search history.
                                 </p>
                                 <p className="mb-4">
-                                    <strong>Service Delivery:</strong> To create your account, process bookings, send confirmations, provide customer support, and deliver the travel services you've requested through our platform.
+                                    <strong>Service Delivery:</strong> To create your account, send confirmations, provide customer support, and deliver the travel services you've requested through our platform.
                                 </p>
                                 <p className="mb-4">
                                     <strong>Platform Improvement:</strong> We use aggregated and anonymized data to improve our recommendation algorithm, develop new features, and enhance the overall user experience on our platform.
                                 </p>
                                 <p className="mb-4">
-                                    <strong>Communication:</strong> To send you important updates about your bookings, travel tips, destination highlights, and other relevant information (with your consent for marketing communications).
+                                    <strong>Communication:</strong> To send you important updates about your recommendations, travel tips, destination highlights, and other relevant information (with your consent for marketing communications).
                                 </p>
                                 <p>
                                     <strong>Legal Compliance:</strong> To comply with applicable laws, regulations, legal processes, or enforceable governmental requests.
@@ -225,7 +224,7 @@ const PrivacyPolicy = () => {
                                     <strong>Portability:</strong> Request your data in a structured, commonly used format that can be transferred to another service.
                                 </p>
                                 <p>
-                                    <strong>How to exercise your rights:</strong> You can manage most of these preferences directly in your account settings. For other requests, contact us at privacy@ikmangaman.lk and we'll respond within 30 days.
+                                    <strong>How to exercise your rights:</strong> You can manage most of these preferences directly in your account settings. For other requests, contact us at teamikmangaman@gmail.com and we'll respond within 30 days.
                                 </p>
                             </div>
                         </section>
@@ -241,9 +240,6 @@ const PrivacyPolicy = () => {
                                 </p>
                                 <p className="mb-4">
                                     <strong>Travel Service Providers:</strong> Hotels, tour operators, and activity providers need your booking information to deliver the services you've purchased.
-                                </p>
-                                <p className="mb-4">
-                                    <strong>Payment Processors:</strong> Secure payment services process your payment information to complete bookings and handle refunds.
                                 </p>
                                 <p className="mb-4">
                                     <strong>Analytics Partners:</strong> Anonymized usage data helps us understand how our platform is used and improve our services.
@@ -272,12 +268,6 @@ const PrivacyPolicy = () => {
                                 <p className="mb-4">
                                     <strong>Booking Records:</strong> 7 years after your last booking for tax and legal compliance.
                                 </p>
-                                <p className="mb-4">
-                                    <strong>Marketing Preferences:</strong> Until you unsubscribe from our communications.
-                                </p>
-                                <p className="mb-4">
-                                    <strong>Analytics Data:</strong> 26 months in anonymized form for platform improvement.
-                                </p>
                                 <p>
                                     You can request immediate deletion of your account and personal information at any time, subject to legal requirements for certain business records.
                                 </p>
@@ -290,7 +280,7 @@ const PrivacyPolicy = () => {
                                 Questions about this policy?
                             </h3>
                             <p style={{ color: 'var(--text-600)' }}>
-                                If you have any questions or concerns about how we handle your personal information, contact us at <strong>privacy@ikmangaman.lk</strong>
+                                If you have any questions or concerns about how we handle your personal information, contact us at <strong>teamikmangaman@gmail.com</strong>
                             </p>
                         </div>
                     </div>

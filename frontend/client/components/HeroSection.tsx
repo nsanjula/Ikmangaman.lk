@@ -98,13 +98,13 @@ export default function HeroSection() {
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center animate-fade-in-up px-4 pb-8 sm:pb-0" style={{ animationDelay: '1.2s' }}>
             <button
               onClick={() => isAuthenticated ? navigate("/recommendation") : navigate("/register")}
-              className="w-full sm:w-auto bg-[#159CAF] hover:bg-[#0d7a8a] text-white px-6 sm:px-8 py-3 rounded-lg font-semibold transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl text-sm sm:text-base"
+              className="w-full sm:w-auto bg-[#159CAF] hover:bg-[#0d7a8a] text-white px-10 py-5 rounded-full font-semibold transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl text-lg"
             >
-              Start planning
+              Get Started Today
             </button>
             <button
               onClick={() => navigate('/how-it-works')}
-              className="w-full sm:w-auto bg-white dark:text-cyan-200 dark:border-cyan-200 text-[#159CAF] border-2 border-[#159CAF] hover:bg-[#e6f7f9] px-6 sm:px-8 py-3 rounded-lg font-semibold transform hover:scale-105 transition-all duration-300 text-sm sm:text-base"
+              className="w-full sm:w-auto bg-white dark:text-cyan-200 dark:border-cyan-200 text-[#159CAF] border-2 border-[#159CAF] hover:bg-[#e6f7f9] rounded-full px-10 py-5 px-6 sm:px-8 py-3 font-semibold transform hover:scale-105 transition-all duration-300 text-sm sm:text-base"
             >
               See how it works
             </button>
