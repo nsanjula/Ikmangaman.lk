@@ -2,7 +2,7 @@ import { defineConfig, Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { createServer } from "./server";
-
+import Sitemap from 'vite-plugin-sitemap';
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
@@ -21,7 +21,9 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: "dist/spa",
   },
-  plugins: [react(), expressPlugin()],
+  plugins: [react(), expressPlugin(), Sitemap({
+    hostname: "https://ikmangaman.netlify.app/"
+  })],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./client"),
