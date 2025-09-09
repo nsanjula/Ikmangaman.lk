@@ -22,7 +22,7 @@ export default function Footer() {
             </p>
             <div className="flex space-x-3">
               <a
-                href="https://youtube.com"
+                href="https://www.youtube.com/@ikmangaman"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="transition-colors duration-150"
@@ -35,7 +35,7 @@ export default function Footer() {
                 </svg>
               </a>
               <a
-                href="https://instagram.com"
+                href="https://www.instagram.com/ikmangaman.lk/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="transition-colors duration-150"
@@ -48,7 +48,7 @@ export default function Footer() {
                 </svg>
               </a>
               <a
-                href="https://facebook.com"
+                href="https://www.facebook.com/profile.php?id=61580198625146"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="transition-colors duration-150"
